@@ -3,6 +3,14 @@ export type AuditPerson = { name: string; email: string };
 export type AuditEntryRow = {
     id: string;
     at: string;
+    /** The local day the table groups it under: «Hoy · 25 nov», «Ayer · 24 nov», «Domingo · 22 nov». */
+    day: string;
+    /** Its local time, «10:42». */
+    time: string;
+    /** The view of the trail it belongs to, if any. */
+    kind: Exclude<keyof AuditCounts, 'all'> | null;
+    /** Where it was done: «Consola», «Empresa», «Empresa, como soporte» or «Sistema». */
+    origin: string;
     event: string;
     actor: AuditPerson | null;
     impersonator: AuditPerson | null;

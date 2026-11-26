@@ -380,7 +380,7 @@ final class AuditPages
 
     /**
      * @param  array{q: string, kind: string, family: string, company: string, from: string, to: string}  $filters
-     * @return LengthAwarePaginator<int, array{id: string, at: string, event: string, actor: array{name: string, email: string}|null, impersonator: array{name: string, email: string}|null, company: array{id: string, name: string}|null, subject: string|null, context: array<string, string>, change: list<array{field: string, before: string, after: string}>}>
+     * @return LengthAwarePaginator<int, array{id: string, at: string, day: string, time: string, kind: string|null, origin: string, event: string, actor: array{name: string, email: string}|null, impersonator: array{name: string, email: string}|null, company: array{id: string, name: string}|null, subject: string|null, context: array<string, string>, change: list<array{field: string, before: string, after: string}>}>
      */
     public function handle(array $filters): LengthAwarePaginator
     {
@@ -394,7 +394,7 @@ final class AuditPages
      * The newest entries the filters find, up to a limit, as the console reads them: for the export.
      *
      * @param  array{q: string, kind: string, family: string, company: string, from: string, to: string}  $filters
-     * @return list<array{id: string, at: string, event: string, actor: array{name: string, email: string}|null, impersonator: array{name: string, email: string}|null, company: array{id: string, name: string}|null, subject: string|null, context: array<string, string>, change: list<array{field: string, before: string, after: string}>}>
+     * @return list<array{id: string, at: string, day: string, time: string, kind: string|null, origin: string, event: string, actor: array{name: string, email: string}|null, impersonator: array{name: string, email: string}|null, company: array{id: string, name: string}|null, subject: string|null, context: array<string, string>, change: list<array{field: string, before: string, after: string}>}>
      */
     public function rows(array $filters, int $limit): array
     {
@@ -405,7 +405,7 @@ final class AuditPages
      * Each entry as the console reads it, the people, companies and role labels of all of them read once.
      *
      * @param  \Illuminate\Support\Collection<int, AuditEntry>  $entries
-     * @return list<array{id: string, at: string, event: string, actor: array{name: string, email: string}|null, impersonator: array{name: string, email: string}|null, company: array{id: string, name: string}|null, subject: string|null, context: array<string, string>, change: list<array{field: string, before: string, after: string}>}>
+     * @return list<array{id: string, at: string, day: string, time: string, kind: string|null, origin: string, event: string, actor: array{name: string, email: string}|null, impersonator: array{name: string, email: string}|null, company: array{id: string, name: string}|null, subject: string|null, context: array<string, string>, change: list<array{field: string, before: string, after: string}>}>
      */
     private function present(\Illuminate\Support\Collection $entries): array
     {
@@ -424,11 +424,22 @@ final class AuditPages
         }
         $timezone = config()->string('app.display_timezone');
         $roles = $this->roleLabels($entries);
+        $staff = $this->staff($entries->pluck('actor_id'));
+        $today = CarbonImmutable::now($timezone);
 
         return array_values($entries->map(fn (AuditEntry $entry): array => [
             'id' => $entry->id,
             // Carbon's Spanish months end in a dot ("nov."); the design system writes "12 nov 2026".
             'at' => str_replace('.', '', $entry->created_at->setTimezone($timezone)->isoFormat('D MMM YYYY, HH:mm')),
+            'day' => $this->dayLabel(CarbonImmutable::parse($entry->created_at)->setTimezone($timezone), $today),
+            'time' => $entry->created_at->setTimezone($timezone)->format('H:i'),
+            'kind' => $this->kind($entry->event),
+            'origin' => match (true) {
+                $entry->actor_id === null => 'Sistema',
+                $entry->impersonator_id !== null => 'Como soporte',
+                isset($staff[$entry->actor_id]) => 'Consola',
+                default => 'Empresa',
+            },
             'event' => $entry->event,
             'actor' => $entry->actor_id === null ? null : ($people[$entry->actor_id] ?? null),
             'impersonator' => $entry->impersonator_id === null ? null : ($people[$entry->impersonator_id] ?? null),
@@ -439,6 +450,63 @@ final class AuditPages
             'context' => $this->context($entry, $companies, $people, $roles),
             'change' => $this->change($entry, $roles),
         ])->all());
+    }
+
+    /** The day the table groups an entry under (tablero Bitácora): «Hoy · 25 nov», «Ayer · 24 nov», «Sábado · 22 nov», the year when it is not this one. */
+    private function dayLabel(CarbonImmutable $at, CarbonImmutable $today): string
+    {
+        $date = str_replace('.', '', $at->isoFormat($at->year === $today->year ? 'D MMM' : 'D MMM YYYY'));
+        $name = match (true) {
+            $at->isSameDay($today) => 'Hoy',
+            $at->isSameDay($today->subDay()) => 'Ayer',
+            default => ucfirst($at->isoFormat('dddd')),
+        };
+
+        return "{$name} · {$date}";
+    }
+
+    /** The view of the trail an event belongs to, by the same patterns its tabs count with; null for none. */
+    private function kind(string $event): ?string
+    {
+        foreach (self::KINDS as $kind => $patterns) {
+            foreach ($patterns as $pattern) {
+                $regex = preg_replace_callback('/\\\\_|%|_|[^%_\\\\]+/', fn (array $part): string => match ($part[0]) {
+                    '\\_' => '_',
+                    '%' => '.*',
+                    '_' => '.',
+                    default => preg_quote($part[0], '/'),
+                }, $pattern);
+
+                if (preg_match('/\A'.$regex.'\z/', $event) === 1) {
+                    return $kind;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Which of these people hold a platform role, in one query: what they do outside a company they do from the console.
+     *
+     * @param  \Illuminate\Support\Collection<int, mixed>  $ids
+     * @return array<int, true>
+     */
+    private function staff(\Illuminate\Support\Collection $ids): array
+    {
+        $staff = [];
+
+        foreach (DB::table('model_has_roles')
+            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            ->whereIn('roles.name', [User::SUPERADMIN, User::SUPPORT])
+            ->whereNull('model_has_roles.tenant_id')
+            ->where('model_has_roles.model_type', (new User)->getMorphClass())
+            ->whereIn('model_has_roles.model_id', $ids->filter()->unique()->values())
+            ->pluck('model_has_roles.model_id') as $id) {
+            is_int($id) && $staff[$id] = true;
+        }
+
+        return $staff;
     }
 
     private function companyId(AuditEntry $entry): ?string
@@ -518,9 +586,9 @@ final class AuditPages
                     ->orWhere(fn (Builder $query) => $query->where('subject_type', (new Tenant)->getMorphClass())->where('subject_id', $filters['company']))))))
             ->when($filters['from'] !== '', fn (Builder $query) => $query->where('created_at', '>=', CarbonImmutable::parse($filters['from'], $timezone)->startOfDay()->utc()))
             ->when($filters['to'] !== '', fn (Builder $query) => $query->where('created_at', '<=', CarbonImmutable::parse($filters['to'], $timezone)->endOfDay()->utc()))
-            ->when($filters['q'] !== '', fn (Builder $query) => $query->whereIn('actor_id', User::query()
-                ->select('id')
-                ->where('email', 'ilike', '%'.addcslashes($filters['q'], '\\%_').'%')));
+            ->when($filters['q'] !== '', fn (Builder $query) => $query->where(fn (Builder $query) => $query
+                ->whereIn('actor_id', User::query()->select('id')->matching(['name', 'email'], $filters['q']))
+                ->orWhereIn('tenant_id', Tenant::query()->select('id')->matching(['trade_name'], $filters['q']))));
     }
 
     /**

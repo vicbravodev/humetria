@@ -14,7 +14,7 @@ export default function AuditCompanyFilter({
     onChange: (company: string) => void;
 }) {
     return (
-        <div className="grid w-full gap-1.5 md:w-60">
+        <div className="grid w-full gap-1.5">
             <Label htmlFor="audit-company">Empresa</Label>
             <Combobox
                 id="audit-company"

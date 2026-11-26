@@ -726,6 +726,30 @@ it('reads an entry made while impersonating as the superadmin acting as the pers
         ->assertDontSee('Impersonando:');
 });
 
+it('groups the trail by day with each action tagged and its origin, and narrows it with chips', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    $tenant = Tenant::factory()->create(['trade_name' => 'Hotel Vía Real']);
+    App\Models\AuditEntry::query()->forceCreate([
+        'id' => (string) Illuminate\Support\Str::uuid(),
+        'tenant_id' => $tenant->id,
+        'event' => 'billing.payment_applied',
+        'metadata' => [],
+        'created_at' => now(),
+    ]);
+
+    visitPage('tenancy/audit', '/admin/audit?family=billing', $dark, $mobile)
+        ->assertSee('Hoy ·')
+        ->assertSee('Cobro o plan')
+        ->assertSee('Pago aplicado')
+        ->assertSee('Hotel Vía Real')
+        ->assertSee('Sistema')
+        ->assertSee('Tipo: Cobranza')
+        ->click('[aria-label="Quitar el filtro: Tipo"]')
+        ->assertQueryStringMissing('family')
+        ->click('button:has-text("Empresa")')
+        ->assertVisible('#audit-company');
+})->with($looks);
+
 it('says so when the filters of the audit trail match nothing', function (bool $dark): void {
     signInAsSuperadmin();
 
@@ -794,8 +818,8 @@ it('opens the detail of an entry in a side panel with what it changed, and offer
         ->assertSee('Exportar CSV')
         ->assertSee('Roles y permisos')
         ->click('[aria-label^="Detalle: "]')
-        ->assertSee('Antes: Analista')
-        ->assertSee('Después: Gerente');
+        ->assertSee('Puesto: Analista')
+        ->assertSee('Puesto: Gerente');
 })->with($looks);
 
 it('says so when no user matches the search', function (bool $dark): void {

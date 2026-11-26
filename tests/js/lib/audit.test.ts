@@ -45,6 +45,10 @@ describe('auditActor', () => {
     const entry = {
         id: 'e1',
         at: '25 nov 2026, 10:42',
+        day: 'Hoy · 25 nov',
+        time: '10:42',
+        kind: null,
+        origin: 'Consola',
         event: 'impersonation.started',
         actor: { name: 'Dueña Acme', email: 'duena@acme.mx' },
         impersonator: null,

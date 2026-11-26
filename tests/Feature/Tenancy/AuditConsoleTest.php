@@ -450,3 +450,53 @@ it('shows a role of the company by the label its owner typed, never by its inter
 
     expect($roleReads)->toHaveCount(1);
 });
+
+it('gives each entry its local day as the table groups it, its local time, and its view of the trail', function (): void {
+    $this->travelTo('2026-11-25 18:00 UTC');
+    auditRow('impersonation.started', ['created_at' => now()->subHours(2)]);
+    auditRow('billing.payment_applied', ['created_at' => now()->subDay()]);
+    // 01:30 UTC of the 25th is still the 24th in Mexico City.
+    auditRow('interventions.evidence_viewed', ['created_at' => CarbonImmutable::parse('2026-11-25 01:30 UTC')]);
+    auditRow('tenant_role.created', ['created_at' => now()->subDays(3)]);
+    auditRow('campaign.launched', ['created_at' => CarbonImmutable::parse('2025-11-20 18:00 UTC')]);
+
+    $this->actingAs(superadmin())->get(route('audit.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('entries.data', fn ($rows) => collect($rows)->map(fn ($row) => [$row['day'], $row['time'], $row['kind']])->all() === [
+                ['Hoy · 25 nov', '10:00', 'support'],
+                ['Ayer · 24 nov', '19:30', 'results'],
+                ['Ayer · 24 nov', '12:00', 'billing'],
+                ['Domingo · 22 nov', '12:00', 'roles'],
+                ['Jueves · 20 nov 2025', '12:00', null],
+            ]));
+});
+
+it('says where each entry came from: the console, a company, support inside a company, or the system', function (): void {
+    $tenant = Tenant::factory()->create();
+    $owner = User::factory()->create();
+    $help = support();
+    auditRow('tenant.updated', ['actor_id' => superadmin()->id, 'created_at' => now()->subMinutes(4)]);
+    auditRow('tenant.updated', ['actor_id' => $help->id, 'created_at' => now()->subMinutes(3)]);
+    auditRow('campaign.launched', ['tenant_id' => $tenant->id, 'actor_id' => $owner->id, 'created_at' => now()->subMinutes(2)]);
+    auditRow('campaign.launched', ['tenant_id' => $tenant->id, 'actor_id' => $owner->id, 'impersonator_id' => $help->id, 'created_at' => now()->subMinute()]);
+    auditRow('billing.statement_issued');
+
+    $this->actingAs(superadmin())->get(route('audit.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('entries.data', fn ($rows) => collect($rows)->pluck('origin')->all() === ['Sistema', 'Como soporte', 'Empresa', 'Consola', 'Consola']));
+});
+
+it('finds entries by the name or email of whoever acted, or by the company, in any order of the words and without accents', function (string $search, array $events): void {
+    $acme = Tenant::factory()->create(['trade_name' => 'Hotel Vía Real']);
+    $ana = User::factory()->create(['name' => 'Ana López', 'email' => 'ana@acme.mx']);
+    auditRow('tenant.updated', ['actor_id' => $ana->id, 'created_at' => now()->subMinute()]);
+    auditRow('campaign.launched', ['tenant_id' => $acme->id]);
+
+    $this->actingAs(superadmin())->get(route('audit.index', ['q' => $search]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('entries.data', fn ($rows) => collect($rows)->pluck('event')->all() === $events));
+})->with([
+    'a name' => ['lopez ana', ['tenant.updated']],
+    'a company' => ['via real', ['campaign.launched']],
+    'nothing' => ['zzz', []],
+]);

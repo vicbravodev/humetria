@@ -1,23 +1,16 @@
 import DateRangePicker from '@/components/humetria/date-range-picker';
 import SearchField from '@/components/humetria/search-field';
 import AuditCompanyFilter from '@/components/tenancy/audit-company-filter';
-import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import AuditFamilyFilter from '@/components/tenancy/audit-family-filter';
+import AuditFilterChip from '@/components/tenancy/audit-filter-chip';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import { auditQuery } from '@/lib/audit';
+import { periodChip } from '@/lib/audit-view';
 import { periodShortcuts } from '@/lib/date-range';
 import { index } from '@/routes/audit';
 import type { AuditFamily, AuditFilters } from '@/types';
 
-const ALL = 'all';
-
-/** Narrows the trail: who acted, what kind of event, which company and which days. */
+/** Narrows the trail (tablero Bitácora): a search by person or company, and the days, the company and the type as chips. */
 export default function AuditToolbar({
     filters,
     families,
@@ -32,51 +25,55 @@ export default function AuditToolbar({
         filters,
         auditQuery,
     );
+    const family =
+        families.find(({ value }) => value === filters.family)?.label ?? null;
 
     return (
-        <div role="search" className="flex flex-wrap items-end gap-3">
+        <div role="search" className="flex flex-wrap items-center gap-3">
             <SearchField
-                label="Buscar por correo de quien actuó"
+                label="Buscar por persona o empresa"
                 value={text}
                 onChange={type}
-                className="w-full md:w-[320px]"
+                className="min-w-[220px] flex-1"
             />
-            <AuditCompanyFilter
-                company={
-                    company === null
-                        ? null
-                        : { id: filters.company, name: company }
-                }
-                onChange={(next) => filter({ company: next })}
-            />
-            <div className="grid w-full gap-1.5 md:w-60">
-                <Label htmlFor="audit-family">Tipo de evento</Label>
-                <Select
-                    value={filters.family === '' ? ALL : filters.family}
-                    onValueChange={(family) =>
-                        filter({ family: family === ALL ? '' : family })
+            <AuditFilterChip
+                label="Fechas"
+                value={periodChip(filters.from, filters.to)}
+                onClear={() => filter({ from: '', to: '' })}
+            >
+                <DateRangePicker
+                    id="audit-period"
+                    label="Periodo"
+                    value={{ from: filters.from, to: filters.to }}
+                    onChange={(period) => filter(period)}
+                    shortcuts={periodShortcuts()}
+                />
+            </AuditFilterChip>
+            <AuditFilterChip
+                label="Empresa"
+                value={company}
+                onClear={() => filter({ company: '' })}
+            >
+                <AuditCompanyFilter
+                    company={
+                        company === null
+                            ? null
+                            : { id: filters.company, name: company }
                     }
-                >
-                    <SelectTrigger id="audit-family" className="w-full">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value={ALL}>Todos los eventos</SelectItem>
-                        {families.map((family) => (
-                            <SelectItem key={family.value} value={family.value}>
-                                {family.label}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
-            <DateRangePicker
-                id="audit-period"
-                label="Periodo"
-                value={{ from: filters.from, to: filters.to }}
-                onChange={(period) => filter(period)}
-                shortcuts={periodShortcuts()}
-            />
+                    onChange={(next) => filter({ company: next })}
+                />
+            </AuditFilterChip>
+            <AuditFilterChip
+                label="Tipo"
+                value={family}
+                onClear={() => filter({ family: '' })}
+            >
+                <AuditFamilyFilter
+                    family={filters.family}
+                    families={families}
+                    onChange={(next) => filter({ family: next })}
+                />
+            </AuditFilterChip>
         </div>
     );
 }

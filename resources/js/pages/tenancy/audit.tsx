@@ -3,12 +3,11 @@ import { Download, ScrollText } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
 import Pagination from '@/components/humetria/pagination';
-import AuditTable from '@/components/tenancy/audit-table';
 import AuditTabs from '@/components/tenancy/audit-tabs';
 import AuditToolbar from '@/components/tenancy/audit-toolbar';
+import AuditWorkArea from '@/components/tenancy/audit-work-area';
 import { Button } from '@/components/ui/button';
 import { auditFiltered, auditQuery } from '@/lib/audit';
-import { countOf } from '@/lib/plural';
 import { exportMethod, index } from '@/routes/audit';
 import type {
     AuditCounts,
@@ -36,10 +35,10 @@ export default function Audit({
     return (
         <>
             <Head title="Bitácora" />
-            <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
+            <div className="flex flex-col gap-6 px-4 py-6 md:px-10 md:py-8">
                 <PageHeader
                     title="Bitácora"
-                    description={`${countOf(entries.total, 'registro', 'registros')}, el más reciente primero. Solo se lee: nada de aquí se edita ni se borra, y nunca guarda respuestas de encuestas.`}
+                    description="Todo lo sensible que pasó en la plataforma, de solo lectura y sin borrar. Nunca guarda respuestas de encuestas ni liga a una persona con una respuesta."
                 >
                     {entries.total > 0 && (
                         <Button asChild variant="outline">
@@ -55,14 +54,12 @@ export default function Audit({
                         </Button>
                     )}
                 </PageHeader>
-                <div className="flex flex-col gap-4">
-                    <AuditTabs filters={filters} counts={counts} />
-                    <AuditToolbar
-                        filters={filters}
-                        families={families}
-                        company={company}
-                    />
-                </div>
+                <AuditToolbar
+                    filters={filters}
+                    families={families}
+                    company={company}
+                />
+                <AuditTabs filters={filters} counts={counts} />
                 {entries.data.length === 0 ? (
                     <EmptyState
                         icon={ScrollText}
@@ -84,7 +81,7 @@ export default function Audit({
                             : 'Cada acción sensible de la plataforma quedará aquí con quién la hizo y cuándo.'}
                     </EmptyState>
                 ) : (
-                    <AuditTable entries={entries.data} />
+                    <AuditWorkArea entries={entries.data} families={families} />
                 )}
                 <Pagination
                     previous="Ver más recientes"
