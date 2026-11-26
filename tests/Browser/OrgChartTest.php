@@ -369,11 +369,10 @@ it('switches between the chart and the list with the segmented control', functio
 it('can be closed: the note that says what the chart is for does not come back', function (): void {
     acmeOrgChart();
 
-    visitPage('organization/org-chart', '/admin/acme/org-chart')
+    reloadPage(visitPage('organization/org-chart', '/admin/acme/org-chart')
         ->assertSee('De aquí salen quién aprueba')
         ->click('[aria-label="Cerrar esta nota"]')
-        ->assertDontSee('De aquí salen quién aprueba')
-        ->refresh()
+        ->assertDontSee('De aquí salen quién aprueba'))
         ->assertDontSee('De aquí salen quién aprueba')
         ->assertNoJavaScriptErrors();
 });
@@ -541,11 +540,10 @@ it('says the reporting line is in order, with the way back to the chart', functi
 it('closes the help of the list and keeps it closed', function (): void {
     acmeOrgChart();
 
-    visitPage('organization/org-chart-quality', '/admin/acme/org-chart/quality')
+    reloadPage(visitPage('organization/org-chart-quality', '/admin/acme/org-chart/quality')
         ->assertSee('Cómo se completa')
         ->click('[aria-label="Cerrar esta ayuda"]')
-        ->assertDontSee('Cómo se completa')
-        ->refresh()
+        ->assertDontSee('Cómo se completa'))
         ->assertDontSee('Cómo se completa')
         ->assertNoJavaScriptErrors();
 });

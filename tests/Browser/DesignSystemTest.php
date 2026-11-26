@@ -161,7 +161,7 @@ it('folds the sidebar to its icons and remembers it', function (bool $dark): voi
         // axe reads colors as painted: let the tooltip finish fading in before it judges the contrast.
         ->assertScript(SETTLED), 1);
 
-    $page->refresh()
+    reloadPage($page)
         ->assertScript('() => document.querySelector(\'[data-slot="sidebar"]\').dataset.state', 'collapsed')
         // ⌘B (Ctrl+B) unfolds it again.
         ->assertScript('() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "b", metaKey: true })); return true; }')
@@ -248,12 +248,11 @@ it('titles the settings like every other page and marks where you are', function
 it('switches the theme from the app frame and keeps it', function (): void {
     $panel = signInToPanel();
 
-    visitPage('dashboard', $panel)
+    reloadPage(visitPage('dashboard', $panel)
         ->assertScript('() => document.querySelector(\'[role="radiogroup"][aria-label="Tema"]\').offsetParent !== null')
         ->click('[role="radio"][aria-label="Oscuro"]')
         ->assertScript('() => document.documentElement.classList.contains("dark")')
-        ->assertScript('() => document.querySelector(\'[role="radio"][aria-label="Oscuro"]\').getAttribute("aria-checked")', 'true')
-        ->refresh()
+        ->assertScript('() => document.querySelector(\'[role="radio"][aria-label="Oscuro"]\').getAttribute("aria-checked")', 'true'))
         ->assertScript('() => document.documentElement.classList.contains("dark")')
         ->click('[role="radio"][aria-label="Claro"]')
         ->assertScript('() => document.documentElement.classList.contains("dark")', false);
@@ -262,13 +261,12 @@ it('switches the theme from the app frame and keeps it', function (): void {
 it('switches the theme on a phone from one button, leaving the trail its room', function (): void {
     $panel = signInToPanel();
 
-    visitPage('dashboard', $panel, mobile: true)
+    reloadPage(visitPage('dashboard', $panel, mobile: true)
         // The three-way switch would squeeze where the page sits: on a phone the theme is one button with a menu.
         ->assertScript('() => document.querySelector(\'[role="radiogroup"][aria-label="Tema"]\').offsetParent === null')
         ->click('button[aria-label="Tema"]')
         ->click('[role="menuitemradio"]:has-text("Oscuro")')
-        ->assertScript('() => document.documentElement.classList.contains("dark")')
-        ->refresh()
+        ->assertScript('() => document.documentElement.classList.contains("dark")'))
         ->assertScript('() => document.documentElement.classList.contains("dark")')
         ->click('button[aria-label="Tema"]')
         ->assertScript('() => document.querySelector(\'[role="menuitemradio"][aria-checked="true"]\').textContent.trim()', 'Oscuro')

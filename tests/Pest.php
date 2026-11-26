@@ -261,6 +261,19 @@ function openPath(AwaitableWebpage|PendingAwaitablePage|On $page, string $path):
 }
 
 /**
+ * In the browser: reloads the page and waits for it to load, once. Not refresh(): Pest retries it like an assertion, one second
+ * per attempt, so a reload that takes longer reloads again and the next step lands in that second load («Execution context was
+ * destroyed»), as openPath() explains for navigate().
+ */
+function reloadPage(AwaitableWebpage|PendingAwaitablePage $page): AwaitableWebpage
+{
+    $webpage = $page instanceof AwaitableWebpage ? $page : $page->assertNoJavaScriptErrors();
+    $webpage->page()->reload();
+
+    return $webpage;
+}
+
+/**
  * In the browser: no accessibility issues at `$level` or worse (axe; 0 critical … 3 minor), as Pest's assertNoAccessibilityIssues()
  * checks them, but axe gets the timeout of the suite. Pest gives it 5 s whatever that timeout is, and a page whose main thread is
  * busy (the landing's videos on a CI runner without a GPU) ran out of them although axe takes a tenth of a second here.
