@@ -42,13 +42,8 @@ export default function Announcements({
                     title="Avisos y mantenimiento"
                     description="Habla con las empresas desde un solo lugar: un banner en su panel con fecha de inicio y fin, o el modo mantenimiento. Todo queda en la bitácora."
                 >
-                    <Button asChild>
-                        <a
-                            href="#nuevo-aviso"
-                            onClick={() => editor.load(null)}
-                        >
-                            Nuevo aviso
-                        </a>
+                    <Button onClick={() => editor.load(null)}>
+                        Nuevo aviso
                     </Button>
                 </PageHeader>
                 <CountTabs
