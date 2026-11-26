@@ -37,7 +37,7 @@ it('sets the plan of a company, quoted with the current catalog, renewing on the
         ->and($subscription->plan)->toBe(Plan::Cumplimiento)
         ->and($subscription->profile)->toBe(Profile::Direct)
         ->and($subscription->status)->toBe(SubscriptionStatus::Active)
-        ->and($subscription->catalog_version)->toBe('v1')
+        ->and($subscription->catalog_version)->toBe('v2')
         ->and($subscription->seats)->toBe(100)
         ->and($subscription->centers)->toBe(2)
         ->and($subscription->starts_on->toDateString())->toBe('2026-12-01')
@@ -50,7 +50,7 @@ it('sets the plan of a company, quoted with the current catalog, renewing on the
     expect($entry->subject_id)->toBe($subscription->id)
         ->and($entry->metadata)->toEqualCanonicalizing([
             'tenant_id' => $tenant->id, 'created' => true, 'plan' => 'cumplimiento', 'profile' => 'direct', 'status' => 'active',
-            'seats' => 100, 'centers' => 2, 'catalog_version' => 'v1', 'negotiated_price_cents' => null,
+            'seats' => 100, 'centers' => 2, 'catalog_version' => 'v2', 'negotiated_price_cents' => null,
         ]);
 });
 

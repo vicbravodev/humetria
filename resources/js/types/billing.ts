@@ -53,12 +53,7 @@ export type AccountCompanyRow = {
     union: boolean;
 };
 
-export type Plan =
-    | 'jornada'
-    | 'cumplimiento'
-    | 'integral'
-    | 'enterprise'
-    | 'sindicato';
+export type Plan = 'jornada' | 'cumplimiento' | 'integral' | 'sindicato';
 
 export type PriceProfile =
     | 'direct'

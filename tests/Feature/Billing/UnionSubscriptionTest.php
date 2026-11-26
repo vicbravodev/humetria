@@ -73,7 +73,7 @@ it('refuses a union any plan but Sindicato', function (string $plan, string $pro
         ->assertSessionHasErrors(['plan' => 'Un sindicato solo puede tener el plan Sindicato.']);
 
     expect(Subscription::query()->count())->toBe(0);
-})->with([['jornada', 'direct'], ['cumplimiento', 'direct'], ['integral', 'direct'], ['enterprise', 'direct']]);
+})->with([['jornada', 'direct'], ['cumplimiento', 'direct'], ['integral', 'direct']]);
 
 it('refuses a company the Sindicato plan', function (): void {
     [$company] = paidCompany();

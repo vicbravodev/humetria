@@ -32,7 +32,7 @@ beforeEach(function (): void {
 /** A company on a plan that includes exactly `$quota` WhatsApp messages a month, entered as the current one. */
 function whatsAppCompany(int $quota): Tenant
 {
-    config(['billing.versions.v1.plans.cumplimiento.quotas.whatsapp' => $quota]);
+    config(['billing.versions.v2.plans.cumplimiento.quotas.whatsapp' => $quota]);
     [, $account] = paidCompany();
     $tenant = planFor($account);
     resolve(Companies::class)->enter($tenant->id);
@@ -128,9 +128,9 @@ it('keeps each company to its own quota', function (): void {
     expect(whatsAppCounter($a)->reserved)->toBe(10)->and(whatsAppCounter($b)->reserved)->toBe(10);
 });
 
-it('ships a plan quota of 1000 messages in the four plans', function (): void {
-    foreach (['jornada', 'cumplimiento', 'integral', 'enterprise'] as $plan) {
-        expect(config("billing.versions.v1.plans.{$plan}.quotas.whatsapp"))->toBe(1000);
+it('ships a plan quota of 1000 messages in the three plans by person', function (): void {
+    foreach (['jornada', 'cumplimiento', 'integral'] as $plan) {
+        expect(config("billing.versions.v2.plans.{$plan}.quotas.whatsapp"))->toBe(1000);
     }
 });
 
