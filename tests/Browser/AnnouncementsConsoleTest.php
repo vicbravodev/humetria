@@ -46,6 +46,15 @@ it('loads an announcement into the form to change it', function (): void {
         ->assertSeeIn('[data-slot="announcement-preview"]', 'Ya puedes descargarla.');
 });
 
+it('leaves the change for a blank form when «Nuevo aviso» is pressed', function (): void {
+    signInAsSuperadmin();
+    Announcement::factory()->create(['title' => 'Nueva plantilla de reporte STPS']);
+
+    visitPage('announcements/index', '/admin/announcements', reach: fn ($page) => $page->click('[aria-label="Editar «Nueva plantilla de reporte STPS»"]')->click('a[href="#nuevo-aviso"]'))
+        ->assertDontSee('Editar aviso')
+        ->assertValue('title', '');
+});
+
 it('saves the change as a draft from the form in the page, and leaves the form blank again', function (): void {
     signInAsSuperadmin();
     $announcement = Announcement::factory()->create(['title' => 'Nueva plantilla de reporte STPS']);

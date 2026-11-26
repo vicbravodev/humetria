@@ -6,10 +6,9 @@ import AnnouncementSelect from '@/components/announcements/announcement-select';
 import AnnouncementText from '@/components/announcements/announcement-text';
 import { Button } from '@/components/ui/button';
 
+import type { AnnouncementDraft } from '@/hooks/use-announcement-editor';
 import { store, update } from '@/routes/announcements';
 import type { AnnouncementOption, AnnouncementRow } from '@/types';
-
-export type AnnouncementDraft = { kind: string; message: string };
 
 /**
  * «Nuevo aviso» in the page (tablero Avisos), or the one being changed: what it is about, to whom, between which two moments

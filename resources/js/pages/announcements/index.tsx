@@ -3,6 +3,7 @@ import AnnouncementsWorkArea from '@/components/announcements/announcements-work
 import CountTabs from '@/components/humetria/count-tabs';
 import PageHeader from '@/components/humetria/page-header';
 import { Button } from '@/components/ui/button';
+import { useAnnouncementEditor } from '@/hooks/use-announcement-editor';
 import { index } from '@/routes/announcements';
 import type {
     AnnouncementOption,
@@ -30,6 +31,8 @@ export default function Announcements({
     plans: AnnouncementOption[];
     maintenance: MaintenanceState;
 }) {
+    const editor = useAnnouncementEditor();
+
     return (
         <>
             <Head title="Avisos" />
@@ -40,7 +43,12 @@ export default function Announcements({
                     description="Habla con las empresas desde un solo lugar: un banner en su panel con fecha de inicio y fin, o el modo mantenimiento. Todo queda en la bitácora."
                 >
                     <Button asChild>
-                        <a href="#nuevo-aviso">Nuevo aviso</a>
+                        <a
+                            href="#nuevo-aviso"
+                            onClick={() => editor.load(null)}
+                        >
+                            Nuevo aviso
+                        </a>
                     </Button>
                 </PageHeader>
                 <CountTabs
@@ -65,6 +73,7 @@ export default function Announcements({
                     history={view === 'history'}
                     catalogs={{ kinds, plans }}
                     maintenance={maintenance}
+                    editor={editor}
                 />
             </div>
         </>
