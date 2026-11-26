@@ -47,15 +47,14 @@ afterEach(function (): void {
 });
 
 it('opens «Mi semana» showing nothing of anybody until the device signs', function (bool $dark, bool $mobile): void {
-    visitPage('attendance/week', '/me/acme/week', $dark, $mobile)
+    accessible(visitPage('attendance/week', '/me/acme/week', $dark, $mobile)
         ->assertSee('Mi semana')
         ->assertSee('Ver mi semana')
         // A state screen, centered, with the way back to Marcar at the top (hallazgo 17): not a button in its body.
         ->assertPresent('header a[href$="/me/acme/punch"]')
         ->assertDontSee('Volver a Marcar')
         ->assertDontSee('Ana López')
-        ->assertDontSee('Total de la semana')
-        ->assertNoAccessibilityIssues(1);
+        ->assertDontSee('Total de la semana'), 1);
 })->with([
     'light, desktop' => [false, false],
     'dark, desktop' => [true, false],
@@ -95,20 +94,19 @@ it('tells Ana which of her marks were made without a connection and where RH\'s 
     $end = OfflineDeliveries::accepted($this->ana, "{$wednesday} 17:00", MarkType::End);
     MarkReviewFactory::new()->createOne(['tenant_id' => $this->tenant->id, 'mark_id' => $end->mark_id]);
 
-    anaSeesHerWeek()->click('summary:has-text("09:00 a 17:00")')
+    accessible(anaSeesHerWeek()->click('summary:has-text("09:00 a 17:00")')
         ->assertSee('Sin conexión · por verificar')
         ->assertSee('Sin conexión, no antes del QR del centro')
         ->assertSee('Verificada')
         ->assertSee('Sin conexión, hora declarada')
         ->assertNoJavaScriptErrors()
-        ->assertScript(smallTouchTargets(), '')
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(smallTouchTargets(), ''), 1);
 });
 
 it('shows Ana her week with its hours and notices, and confirms it with her fingerprint', function (bool $dark): void {
     $page = anaSeesHerWeek($dark);
 
-    $page->assertSee('Su semana')
+    accessible($page->assertSee('Su semana')
         ->assertSee('Ana López')
         ->assertSee('Total de la semana')
         // The shape of the week first: seven bars; the status beside the title; the days folded, one line each (hallazgo 21).
@@ -126,18 +124,16 @@ it('shows Ana her week with its hours and notices, and confirms it with her fing
         ->assertSee('Me faltó una marca')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]')
-        ->assertScript(smallTouchTargets(), '')
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(smallTouchTargets(), ''), 1);
 
-    $page->press('Confirmar mi semana')
+    accessible($page->press('Confirmar mi semana')
         ->waitForText('La confirmó el')
         ->assertSee('Confirmada')
         ->assertSee('RH ya puede ver su confirmación. Si algo cambia, pida una corrección y, si activó los avisos, le avisamos cuando respondan.')
         ->assertDontSee('Al confirmar, RH ve')
         ->assertDontSee('Confirmar mi semana')
         ->assertSee('No estoy de acuerdo')
-        ->assertNoJavaScriptErrors()
-        ->assertNoAccessibilityIssues(1);
+        ->assertNoJavaScriptErrors(), 1);
 
     expect(WeeklyConfirmation::query()->sole()->status)->toBe(WeekStatus::Confirmed);
 })->with(['light' => [false], 'dark' => [true]]);
@@ -146,19 +142,18 @@ it('shows Ana a day of approved vacations as vacations, not as a day without mar
     $wednesday = WeekPeriod::containing(CarbonImmutable::now()->subWeek(), 'America/Mexico_City')->start()->addDays(2)->toDateString();
     LeaveRequest::factory()->approved()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'starts_on' => $wednesday, 'ends_on' => $wednesday, 'working_days' => 1]);
 
-    anaSeesHerWeek($dark)
+    accessible(anaSeesHerWeek($dark)
         ->assertSee('Vacaciones')
         ->assertPresent('[role="img"][aria-label*="miércoles ausente"]')
         ->assertNoJavaScriptErrors()
-        ->assertScript(cspViolations(), '[]')
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(cspViolations(), '[]'), 1);
 })->with(['light' => [false], 'dark' => [true]]);
 
 it('turns off «Confirmar mi semana» while a working day has no marks, says which and how to cover it, and still lets Ana object', function (bool $dark): void {
     // Wednesday to Friday are working days again, and she marked none of them.
     AttendanceSchedule::query()->update(['minutes_by_weekday' => [1 => 480, 2 => 480, 3 => 480, 4 => 480, 5 => 480, 6 => 0, 7 => 0]]);
 
-    anaSeesHerWeek($dark)
+    accessible(anaSeesHerWeek($dark)
         ->assertSee('Días sin cubrir')
         ->assertSee('Faltan el miércoles')
         ->assertSee('Si ese día no trabajó, pida a Recursos Humanos que lo registre como permiso.')
@@ -167,8 +162,7 @@ it('turns off «Confirmar mi semana» while a working day has no marks, says whi
         ->assertPresent('button:has-text("No estoy de acuerdo"):not([disabled])')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]')
-        ->assertScript(smallTouchTargets(), '')
-        ->assertNoAccessibilityIssues(1)
+        ->assertScript(smallTouchTargets(), ''), 1)
         // «Me faltó una marca» of the first day opens the sheet to add it, for that day.
         ->click('section[aria-labelledby="week-uncovered-title"] li:first-child button')
         ->waitForText('Agregar una marca que faltó')
@@ -182,14 +176,13 @@ it('turns off «Confirmar mi semana» while a mark of Ana waits in her phone, co
 
     queueMarkInPhone($page, $this->ana->id, $this->ana->id);
 
-    $page->assertSee('1 marca sin enviar')
+    accessible($page->assertSee('1 marca sin enviar')
         ->assertPresent('button:has-text("Confirmar mi semana")[disabled]')
         ->assertSee('Tiene marcas sin enviar en este teléfono. Abra Humetría con internet para enviarlas antes de confirmar.')
         ->assertPresent('button:has-text("No estoy de acuerdo"):not([disabled])')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]')
-        ->assertScript(smallTouchTargets(), '')
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(smallTouchTargets(), ''), 1);
 })->with(['light' => [false], 'dark' => [true]]);
 
 it('does not turn it off for a mark that waits in the same phone for another person', function (): void {
@@ -205,9 +198,8 @@ it('does not turn it off for a mark that waits in the same phone for another per
 it('lets Ana say what is not right, with her reason', function (): void {
     $page = anaSeesHerWeek();
 
-    $page->press('No estoy de acuerdo')
-        ->waitForText('¿Qué no está bien en su semana?')
-        ->assertNoAccessibilityIssues(1)
+    accessible($page->press('No estoy de acuerdo')
+        ->waitForText('¿Qué no está bien en su semana?'), 1)
         ->fill('reason', 'El martes salí a las 20:00, no a las 21:00.')
         ->press('Enviar mi objeción')
         ->waitForText('La objetó el')
@@ -225,13 +217,12 @@ it('shows Ana her week again when RH corrected it after she opened it, and lets 
     $tuesdayEnd = AttendanceMark::query()->where('type', MarkType::End)->orderByDesc('marked_at')->firstOrFail();
     AttendanceMark::factory()->correcting($tuesdayEnd)->create(['marked_at' => $tuesdayEnd->marked_at?->subHour()]);
 
-    $page->press('Confirmar mi semana')
+    accessible($page->press('Confirmar mi semana')
         ->waitForText('Su semana cambió desde que la abrió')
         // The day with a correction opens by itself.
         ->assertSee('Corregida por RH')
         ->assertSee('Sin confirmar')
-        ->assertNoJavaScriptErrors()
-        ->assertNoAccessibilityIssues(1);
+        ->assertNoJavaScriptErrors(), 1);
     expect(WeeklyConfirmation::query()->count())->toBe(0);
 
     $page->press('Confirmar mi semana')->waitForText('La confirmó el');
@@ -243,12 +234,11 @@ it('lets Ana ask RH to correct a mark of a week she confirmed; once RH approves,
     $page = anaSeesHerWeek();
     $page->press('Confirmar mi semana')->waitForText('La confirmó el');
 
-    $page->click('summary:has-text("07:00 a 21:00")')
+    accessible($page->click('summary:has-text("07:00 a 21:00")')
         ->click('[aria-label="Pedir corrección de salida de las 21:00"]')
         // A sheet from the bottom, one mark at a time (hallazgo 22).
         ->waitForText('Corregir salida de las 21:00')
-        ->assertSee('¿A qué hora fue?')
-        ->assertNoAccessibilityIssues(1)
+        ->assertSee('¿A qué hora fue?'), 1)
         ->fill('time', '20:00')
         ->fill('reason', 'El martes salí a las 20:00, el QR no cargaba.')
         ->press('Enviar solicitud')
@@ -290,13 +280,12 @@ it('lets a person whose mark was refused ask RH from Marcar to add it', function
     // On site, outside the zone of the center (a code read, so the key comes straight after): the mark is refused.
     AttendanceZone::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
     standingAt($page, 19.4336, -99.1332);
-    openPath($page, '/me/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()))
+    accessible(openPath($page, '/me/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()))
         ->waitForText(', Ana')
         ->press('button:has-text("Entrada")')
         ->waitForText('Pedir una corrección')
         ->press('Pedir una corrección')
-        ->waitForText('¿Qué marca le faltó?')
-        ->assertNoAccessibilityIssues(1)
+        ->waitForText('¿Qué marca le faltó?'), 1)
         ->click('label:has-text("Entrada")')
         ->fill('reason', 'Llegué a tiempo pero el teléfono no marcó.')
         ->press('Enviar solicitud')

@@ -51,6 +51,10 @@ it('opens a page once with openPath(), never with navigate(): Pest sends navigat
     expect(testLinesMatching('/->navigate\(/'))->toBe([]);
 });
 
+it('checks accessibility with accessible(), never assertNoAccessibilityIssues(): Pest gives axe 5 s whatever the timeout of the suite', function (): void {
+    expect(testLinesMatching('/->assertNoAccessibilityIssues\(/'))->toBe([]);
+});
+
 it('waits for what a browser test asserts, not a fixed number of seconds', function (): void {
     $waits = testLinesMatching('/->wait\(/');
 

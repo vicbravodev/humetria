@@ -119,6 +119,10 @@ tiene que pasar con **cualquier** dato que Faker pueda dar, no solo con el de ho
     intento: una página que tarda más (un runner ocupado) se pide otra vez mientras carga, y la siguiente lectura cae en la
     carga nueva («Execution context was destroyed», captura en blanco). `openPath()` la abre una vez con el tiempo de toda la
     prueba. `tests/Unit/FlakyPatternsTest.php` lo hace cumplir.
+15. **La accesibilidad se revisa con `accessible($page)`, nunca con `assertNoAccessibilityIssues()`.** Pest le da a axe 5 s fijos,
+    sin importar el timeout de la suite, y una página con el hilo principal ocupado (los videos de la landing en un runner sin
+    GPU) se quedaba sin ellos aunque axe tarda una décima de segundo. `accessible()` revisa lo mismo con el tiempo de la prueba.
+    `tests/Unit/FlakyPatternsTest.php` lo hace cumplir.
 
 ## Cómo se estresa
 

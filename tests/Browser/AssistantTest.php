@@ -119,7 +119,7 @@ function humiServesInOrder(string ...$bodies): string
 }
 
 it('asks with buttons, sends the option as the person\'s message, and keeps the buttons as a record, in both themes and on a phone', function (bool $dark, bool $mobile): void {
-    visitPage('dashboard', humiPanelCompany(), $dark, $mobile)
+    accessible(visitPage('dashboard', humiPanelCompany(), $dark, $mobile)
         ->assertScript(humiServesInOrder(humiChoicesStream(), humiAfterChoiceStream()), 'ready')
         ->click('[aria-label="Abrir a Humi"]')
         ->click('¿Cómo va la participación?')
@@ -132,8 +132,7 @@ it('asks with buttons, sends the option as the person\'s message, and keeps the 
         ->assertSee('Estos son tus pendientes de NOM-035.')
         ->assertScript('() => JSON.stringify([...document.querySelectorAll(\'[role="group"][aria-label="¿De qué parte?"] button\')].map((button) => [button.disabled, button.getAttribute(\'aria-pressed\')]))', '[[true,"false"],[true,"true"]]')
         ->assertScript(cspViolations(), '[]')
-        ->assertScript(humiSettled(), true)
-        ->assertNoAccessibilityIssues(1)
+        ->assertScript(humiSettled(), true), 1)
         ->assertNoJavaScriptErrors();
 })->with([
     'light' => [false, false],
@@ -430,18 +429,17 @@ it('shows Humi thinking with the steps it takes and a skeleton, and lets the per
 it('says when Humi is back after too many questions, and that the page keeps working', function (): void {
     $refusal = json_encode(json_encode(['reason' => 'rate', 'message' => 'Alcanzaste el límite de mensajes por ahora.', 'retry_after' => 240]));
 
-    visitPage('dashboard', humiPanelCompany())
+    accessible(visitPage('dashboard', humiPanelCompany())
         ->assertScript(humiAnswersWith("new Response({$refusal}, { status: 429, headers: { 'Content-Type': 'application/json' } })"), 'ready')
         ->click('[aria-label="Abrir a Humi"]')
         ->click('¿Cómo va la participación?')
         ->assertSee('Hiciste muchas preguntas seguidas. Humi vuelve en unos 4 minutos. La página sigue funcionando.')
         ->assertScript('() => document.querySelector(\'textarea\').placeholder', 'Disponible en unos minutos')
-        ->assertScript(humiSettled(), true)
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(humiSettled(), true), 1);
 });
 
 it('says what failed with a way to retry and the code for support, with Humi listening again', function (bool $dark): void {
-    visitPage('dashboard', humiPanelCompany(), $dark)
+    accessible(visitPage('dashboard', humiPanelCompany(), $dark)
         ->assertScript(humiAnswersWith("new Response('Server Error', { status: 500, headers: { 'X-Request-Id': 'b3f1c2d4-0000-4000-8000-000000000001' } })"), 'ready')
         ->click('[aria-label="Abrir a Humi"]')
         ->click('¿Cómo va la participación?')
@@ -450,8 +448,7 @@ it('says what failed with a way to retry and the code for support, with Humi lis
         ->assertSee('b3f1c2d4-0000-4000-8000-000000000001')
         ->assertPresent('[role="alert"] button:has-text("Reintentar")')
         ->assertScript('() => document.querySelectorAll(\'[role="alert"] path[d="M148 238 H172"]\').length', 1)
-        ->assertScript(humiSettled(), true)
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(humiSettled(), true), 1);
 })->with([
     'light' => [false],
     'dark' => [true],

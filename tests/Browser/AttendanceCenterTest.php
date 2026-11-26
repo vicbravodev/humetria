@@ -151,7 +151,7 @@ it('lets RH place a zone on the map: the coordinates move the circle, a touch mo
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
 
-    $page->assertNoAccessibilityIssues(1);
+    accessible($page, 1);
 })->with([
     'light, desktop' => [false, false],
     'dark, phone' => [true, true],
@@ -313,14 +313,13 @@ it('reads where RH stands on a center opened from the overview, whose own docume
 it('lets RH issue a screen, showing its link once to copy, and revoke it', function (bool $dark): void {
     [$url, $plant] = centerPanel();
 
-    $page = visitPage('attendance/center', $url, $dark)
+    $page = accessible(visitPage('attendance/center', $url, $dark)
         ->assertSee('Sin pantallas del QR')
         ->click('Emitir pantalla')
         ->waitForText('Enlace de la pantalla')
         ->assertSee('funciona una sola vez')
         ->assertSee('Emitida, sin activar')
-        ->assertSee('Aún no muestra el código')
-        ->assertNoAccessibilityIssues(1);
+        ->assertSee('Aún no muestra el código'), 1);
     expect(KioskDevice::query()->sole()->work_center_id)->toBe($plant->id);
 
     openPath($page, $url)

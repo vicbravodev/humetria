@@ -71,11 +71,10 @@ it('says the camera is off when the phone does not allow it, that Marcar may sti
     $page = visit('/me/acme/punch')->assertNoJavaScriptErrors()->waitForText('Marcar su jornada');
     $page->script('() => { window.__asked = 0; navigator.mediaDevices.getUserMedia = async () => { window.__asked++; throw new DOMException("no", "NotAllowedError"); }; return true; }');
 
-    $page->press('button:has-text("Entrada")')
+    accessible($page->press('button:has-text("Entrada")')
         ->waitForText('La cámara está apagada')
         ->assertSee('Sin cámara también puede marcar')
-        ->assertSee('Permítala en los ajustes de su teléfono')
-        ->assertNoAccessibilityIssues(1)
+        ->assertSee('Permítala en los ajustes de su teléfono'), 1)
         ->press('[role="dialog"] button:has-text("Intentar de nuevo")')
         ->assertScript(eventually('() => window.__asked === 2'), true)
         ->assertSee('La cámara está apagada')
@@ -125,12 +124,11 @@ it('marks with the code the camera read: the mark counts with the QR and the zon
 it('says a code of another company is not theirs and goes on reading', function (): void {
     $page = punchScreenSeeing('/me/otra/punch?q=abc123def');
 
-    $page->press('button:has-text("Entrada")')
+    accessible($page->press('button:has-text("Entrada")')
         ->waitForText('Ese código es de otra empresa.')
         ->assertPresent('[role="dialog"]')
         ->assertDontSee('Código leído')
-        ->assertScript('() => window.__camera.getTracks().every((track) => track.readyState === "live")', true)
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript('() => window.__camera.getTracks().every((track) => track.readyState === "live")', true), 1);
 });
 
 it('does not take the old address of Marcar for a code: it says it is not the center\'s and goes on reading', function (): void {
@@ -149,22 +147,20 @@ it('says a code of another address is not the center\'s, which is what a screen 
     $page = visit('/me/acme/punch')->waitForText('Marcar su jornada');
     withCameraShowing($page, 'https://another-address.test/me/acme/punch?q=59852987.926f3b58d6b5586c');
 
-    $page->press('button:has-text("Entrada")')
-        ->waitForText('Ese código no es el de la pantalla de su centro. Apunte al de la pantalla.')
-        ->assertNoAccessibilityIssues(1);
+    accessible($page->press('button:has-text("Entrada")')
+        ->waitForText('Ese código no es el de la pantalla de su centro. Apunte al de la pantalla.'), 1);
 });
 
 it('says it cannot read anything when no code shows for a while, and goes on looking', function (): void {
     $page = visit('/me/acme/punch')->waitForText('Marcar su jornada');
     withCameraShowingNoCode($page);
 
-    $page->press('button:has-text("Entrada")')
+    accessible($page->press('button:has-text("Entrada")')
         ->waitForText('Apunte al código de la pantalla de su centro.')
         ->assertDontSee('No logro leer el código')
         ->waitForText('No logro leer el código. Acérquese o aléjese un poco, sin reflejos, y mantenga el teléfono quieto.', 15)
         ->assertPresent('[role="dialog"]')
-        ->assertScript('() => window.__camera.getTracks().every((track) => track.readyState === "live")', true)
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript('() => window.__camera.getTracks().every((track) => track.readyState === "live")', true), 1);
 });
 
 it('turns the camera off when it is closed and when the page is left', function (): void {

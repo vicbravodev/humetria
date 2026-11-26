@@ -148,7 +148,7 @@ it('folds a submenu away from its parent and lights the closest child on a deepe
 it('folds the sidebar to its icons and remembers it', function (bool $dark): void {
     $panel = signInToPanel(superadmin());
 
-    $page = visitPage('dashboard', $panel, $dark)
+    $page = accessible(visitPage('dashboard', $panel, $dark)
         ->click('[data-sidebar="trigger"]')
         ->assertScript(SETTLED)
         ->assertScript('() => document.querySelector(\'[data-slot="sidebar"]\').dataset.collapsible', 'icon')
@@ -159,8 +159,7 @@ it('folds the sidebar to its icons and remembers it', function (bool $dark): voi
         ->hover('[data-sidebar="menu-button"][href$="/admin/companies"]')
         ->assertScript('() => document.querySelector(\'[role="tooltip"]\')?.textContent', 'Empresas')
         // axe reads colors as painted: let the tooltip finish fading in before it judges the contrast.
-        ->assertScript(SETTLED)
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(SETTLED), 1);
 
     $page->refresh()
         ->assertScript('() => document.querySelector(\'[data-slot="sidebar"]\').dataset.state', 'collapsed')

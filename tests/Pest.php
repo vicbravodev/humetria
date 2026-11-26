@@ -261,6 +261,33 @@ function openPath(AwaitableWebpage|PendingAwaitablePage|On $page, string $path):
 }
 
 /**
+ * In the browser: no accessibility issues at `$level` or worse (axe; 0 critical … 3 minor), as Pest's assertNoAccessibilityIssues()
+ * checks them, but axe gets the timeout of the suite. Pest gives it 5 s whatever that timeout is, and a page whose main thread is
+ * busy (the landing's videos on a CI runner without a GPU) ran out of them although axe takes a tenth of a second here.
+ */
+function accessible(AwaitableWebpage $page, int $level = 1): AwaitableWebpage
+{
+    $threshold = Pest\Browser\Enums\AccessibilityIssueLevel::tryFromLevel($level) ?? throw new InvalidArgumentException("No accessibility level [{$level}].");
+    $browser = $page->page();
+    $browser->waitForLoadState('networkidle');
+    $browser->waitForFunction('document.readyState === "complete"');
+    $found = Pest\Browser\Playwright\Playwright::usingTimeout(
+        Pest\Browser\Playwright\Playwright::timeout(),
+        fn (): mixed => $browser->evaluate('async () => ((await window.axe.run()).violations)'),
+    );
+    $violations = array_values(array_filter(is_array($found) ? $found : [], function (mixed $violation) use ($threshold): bool {
+        $impact = is_array($violation) && is_string($violation['impact'] ?? null) ? $violation['impact'] : null;
+
+        // As Pest counts them: one without an impact counts at any level.
+        return $impact === null || Pest\Browser\Enums\AccessibilityIssueLevel::from($impact)->level() <= $threshold->level();
+    }));
+
+    expect($violations)->toBeEmpty(Pest\Browser\Support\AccessibilityFormatter::format($violations));
+
+    return $page;
+}
+
+/**
  * In the browser: the steps of a person (`$employeeId`) who opened a page of theirs without a session and was sent to enter.
  * They open a one-time link they asked for (made here), press «Continuar» and land on that page, which shows `$text`.
  * Use as the `$reach` of visitPage() with the person's page as its address, or on a page just opened with visit() (pending:
@@ -565,7 +592,7 @@ function pageIsHealthy(AwaitableWebpage $page, bool $mobile): AwaitableWebpage
         $page->assertScript(smallTouchTargets(), '');
     }
 
-    return $page->assertNoAccessibilityIssues(1);
+    return accessible($page, 1);
 }
 
 /**

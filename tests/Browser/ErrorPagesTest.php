@@ -82,10 +82,9 @@ it('shows a calm page, instead of a blank one, when a page breaks while it rende
     $pending = $mobile ? visit('/test/broken-page')->on()->mobile() : visit('/test/broken-page');
     $page = $dark ? $pending->inDarkMode() : $pending->inLightMode();
 
-    $page->assertSee('Algo salió mal')
+    accessible($page->assertSee('Algo salió mal')
         ->assertSee('Recargar la página')
-        ->assertScript(cspViolations(), '[]')
-        ->assertNoAccessibilityIssues(1)
+        ->assertScript(cspViolations(), '[]'), 1)
         ->click('Recargar la página')
         ->assertSee('Algo salió mal');
 })->with('error looks');

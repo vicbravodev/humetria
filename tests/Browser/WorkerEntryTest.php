@@ -56,12 +56,11 @@ function anaLink(string $token, bool $requested = false): void
 }
 
 it('opens the screen to enter, naming nobody, with the key and the link by email', function (bool $dark, bool $mobile): void {
-    visitPage('worker-access/enter', '/me/acme', $dark, $mobile)
+    accessible(visitPage('worker-access/enter', '/me/acme', $dark, $mobile)
         ->assertSee('Entre a su portal')
         ->assertSee('Entrar con mi huella')
         ->assertSee('Entrar con un enlace por correo')
-        ->assertDontSee('Ana López')
-        ->assertNoAccessibilityIssues(1);
+        ->assertDontSee('Ana López'), 1);
 })->with([
     'light desktop' => [false, false],
     'dark desktop' => [true, false],
@@ -78,10 +77,9 @@ it('answers the same to an email asked for, whoever it is', function (): void {
 it('opens a link with «Continuar», and its start names the person', function (bool $dark, bool $mobile): void {
     anaLink('browser-token', requested: true);
 
-    $page = visitPage('worker-access/link', '/me/acme/link/browser-token', $dark, $mobile)
+    $page = accessible(visitPage('worker-access/link', '/me/acme/link/browser-token', $dark, $mobile)
         ->assertSee('Su enlace está listo')
-        ->assertScript(stateCentered(), ['balanced' => true, 'icon' => 80, 'align' => 'center'])
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(stateCentered(), ['balanced' => true, 'icon' => 80, 'align' => 'center']), 1);
 
     $page->press('Continuar')->waitForText('Todavía sin marcas')->assertSee('Cuenta');
 })->with([
@@ -92,7 +90,7 @@ it('opens a link with «Continuar», and its start names the person', function (
 it('welcomes a person with the link RH issued by the three steps that follow, naming nobody', function (bool $dark, bool $mobile): void {
     anaLink('first-token');
 
-    $page = visitPage('worker-access/link', '/me/acme/link/first-token', $dark, $mobile)
+    $page = accessible(visitPage('worker-access/link', '/me/acme/link/first-token', $dark, $mobile)
         ->assertSee('Le damos la bienvenida')
         ->assertSee('Cree su llave')
         ->assertSee('Póngala en su inicio')
@@ -100,8 +98,7 @@ it('welcomes a person with the link RH issued by the three steps that follow, na
         ->assertSee('Su huella nunca sale del teléfono')
         ->assertDontSee('Su enlace está listo')
         ->assertDontSee('Ana')
-        ->assertScript(spilledOut(), '')
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(spilledOut(), ''), 1);
 
     $page->press('Continuar')->waitForText('cree su llave de acceso');
 })->with([
@@ -112,15 +109,14 @@ it('welcomes a person with the link RH issued by the three steps that follow, na
 it('shows the start with the session open, its three tabs, and «Salir» in Cuenta leaves no name behind', function (bool $dark, bool $mobile): void {
     anaLink('home-token', requested: true);
 
-    $page = visitPage('worker-access/home', '/me/acme/link/home-token', $dark, $mobile, fn ($page) => $page->press('Continuar')->waitForText('Todavía sin marcas'))
+    $page = accessible(visitPage('worker-access/home', '/me/acme/link/home-token', $dark, $mobile, fn ($page) => $page->press('Continuar')->waitForText('Todavía sin marcas'))
         ->assertSeeIn('nav[aria-label="Secciones del portal"]', 'Inicio')
         ->assertSeeIn('nav[aria-label="Secciones del portal"]', 'Pendientes')
         ->assertDontSee('Salir')
-        ->assertScript(spilledOut(), '')
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(spilledOut(), ''), 1);
 
-    $page->press('Pendientes')->waitForText('Está al día')->assertScript(settled(), true)->assertNoAccessibilityIssues(1);
-    $page->press('Cuenta')->waitForText('Su cuenta')->assertSee('Ana López')->assertScript(settled(), true)->assertNoAccessibilityIssues(1);
+    accessible($page->press('Pendientes')->waitForText('Está al día')->assertScript(settled(), true), 1);
+    accessible($page->press('Cuenta')->waitForText('Su cuenta')->assertSee('Ana López')->assertScript(settled(), true), 1);
     $page->press('Salir')->waitForText('Entre a su portal')->assertDontSee('Ana López');
 })->with([
     'light desktop' => [false, false],
@@ -189,21 +185,19 @@ it('greets by the hour of the day in a company without attendance too, by first 
 });
 
 it('shows one screen for a link that does not work', function (): void {
-    visitPage('worker-access/link', '/me/acme/link/unknown', mobile: true)
+    accessible(visitPage('worker-access/link', '/me/acme/link/unknown', mobile: true)
         ->assertSee('Este enlace ya no sirve')
         ->assertScript(stateCentered(), ['balanced' => true, 'icon' => 80, 'align' => 'center'])
-        ->assertSee('Pedir un enlace nuevo')
-        ->assertNoAccessibilityIssues(1);
+        ->assertSee('Pedir un enlace nuevo'), 1);
 });
 
 it('opens RH\'s link straight into creating a key, with the warning on shared accounts', function (bool $dark, bool $mobile): void {
     anaLink('issued-token');
 
-    visitPage('worker-access/key', '/me/acme/link/issued-token', $dark, $mobile, fn ($page) => $page->press('Continuar')->waitForText('cree su llave de acceso'))
+    accessible(visitPage('worker-access/key', '/me/acme/link/issued-token', $dark, $mobile, fn ($page) => $page->press('Continuar')->waitForText('cree su llave de acceso'))
         ->assertSee('Ana López, cree su llave de acceso')
         ->assertSee('Si comparte su cuenta de iCloud o de Google con su familia')
-        ->assertSee('Crear llave')
-        ->assertNoAccessibilityIssues(1);
+        ->assertSee('Crear llave'), 1);
 })->with([
     'light desktop' => [false, false],
     'dark desktop' => [true, false],
@@ -214,10 +208,9 @@ it('asks before «No fui yo» revokes a key, then says it is done', function (bo
     $key = App\Modules\WorkerAccess\Models\WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'label' => 'iPhone']);
     $url = Illuminate\Support\Facades\URL::temporarySignedRoute('worker.not-me.show', now()->addDays(30), ['tenant' => 'acme', 'credential' => $key->id], absolute: false);
 
-    $page = visitPage('worker-access/not-me', $url, $dark, $mobile)
+    $page = accessible(visitPage('worker-access/not-me', $url, $dark, $mobile)
         ->assertSee('¿No creó usted la llave «iPhone»?')
-        ->assertScript(stateCentered(), ['balanced' => true, 'icon' => 80, 'align' => 'center'])
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(stateCentered(), ['balanced' => true, 'icon' => 80, 'align' => 'center']), 1);
 
     $page->press('Anular esa llave')->waitForText('La llave quedó anulada')
         ->assertScript(stateCentered(), ['balanced' => true, 'icon' => 80, 'align' => 'center']);
@@ -245,37 +238,34 @@ const CHROME_ANDROID = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537
 it('shows an iPhone the steps to add the app to its home screen, as the last thing in the start', function (bool $dark): void {
     $pending = visit('/me/acme/link/install-token')->on()->iPhone14Pro()->withUserAgent(SAFARI_IPHONE);
 
-    anaStartOn($dark ? $pending->inDarkMode() : $pending->inLightMode())
+    accessible(anaStartOn($dark ? $pending->inDarkMode() : $pending->inLightMode())
         ->assertSee('Instale la app en su teléfono')
         ->assertSee('Toque Compartir')
         ->assertSee('Agregar a pantalla de inicio')
         ->assertSee('El ícono abre Marcar.')
         ->assertDontSee('Ábralo en Safari o Chrome')
         ->assertScript(spilledOut(), '')
-        ->assertScript(settled(), true)
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(settled(), true), 1);
 })->with([
     'light' => [false],
     'dark' => [true],
 ]);
 
 it('shows an Android phone how to install the app', function (): void {
-    anaStartOn(visit('/me/acme/link/install-token')->on()->pixel8()->withUserAgent(CHROME_ANDROID)->inLightMode())
+    accessible(anaStartOn(visit('/me/acme/link/install-token')->on()->pixel8()->withUserAgent(CHROME_ANDROID)->inLightMode())
         ->assertSee('Instale la app en su teléfono')
         ->assertSee('El ícono abre Marcar.')
         ->assertDontSee('Agregar a pantalla de inicio')
-        ->assertScript(settled(), true)
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(settled(), true), 1);
 });
 
 it('asks to open the link in Safari or Chrome from the browser inside another app, instead of the install steps', function (): void {
-    anaStartOn(visit('/me/acme/link/install-token')->on()->iPhone14Pro()->withUserAgent(GMAIL_IPHONE)->inLightMode())
+    accessible(anaStartOn(visit('/me/acme/link/install-token')->on()->iPhone14Pro()->withUserAgent(GMAIL_IPHONE)->inLightMode())
         ->assertSee('Ábralo en Safari o Chrome')
         ->assertSee('Copiar el enlace')
         ->assertDontSee('Agregar a pantalla de inicio')
         ->assertScript(spilledOut(), '')
-        ->assertScript(settled(), true)
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(settled(), true), 1);
 });
 
 it('does not show the install guide on a computer', function (): void {
@@ -354,15 +344,14 @@ it('offers the notices after a first mark, saying what they will say before the 
     $page = anaStartOn($dark ? $pending->inDarkMode() : $pending->inLightMode());
     pushPhone($page);
 
-    reopenStart($page)
+    accessible(reopenStart($page)
         ->assertSee('¿Le avisamos?')
         ->assertSee('¿Le avisamos cuando Recursos Humanos revise sus marcas sin internet o responda sus correcciones?')
         ->assertSee('Tiene un aviso en Humetría')
         ->assertSee('Sí, avisarme')
         ->assertSee('Ahora no')
         ->assertScript(spilledOut(), '')
-        ->assertScript(settled(), true)
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(settled(), true), 1);
 })->with([
     'light desktop' => [false, false],
     'dark mobile' => [true, true],

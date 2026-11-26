@@ -128,15 +128,14 @@ it('marks without a connection, keeps the mark through a reload and delivers it 
     withoutNetwork($page);
 
     markOffline($page, 'Salir a comer', 'Salida a comer sin internet');
-    $page->assertSee('Usted indicó')
+    accessible($page->assertSee('Usted indicó')
         ->assertSee('Aún no la recibe Recursos Humanos')
         ->assertSee('1 marca sin enviar')
         ->assertSee('Si borra los datos de la app antes de que se envíe, esta marca se pierde.')
         ->assertDontSee('Entrada registrada')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]')
-        ->assertScript(smallTouchTargets(), '')
-        ->assertNoAccessibilityIssues(1)
+        ->assertScript(smallTouchTargets(), ''), 1)
         // A mark saved without a connection is the person's first mark too: the start may offer the notices from now on.
         ->assertScript("() => localStorage.getItem('humetria-push-marked')", '1');
 
@@ -147,9 +146,8 @@ it('marks without a connection, keeps the mark through a reload and delivers it 
     openPath($page, '/me/acme/punch')->waitForText('1 marca sin enviar')->assertSee('Abra Humetría con internet para enviar su marca.');
 
     withoutNetwork($page, false);
-    $page->assertScript(eventually('() => document.body.innerText.includes("Recibida. Cuenta en sus horas. Recursos Humanos la revisará.")'), true)
-        ->assertDontSee('1 marca sin enviar')
-        ->assertNoAccessibilityIssues(1);
+    accessible($page->assertScript(eventually('() => document.body.innerText.includes("Recibida. Cuenta en sus horas. Recursos Humanos la revisará.")'), true)
+        ->assertDontSee('1 marca sin enviar'), 1);
 
     $row = AttendanceOfflineMark::query()->sole();
     expect($row->outcome)->toBe('accepted')->and($row->mark_type)->toBe(MarkType::BreakStart)->and($row->mark?->method)->toBe(MarkMethod::OfflineDeclared)
@@ -165,13 +163,12 @@ it('shows a mark the server did not accept until the person says «Entendido», 
     Employee::query()->whereKey($this->ana->id)->update(['work_center_id' => WorkCenter::factory()->for($this->tenant)->create()->id]);
 
     withoutNetwork($page, false);
-    openPath($page, '/me/acme/punch')->waitForText('No aceptada: el centro no es el suyo. Puede pedir una corrección.')
+    accessible(openPath($page, '/me/acme/punch')->waitForText('No aceptada: el centro no es el suyo. Puede pedir una corrección.')
         ->assertSee('Usted indicó')
         ->assertSee('Entendido')
         ->assertSee('Pedir corrección')
         ->assertDontSee('1 marca sin enviar')
-        ->assertScript(smallTouchTargets(), '')
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(smallTouchTargets(), ''), 1);
 
     expect(AttendanceOfflineMark::query()->sole()->outcome)->toBe('rejected')->and(AttendanceMark::query()->count())->toBe(1);
 
@@ -212,10 +209,9 @@ it('keeps only the mark the server cannot read as not accepted, and delivers the
     damageMark($page, 1);
 
     withoutNetwork($page, false);
-    $page->assertScript(eventually('() => document.body.innerText.includes("la marca se guardó dañada en el teléfono")'), true)
+    accessible($page->assertScript(eventually('() => document.body.innerText.includes("la marca se guardó dañada en el teléfono")'), true)
         ->assertSee('No aceptada')
-        ->assertSee('Recibida.')
-        ->assertNoAccessibilityIssues(1);
+        ->assertSee('Recibida.'), 1);
 
     // Only the good one reached the server: the damaged one has no row there, so «Entendido» asks first.
     $row = AttendanceOfflineMark::query()->sole();
@@ -267,10 +263,9 @@ it('makes one mark without a connection when the button is tapped twice before t
 it('says how ready the phone is: few tickets, none, and ready', function (): void {
     $page = phoneWithTickets();
 
-    $page->press('¿Puedo marcar sin internet?')->waitForText('Listo para marcar sin internet')
+    accessible($page->press('¿Puedo marcar sin internet?')->waitForText('Listo para marcar sin internet')
         ->assertSee('Su empresa activó marcar sin internet')
-        ->assertSee('Ya aceptó el acuerdo de registro')
-        ->assertNoAccessibilityIssues(1);
+        ->assertSee('Ya aceptó el acuerdo de registro'), 1);
     $page->press('Volver');
 
     keepTickets($page, 2);
@@ -278,10 +273,9 @@ it('says how ready the phone is: few tickets, none, and ready', function (): voi
 
     keepTickets($page, 0);
     withoutNetwork($page);
-    openPath($page, '/me/acme/punch')->press('¿Puedo marcar sin internet?')->waitForText('Aún no está listo: ábrala con internet')
+    accessible(openPath($page, '/me/acme/punch')->press('¿Puedo marcar sin internet?')->waitForText('Aún no está listo: ábrala con internet')
         ->assertSee('Abra Humetría con internet')
-        ->assertScript(smallTouchTargets(), '')
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(smallTouchTargets(), ''), 1);
 });
 
 it('without a ticket, the mark without a connection says what is missing instead of failing in silence', function (): void {
@@ -305,7 +299,7 @@ it('marks from the shell of the installed app, with no page of the server: the s
     // history moves to that address, which is what the shell reads to know it is Marcar it must show.
     $page->script("() => { history.pushState({}, '', '/me/acme/punch'); window.dispatchEvent(new PopStateEvent('popstate')); }");
 
-    $page->waitForText('Marcar sin internet')
+    accessible($page->waitForText('Marcar sin internet')
         ->assertSee('Entrada')
         ->assertSee('Salir a comer')
         ->assertDontSee('Leer el código de la pantalla')
@@ -315,11 +309,10 @@ it('marks from the shell of the installed app, with no page of the server: the s
         ->assertScript(cspViolations(), '[]')
         ->assertScript(smallTouchTargets(), '')
         // The shell fades in when the address changes: axe must judge the settled page, not a frame mid-transition.
-        ->assertScript(settled(), true)
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(settled(), true), 1);
 
     markOffline($page, 'Salir a comer', 'Salida a comer sin internet');
-    $page->assertSee('1 marca sin enviar')->assertScript(settled(), true)->assertNoAccessibilityIssues(1);
+    accessible($page->assertSee('1 marca sin enviar')->assertScript(settled(), true), 1);
 
     withoutNetwork($page, false);
     $page->press('Listo');
@@ -350,9 +343,8 @@ it('opens the shell with the count of the marks that wait and the way to Marcar'
     withoutNetwork($page);
     markOffline($page, 'Salir a comer', 'Salida a comer sin internet');
 
-    openPath($page, '/me/acme/offline')->waitForText('No hay internet')
+    accessible(openPath($page, '/me/acme/offline')->waitForText('No hay internet')
         ->assertSee('1 marca sin enviar')
         ->assertPresent('a[href="/me/acme/punch"]')
-        ->assertNoJavaScriptErrors()
-        ->assertNoAccessibilityIssues(1);
+        ->assertNoJavaScriptErrors(), 1);
 });

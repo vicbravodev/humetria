@@ -202,7 +202,7 @@ it('walks the four steps of the form and hands back a reference and a key once',
     $channel = openChannelWithHandler();
     $page = $mobile ? visit("/c/{$channel->access_code}")->on()->mobile() : visit("/c/{$channel->access_code}");
 
-    $page->click('Presentar una queja')
+    accessible($page->click('Presentar una queja')
         ->assertSee('Paso 1 de 4')
         ->assertSee('¿Qué quiere reportar?')
         ->press('Continuar')
@@ -222,8 +222,7 @@ it('walks the four steps of the form and hands back a reference and a key once',
         ->fill('#complaint-description', 'Mi jefe me grita todos los días frente a mis compañeros y me amenaza.')
         ->press('Continuar')
         ->assertSee('Paso 4 de 4')
-        ->assertSee('¿Cómo quiere darle seguimiento?')
-        ->assertNoAccessibilityIssues(1)
+        ->assertSee('¿Cómo quiere darle seguimiento?'), 1)
         ->press('Enviar queja')
         ->assertSee('Recibimos su queja')
         ->assertSee('Le confirmaremos que alguien la leyó a más tardar el')
@@ -289,13 +288,11 @@ it('goes back a step without losing what was written', function (): void {
 it('shows the form steps without accessibility issues and with room for a finger', function (): void {
     $channel = openChannelWithHandler();
 
-    visit("/c/{$channel->access_code}")->on()->mobile()
-        ->click('Presentar una queja')
-        ->assertNoAccessibilityIssues(1)
+    accessible(accessible(visit("/c/{$channel->access_code}")->on()->mobile()
+        ->click('Presentar una queja'), 1)
         ->assertScript(smallTouchTargets(), '')
         ->click('Queja por una práctica opuesta a un entorno favorable')
-        ->press('Continuar')
-        ->assertNoAccessibilityIssues(1)
+        ->press('Continuar'), 1)
         ->assertScript(smallTouchTargets(), '');
 });
 
@@ -603,7 +600,7 @@ it('opens the case with the reference and the key, and writes in it', function (
     [$channel, $complaint] = followedComplaint();
     $page = $mobile ? visit("/c/{$channel->access_code}/follow-up")->on()->mobile() : visit("/c/{$channel->access_code}/follow-up");
 
-    $page->fill('#follow-up-reference', 'abcd 2345')
+    accessible($page->fill('#follow-up-reference', 'abcd 2345')
         ->fill('#follow-up-key', 'keyk-1234-keyk-5678-keyk')
         ->press('Ver mi queja')
         ->assertSee('ABCD2345')
@@ -611,8 +608,7 @@ it('opens the case with the reference and the key, and writes in it', function (
         ->assertSee('Le responderemos a más tardar el')
         ->assertSee('Alguien la leyó')
         ->assertSee('Persona encargada')
-        ->assertSee('Acusamos recibo de su queja.')
-        ->assertNoAccessibilityIssues(1)
+        ->assertSee('Acusamos recibo de su queja.'), 1)
         ->fill('#follow-up-reply', 'Sigue pasando y ahora lo hace delante de todos.')
         ->press('Enviar')
         ->assertSee('Sigue pasando y ahora lo hace delante de todos.')
