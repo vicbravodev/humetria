@@ -43,14 +43,80 @@ export function demoQuery(view: DemoView): { status?: DemoView } {
     return view === 'all' ? {} : { status: view };
 }
 
-/** The list's address: the status and what was searched, each only when there is one. */
+/** The console's address: the funnel, the status, what was searched and each filter, each only when there is one. */
 export function demoListQuery(
     filters: DemoFilters,
 ): Partial<Record<keyof DemoFilters, string>> {
     // The list is the page's default view: its address does not name it.
+    const query: Partial<Record<keyof DemoFilters, string>> = {
+        ...(filters.view === 'board' ? { view: 'board' } : {}),
+        ...demoQuery(filters.status),
+    };
     const q = filters.q.trim();
 
-    return { ...demoQuery(filters.status), ...(q === '' ? {} : { q }) };
+    if (q !== '') {
+        query.q = q;
+    }
+
+    for (const key of FILTER_KEYS) {
+        const value = filters[key] ?? '';
+
+        if (value !== '') {
+            query[key] = value;
+        }
+    }
+
+    return query;
+}
+
+const FILTER_KEYS: ('origin' | 'owner' | 'size')[] = [
+    'origin',
+    'owner',
+    'size',
+];
+
+export type FilterOption = { value: string; label: string };
+
+/** Where a request came from, as the server groups it (DemoOrigin). */
+export const DEMO_ORIGINS: FilterOption[] = [
+    { value: 'ad', label: 'Anuncio' },
+    { value: 'campaign', label: 'Campaña' },
+    { value: 'search', label: 'Orgánico' },
+    { value: 'referral', label: 'Referido' },
+    { value: 'unknown', label: 'Sin dato' },
+];
+
+/** The headcount ranges of the landing's form (Workforce). */
+export const DEMO_SIZES: FilterOption[] = [
+    { value: '1_15', label: '1–15' },
+    { value: '16_50', label: '16–50' },
+    { value: '51_100', label: '51–100' },
+    { value: '101_500', label: '101–500' },
+    { value: '501_plus', label: 'Más de 500' },
+];
+
+/** A filter chip: its name alone while it narrows nothing, else what it narrows to. */
+export function filterChipText(
+    name: string,
+    options: FilterOption[],
+    value: string,
+): string {
+    const chosen = options.find((option) => option.value === value);
+
+    return chosen === undefined ? name : `${name}: ${chosen.label}`;
+}
+
+/** The line under the company on a card: its size, and who the request is for when not the company itself. */
+export function demoCardLine(
+    workforce: string | null,
+    profile: string | null,
+): string {
+    const parts = [
+        workforce === null ? null : workforceText(workforce),
+        profile === 'Empresa' ? null : profile,
+    ].filter((part) => part !== null);
+
+    return parts.length === 0 ? 'Tamaño sin indicar' : parts.join(' · ');
 }
 
 /** What an empty tab says: nothing arrived at all, or nothing is in that state. */

@@ -1,32 +1,26 @@
 import DemoRequestsEmpty from '@/components/demos/demo-requests-empty';
 import DemoRequestsInbox from '@/components/demos/demo-requests-inbox';
-import DemoRequestsToolbar from '@/components/demos/demo-requests-toolbar';
 import Pagination from '@/components/humetria/pagination';
-import type { DemoFilters, DemoRequestRow, DemoView, Paginated } from '@/types';
+import type { DemoFilters, DemoRequestRow, Paginated } from '@/types';
 
-/** Every request, by status and searched in the server, a page at a time, as an inbox. */
+/** Every request the filters leave, searched in the server, a page at a time, with the one chosen in the panel. */
 export default function DemoRequestsList({
     demoRequests,
     filters,
-    counts,
     canManage,
 }: {
     demoRequests: Paginated<DemoRequestRow>;
     filters: DemoFilters;
-    counts: Record<DemoView, number>;
     canManage: boolean;
 }) {
     return (
         <>
-            {counts.all > 0 && (
-                <DemoRequestsToolbar filters={filters} counts={counts} />
-            )}
             {demoRequests.data.length === 0 ? (
                 <DemoRequestsEmpty filters={filters} />
             ) : (
-                // Keyed by page and view: a new one opens on its newest request.
+                // Keyed by page and filters: a new one opens on its newest request.
                 <DemoRequestsInbox
-                    key={`${filters.status}-${filters.q}-${demoRequests.current_page}`}
+                    key={`${JSON.stringify(filters)}-${demoRequests.current_page}`}
                     requests={demoRequests.data}
                     canManage={canManage}
                 />

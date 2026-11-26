@@ -3,8 +3,8 @@ import { demoMetricTiles } from '@/lib/demo-requests';
 import type { DemoMetrics as Metrics } from '@/types';
 
 /**
- * The four figures of the funnel: what waits, how soon the team answers, how many became a company and where most
- * came from. They arrive after the page shows; until then each tile keeps its size, so nothing below it moves.
+ * The four figures of the funnel (tablero Demos): what waits, how soon the team answers, how many became a company and
+ * where most came from. They arrive after the page shows; until then each tile keeps its size, so nothing below moves.
  */
 export default function DemoMetrics({
     metrics,
@@ -12,23 +12,23 @@ export default function DemoMetrics({
     metrics: Metrics | undefined;
 }) {
     return (
-        <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))] gap-4">
             {demoMetricTiles(metrics).map((tile) => (
                 <section
                     key={tile.title}
-                    className="grid content-start gap-1 card p-4 md:p-5"
+                    className="grid content-start gap-1 card px-6 py-5"
                 >
-                    <h2 className="text-caption text-muted-foreground">
+                    <h2 className="text-caption font-medium tracking-[0.02em] text-muted-foreground uppercase">
                         {tile.title}
                     </h2>
                     {tile.figure === null ? (
-                        <Skeleton className="h-8 w-16 md:h-9" />
+                        <Skeleton className="h-10 w-16" />
                     ) : (
-                        <p className="truncate text-2xl font-semibold tracking-[-0.01em] tabular-nums md:text-3xl">
+                        <p className="truncate text-[32px] leading-10 font-semibold tracking-[-0.01em] tabular-nums">
                             {tile.figure}
                         </p>
                     )}
-                    <p className="min-h-10 text-sm text-muted-foreground lg:min-h-5">
+                    <p className="min-h-5 text-sm text-muted-foreground">
                         {tile.caption}
                     </p>
                 </section>

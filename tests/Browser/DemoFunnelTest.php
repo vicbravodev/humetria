@@ -34,6 +34,24 @@ it('shows the funnel with its figures and the request chosen beside it', functio
     'dark mobile' => [true, true],
 ]);
 
+it('narrows the funnel by origin from its chip, in the server', function (): void {
+    signInAsSuperadmin();
+    DemoRequest::factory()->withAdClick()->create(['name' => 'Lucía Vega', 'company' => 'Clínica Santa Fe']);
+    DemoRequest::factory()->referredBy('blog.ejemplo.mx')->create(['name' => 'Rosa Medina', 'company' => 'Despacho Lira']);
+
+    visitPage('demos/index', '/admin/demo-requests?view=board')
+        ->assertSee('Despacho Lira')
+        ->assertSeeIn('@filter-origen', 'Origen: todos')
+        ->click('@filter-origen')
+        // The second option, after «Todos».
+        ->click('[role="menuitemradio"]:nth-of-type(2)')
+        ->assertSeeIn('@filter-origen', 'Origen: Anuncio')
+        ->assertDontSee('Despacho Lira')
+        ->assertSeeIn('@demo-request-detail', 'Clínica Santa Fe')
+        ->assertScript('() => new URL(location.href).searchParams.get("origin")', 'ad')
+        ->assertNoJavaScriptErrors();
+});
+
 it('discards a request with its reason from the funnel', function (): void {
     signInAsSuperadmin();
     $request = DemoRequest::factory()->create(['name' => 'Lucía Vega', 'company' => 'Clínica Santa Fe']);

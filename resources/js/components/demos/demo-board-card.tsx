@@ -1,8 +1,9 @@
-import { workforceText } from '@/lib/demo-requests';
+import { Badge } from '@/components/ui/badge';
+import { demoCardLine } from '@/lib/demo-requests';
 import { cn } from '@/lib/utils';
 import type { DemoRequestRow } from '@/types';
 
-/** A request on the funnel: the company, who asked, what comes next and who owns it. */
+/** A request on the funnel (tablero Demos): the company, its size and who it is for, how long it has waited and its origin. */
 export default function DemoBoardCard({
     request,
     chosen,
@@ -12,11 +13,6 @@ export default function DemoBoardCard({
     chosen: boolean;
     onChoose: () => void;
 }) {
-    const next =
-        request.status === 'scheduled' && request.scheduled_for !== null
-            ? `Demo el ${request.scheduled_for}`
-            : (request.next_step ?? `Llegó el ${request.received_at}`);
-
     return (
         <li>
             <button
@@ -24,17 +20,22 @@ export default function DemoBoardCard({
                 aria-current={chosen ? 'true' : undefined}
                 onClick={onChoose}
                 className={cn(
-                    'flex w-full flex-col gap-1 rounded-[10px] border bg-card p-3.5 text-left transition-colors duration-150 ease-out hover:border-ring focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
-                    chosen && 'border-primary ring-1 ring-primary',
+                    'flex w-full flex-col gap-2 rounded-[10px] border bg-card p-3.5 text-left transition-colors duration-150 ease-out hover:border-ring focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+                    chosen &&
+                        'border-2 border-primary p-[13px] hover:border-primary',
                 )}
             >
                 <span className="font-semibold">{request.company}</span>
                 <span className="text-sm text-muted-foreground">
-                    {request.name} · {workforceText(request.workforce)}
+                    {demoCardLine(request.workforce, request.profile)}
                 </span>
-                <span className="text-sm">{next}</span>
-                <span className="text-caption text-muted-foreground">
-                    {request.owner?.name ?? 'Sin responsable'}
+                <span className="flex flex-wrap items-center gap-1.5">
+                    <Badge variant={request.waiting.tone}>
+                        {request.waiting.label}
+                    </Badge>
+                    <span className="text-sm text-muted-foreground">
+                        {request.origin}
+                    </span>
                 </span>
             </button>
         </li>

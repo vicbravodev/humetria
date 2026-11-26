@@ -25,7 +25,19 @@ export type DemoRequestRow = {
     /** When its demo is, as the console writes it: "jue 3 dic, 11:00". */
     scheduled_for: string | null;
     discard_reason: string | null;
+    /** Where it came from, as the funnel groups it: «Anuncio», «Orgánico», «Sin dato»… */
+    origin: string;
+    /** How long it has waited, or when its demo is, with how urgent it looks. */
+    waiting: { label: string; tone: DemoTone };
 };
+
+/** The variants of Badge a card's time may take. */
+export type DemoTone =
+    | 'default'
+    | 'secondary'
+    | 'success'
+    | 'warning'
+    | 'destructive';
 
 /** Someone of Humetría's staff who may own a request. */
 export type DemoOwner = { id: number; name: string };
@@ -43,7 +55,15 @@ export type DemoView = 'all' | DemoStatus;
 /** The list (paged and searched) or the funnel. */
 export type DemoLayout = 'list' | 'board';
 
-export type DemoFilters = { status: DemoView; q: string; view: DemoLayout };
+export type DemoFilters = {
+    status: DemoView;
+    q: string;
+    view: DemoLayout;
+    /** Each empty while it narrows nothing; the owner is a staff id or "none". */
+    origin?: string;
+    owner?: string;
+    size?: string;
+};
 
 /** An open stage of the funnel: how many requests it holds and the newest few. */
 export type DemoBoardColumn = {

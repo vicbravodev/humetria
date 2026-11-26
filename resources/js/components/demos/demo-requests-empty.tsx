@@ -8,10 +8,18 @@ export default function DemoRequestsEmpty({
 }: {
     filters: DemoFilters;
 }) {
-    if (filters.q.trim() !== '') {
+    const narrowed = [
+        filters.q.trim(),
+        filters.origin,
+        filters.owner,
+        filters.size,
+    ].some((value) => value !== undefined && value !== '');
+
+    if (narrowed) {
         return (
             <EmptyState icon={SearchX} title="Ninguna solicitud coincide">
-                Prueba con otro nombre, correo, empresa o WhatsApp.
+                Prueba con otro nombre, correo, empresa o WhatsApp, o quita un
+                filtro.
             </EmptyState>
         );
     }

@@ -2,8 +2,12 @@ import { describe, expect, it } from 'vite-plus/test';
 
 import {
     DEMO_CHOICES,
+    DEMO_ORIGINS,
+    DEMO_SIZES,
     DEMO_VIEWS,
+    demoCardLine,
     demoEmptyText,
+    filterChipText,
     demoListQuery,
     demoMetricTiles,
     firstResponseText,
@@ -141,5 +145,70 @@ describe('demoMetricTiles', () => {
 
         expect(empty.map((tile) => tile.figure)).toEqual(['0', '—', '—', '—']);
         expect(empty[3]?.caption).toBe('Ninguna dijo de dónde llegó');
+    });
+});
+
+describe('the filters of the console (tablero Demos)', () => {
+    it('carries the funnel and each filter chosen in the address, and nothing that is empty', () => {
+        expect(
+            demoListQuery({
+                status: 'all',
+                q: '',
+                view: 'board',
+                origin: 'ad',
+                owner: '',
+                size: '51_100',
+            }),
+        ).toEqual({ view: 'board', origin: 'ad', size: '51_100' });
+        expect(
+            demoListQuery({
+                status: 'new',
+                q: '',
+                view: 'list',
+                origin: '',
+                owner: 'none',
+                size: '',
+            }),
+        ).toEqual({ status: 'new', owner: 'none' });
+    });
+
+    it('offers the origins and the sizes the server knows', () => {
+        expect(DEMO_ORIGINS.map((origin) => origin.value)).toEqual([
+            'ad',
+            'campaign',
+            'search',
+            'referral',
+            'unknown',
+        ]);
+        expect(DEMO_SIZES.map((size) => size.value)).toEqual([
+            '1_15',
+            '16_50',
+            '51_100',
+            '101_500',
+            '501_plus',
+        ]);
+    });
+
+    it('names a chip by what it narrows to, or by itself when it narrows nothing', () => {
+        expect(filterChipText('Tamaño', DEMO_SIZES, '')).toBe('Tamaño');
+        expect(filterChipText('Tamaño', DEMO_SIZES, '16_50')).toBe(
+            'Tamaño: 16–50',
+        );
+        expect(filterChipText('Origen', DEMO_ORIGINS, 'ad')).toBe(
+            'Origen: Anuncio',
+        );
+        expect(filterChipText('Origen', DEMO_ORIGINS, 'tv')).toBe('Origen');
+    });
+});
+
+describe('demoCardLine', () => {
+    it('writes the size under its company, and who it is for when not the company itself', () => {
+        expect(demoCardLine('51–100', 'Empresa')).toBe('51–100 trabajadores');
+        expect(demoCardLine('51–100', 'Sindicato')).toBe(
+            '51–100 trabajadores · Sindicato',
+        );
+        expect(demoCardLine(null, 'Consultor')).toBe('Consultor');
+        expect(demoCardLine('1–15', null)).toBe('1–15 trabajadores');
+        expect(demoCardLine(null, null)).toBe('Tamaño sin indicar');
     });
 });
