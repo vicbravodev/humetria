@@ -22,14 +22,14 @@ use Illuminate\Support\Facades\Queue;
  * real audience, and ending it resets the demo again, so whatever the audience left goes with it. One at a time.
  */
 
-/** A workspace that tells one step, or fails; it notes what it was asked. */
-function sessionWorkspace(bool $fails = false): ArrayObject
+/** A workspace that tells one step, or fails (preparing or staging the session); it notes what it was asked. */
+function sessionWorkspace(bool $fails = false, bool $stagingFails = false): ArrayObject
 {
     $calls = new ArrayObject;
-    app()->instance(DemoWorkspace::class, new readonly class($calls, $fails) implements DemoWorkspace
+    app()->instance(DemoWorkspace::class, new readonly class($calls, $fails, $stagingFails) implements DemoWorkspace
     {
         /** @param ArrayObject<int, string> $calls */
-        public function __construct(private ArrayObject $calls, private bool $fails) {}
+        public function __construct(private ArrayObject $calls, private bool $fails, private bool $stagingFails) {}
 
         public function prepare(?Closure $step = null): void
         {
@@ -45,6 +45,17 @@ function sessionWorkspace(bool $fails = false): ArrayObject
         {
             $this->calls->append('reset');
         }
+
+        public function stageSession(?string $clientName): string
+        {
+            $this->calls->append('stage '.($clientName ?? '-'));
+
+            if ($this->stagingFails) {
+                throw new RuntimeException('SQLSTATE: el centro de juan@empresa.mx');
+            }
+
+            return '0b7c2f3e-5d1a-4c8e-9f60-3a2b1c4d5e6f';
+        }
     });
 
     return $calls;
@@ -56,9 +67,9 @@ function sessionForm(array $overrides = []): array
     return ['client_name' => 'Grupo Ejemplo', 'tours' => ['attendance', 'nom035'], ...$overrides];
 }
 
-function openSession(DemoSessionStatus $status = DemoSessionStatus::Active): DemoSession
+function openSession(DemoSessionStatus $status = DemoSessionStatus::Active, ?string $client = null): DemoSession
 {
-    return DemoSession::query()->forceCreate(['client_name' => null, 'tours' => ['nom035'], 'status' => $status, 'started_at' => now()]);
+    return DemoSession::query()->forceCreate(['client_name' => $client, 'tours' => ['nom035'], 'status' => $status, 'started_at' => now()]);
 }
 
 it('lives at /admin/demo/session', function (): void {
@@ -298,18 +309,34 @@ describe('the preparation of a session', function (): void {
             ->and($job->queue)->toBe('demo');
     });
 
-    it('prepares the demo and opens the session', function (): void {
+    it('prepares the demo, stages its room and opens the session in it', function (): void {
         $calls = sessionWorkspace();
+        $session = openSession(DemoSessionStatus::Preparing, 'Grupo Ejemplo');
+        $run = DemoRun::start('session') ?? throw new LogicException('Not started.');
+
+        (new PrepareDemoSession($run->id, $session->id))->handle(resolve(DemoWorkspace::class));
+
+        expect($calls->getArrayCopy())->toBe(['prepare', 'stage Grupo Ejemplo'])
+            ->and($run->refresh()->status)->toBe('finished')
+            ->and($run->step)->toBe('Sala de la sesión')
+            ->and($session->refresh()->status)->toBe(DemoSessionStatus::Active)
+            ->and($session->work_center_id)->toBe('0b7c2f3e-5d1a-4c8e-9f60-3a2b1c4d5e6f')
+            ->and($session->ready_at)->not->toBeNull();
+    });
+
+    it('marks the session failed when staging fails', function (): void {
+        sessionWorkspace(stagingFails: true);
         $session = openSession(DemoSessionStatus::Preparing);
         $run = DemoRun::start('session') ?? throw new LogicException('Not started.');
 
         (new PrepareDemoSession($run->id, $session->id))->handle(resolve(DemoWorkspace::class));
 
-        expect($calls->getArrayCopy())->toBe(['prepare'])
-            ->and($run->refresh()->status)->toBe('finished')
-            ->and($run->step)->toBe('Organización')
-            ->and($session->refresh()->status)->toBe(DemoSessionStatus::Active)
-            ->and($session->ready_at)->not->toBeNull();
+        expect($run->refresh()->status)->toBe('failed')
+            ->and($run->step)->toBe('Sala de la sesión')
+            ->and($run->error_class)->toBe(RuntimeException::class)
+            ->and($session->refresh()->status)->toBe(DemoSessionStatus::Failed)
+            ->and($session->work_center_id)->toBeNull()
+            ->and(DemoSession::current())->toBeNull();
     });
 
     it('fails the session with its run, keeping only the class', function (): void {

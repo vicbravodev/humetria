@@ -12,8 +12,9 @@ use Illuminate\Foundation\Queue\Queueable;
 use Throwable;
 
 /**
- * Prepares the demo for a session: resets it and tells its story again, then opens the session to the audience. Like
- * PrepareDemo, once only, and a failure stays on the run with its class and step; the session fails with it.
+ * Prepares the demo for a session: resets it and tells its story again, stages the session's room (its work center, the
+ * group minimum at 1, WhatsApp on), then opens the session to the audience in it. Like PrepareDemo, once only, and a
+ * failure stays on the run with its class and step; the session fails with it.
  */
 final class PrepareDemoSession implements ShouldQueue
 {
@@ -44,6 +45,8 @@ final class PrepareDemoSession implements ShouldQueue
 
         try {
             $workspace->prepare($run->reach(...));
+            $run->reach('Sala de la sesión');
+            $centerId = $workspace->stageSession($session->client_name);
         } catch (Throwable $error) {
             $run->fail($error);
             $session->markFailed();
@@ -52,7 +55,7 @@ final class PrepareDemoSession implements ShouldQueue
         }
 
         $run->finish();
-        $session->markReady(null);
+        $session->markReady($centerId);
     }
 
     /** The worker gave up on it (its time ran out): neither the run nor the session may stay open. */

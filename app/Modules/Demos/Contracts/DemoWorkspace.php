@@ -21,6 +21,14 @@ interface DemoWorkspace
     public function prepare(?Closure $step = null): void;
 
     /**
+     * Stages a guided session in the demo company, after prepare(): a work center of its own («Sala · {client}», or «Sala
+     * de demostración» with no client), the group minimum at 1 and WhatsApp on with the words in force.
+     *
+     * @return string the id of the session's work center
+     */
+    public function stageSession(?string $clientName): string;
+
+    /**
      * Wipes everything of the demo company, live visitors' traces and files included, except its audit trail. The company
      * row (its slug, its complaint code) and its members' accounts stay; nothing happens when there is no demo.
      */
