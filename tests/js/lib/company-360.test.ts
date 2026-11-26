@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
-    companyLine,
+    companyHeaderFacts,
     companyTab,
     contactFacts,
     limitFigures,
@@ -70,19 +70,30 @@ describe('returnTo', () => {
     });
 });
 
-describe('companyLine', () => {
-    it('writes legal name, RFC, city, registration and who answers for it', () => {
-        expect(companyLine(company)).toBe(
-            'Textiles del Norte SA de CV · TNO090312AB1 · Monterrey · Alta: 14 mar 2026 · Responsable: Victor',
-        );
+describe('companyHeaderFacts', () => {
+    it('lists legal name, RFC, city, registration and who answers for it, as the facts of PageHeader', () => {
+        expect(companyHeaderFacts(company).map(({ text }) => text)).toEqual([
+            'Textiles del Norte SA de CV',
+            'TNO090312AB1',
+            'Monterrey',
+            'Alta: 14 mar 2026',
+            'Responsable: Victor',
+        ]);
     });
 
     it('leaves out the city it does not have and says nobody answers for it yet', () => {
         expect(
-            companyLine({ ...company, city: null, account_manager: null }),
-        ).toBe(
-            'Textiles del Norte SA de CV · TNO090312AB1 · Alta: 14 mar 2026 · Responsable: sin asignar',
-        );
+            companyHeaderFacts({
+                ...company,
+                city: null,
+                account_manager: null,
+            }).map(({ text }) => text),
+        ).toEqual([
+            'Textiles del Norte SA de CV',
+            'TNO090312AB1',
+            'Alta: 14 mar 2026',
+            'Responsable: sin asignar',
+        ]);
     });
 });
 

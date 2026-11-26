@@ -1,6 +1,8 @@
+import { Building2, CalendarDays, Hash, MapPin, UserRound } from 'lucide-react';
 import { pesos } from '@/lib/overview';
 import { countOf } from '@/lib/plural';
 import type {
+    PageFact,
     CompanyDetail,
     CompanyPayer,
     LimitRow,
@@ -39,17 +41,20 @@ export function returnTo(
     return trigger === undefined ? { query: { tab: 'modulos' } } : undefined;
 }
 
-/** The line under the company's name: who it is legally, where, since when and who answers for it. */
-export function companyLine(company: CompanyDetail): string {
-    return [
-        company.legal_name,
-        company.rfc,
-        company.city,
-        `Alta: ${company.created_on}`,
-        `Responsable: ${company.account_manager?.name ?? 'sin asignar'}`,
-    ]
-        .filter((part) => part !== null)
-        .join(' · ');
+/** Who the company is legally and who answers for it, as the row of facts under its name (`PageHeader`). */
+export function companyHeaderFacts(company: CompanyDetail): PageFact[] {
+    const facts: (PageFact | null)[] = [
+        { icon: Building2, text: company.legal_name },
+        { icon: Hash, text: company.rfc },
+        company.city === null ? null : { icon: MapPin, text: company.city },
+        { icon: CalendarDays, text: `Alta: ${company.created_on}` },
+        {
+            icon: UserRound,
+            text: `Responsable: ${company.account_manager?.name ?? 'sin asignar'}`,
+        },
+    ];
+
+    return facts.filter((fact) => fact !== null);
 }
 
 function owes(payer: CompanyPayer | null): payer is CompanyPayer {

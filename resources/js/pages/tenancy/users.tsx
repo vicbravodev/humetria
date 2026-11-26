@@ -28,7 +28,7 @@ export default function PlatformUsers({
     return (
         <>
             <Head title="Equipo Humetría" />
-            <div className="flex flex-col gap-6 px-4 py-6 md:px-10 md:py-8">
+            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
                     title="Equipo Humetría"
                     description="Quién del equipo puede entrar a la consola y qué puede hacer. Hoy el rol de soporte se da y se quita aquí; crear un superadmin sigue siendo por terminal a propósito."

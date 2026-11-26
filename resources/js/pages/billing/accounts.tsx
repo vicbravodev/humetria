@@ -43,7 +43,7 @@ export default function Accounts({
     return (
         <>
             <Head title="Cuentas y cobranza" />
-            <div className="flex flex-col gap-6 px-4 py-6 md:px-10 md:py-8">
+            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
                     title="Cuentas y cobranza"
                     description="Quién paga qué y qué falta por cobrar. Las cuentas son directas o de un consultor que paga por varias empresas."

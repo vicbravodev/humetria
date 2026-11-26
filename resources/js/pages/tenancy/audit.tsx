@@ -35,7 +35,7 @@ export default function Audit({
     return (
         <>
             <Head title="Bitácora" />
-            <div className="flex flex-col gap-6 px-4 py-6 md:px-10 md:py-8">
+            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
                     title="Bitácora"
                     description="Todo lo sensible que pasó en la plataforma, de solo lectura y sin borrar. Nunca guarda respuestas de encuestas ni liga a una persona con una respuesta."

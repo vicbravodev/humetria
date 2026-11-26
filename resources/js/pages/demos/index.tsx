@@ -40,7 +40,7 @@ export default function DemoRequests({
     return (
         <>
             <Head title="Solicitudes de demo" />
-            <div className="flex flex-col gap-6 px-4 py-6 md:px-10 md:py-8">
+            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
                     title="Solicitudes de demo"
                     description="De la landing al alta: cada solicitud avanza por un embudo, con responsable y siguiente paso. El alta de empresas sigue siendo solo por demo."
