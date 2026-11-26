@@ -114,6 +114,8 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
   estados (ver su README).
 - `Notifications`: avisos push (Web Push con VAPID) a la persona trabajadora, que dicen solo de qué tipo son (cifrado, sin nombres ni datos): suscripciones y envío; reacciona a
   eventos públicos de Attendance y WorkerAccess; nunca manda correo (ver su README).
+- `Operations`: consola de la plataforma para el superadmin: salud del sistema (colas, trabajos fallidos, latido del
+  programador, webhooks) y mensajería en conteos; sin tablas, nunca datos de personas.
 - `Organization`: áreas, empleados, niveles de puesto, líneas de reporte (organigrama).
 - `Responses`: respuestas anónimas y tamizaje de Guía I.
 - `Results`: agregados con mínimo por grupo, reportes, canalización de Guía I.
