@@ -588,7 +588,7 @@ it('narrows the companies by name or RFC and by status', function (): void {
         ->assertDontSee('Grupo Ejemplo')
         ->assertSee('Autopartes Querétaro')
         ->assertQueryStringHas('q', 'queretaro')
-        ->click('a[href*="status=trial"]')
+        ->click('a[href$="status=trial"]')
         ->assertSee('Nada coincide con tu búsqueda')
         ->assertSee('Quitar filtros')
         ->assertNoJavaScriptErrors();
