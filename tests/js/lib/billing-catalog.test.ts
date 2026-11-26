@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
     moduleLabel,
+    mostUsed,
     planPrice,
     planReach,
     plansQuery,
@@ -64,5 +65,21 @@ describe('plansQuery', () => {
     it('carries the trimmed search, and nothing when it is empty', () => {
         expect(plansQuery({ q: '  ' })).toEqual({});
         expect(plansQuery({ q: ' acme ' })).toEqual({ q: 'acme' });
+    });
+});
+
+describe('mostUsed', () => {
+    it('names the plan with the most companies', () => {
+        expect(
+            mostUsed([
+                plan({ key: 'jornada', companies: 3 }),
+                plan({ key: 'cumplimiento', companies: 17 }),
+                plan({ key: 'integral', companies: 14 }),
+            ]),
+        ).toBe('cumplimiento');
+    });
+
+    it('names none while no company is on a plan', () => {
+        expect(mostUsed([plan(), plan({ key: 'integral' })])).toBeNull();
     });
 });

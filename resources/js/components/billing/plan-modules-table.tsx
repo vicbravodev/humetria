@@ -18,15 +18,20 @@ export default function PlanModulesTable({
     catalog: CatalogView;
 }) {
     return (
-        <section aria-labelledby="plan-modules" className="grid gap-4">
-            <h2
-                id="plan-modules"
-                className="text-xl font-semibold tracking-[-0.01em]"
-            >
-                Qué módulo trae cada plan
-            </h2>
-            <div className="overflow-hidden card p-0">
-                <Table>
+        <section
+            aria-labelledby="plan-modules"
+            className="overflow-hidden card p-0 [&_[data-slot=table-container]]:rounded-none [&_[data-slot=table-container]]:border-0"
+        >
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b px-6 py-4">
+                <h2 id="plan-modules" className="flex-1 font-semibold">
+                    Qué módulo trae cada plan
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                    Cada cruce puede anularse por empresa
+                </p>
+            </div>
+            <div>
+                <Table className="min-w-[640px]">
                     <TableCaption className="sr-only">
                         Módulos del catálogo {catalog.version} por plan
                     </TableCaption>

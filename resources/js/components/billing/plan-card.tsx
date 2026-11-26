@@ -1,10 +1,18 @@
+import { Badge } from '@/components/ui/badge';
 import { Check } from 'lucide-react';
 import { moduleLabel, planPrice, planReach } from '@/lib/billing-catalog';
 import { countOf } from '@/lib/plural';
 import type { CatalogPlan } from '@/types';
 
-/** One plan of the catalog: its price before VAT, who is on it and what it includes. Read only: the catalog changes in code. */
-export default function PlanCard({ plan }: { plan: CatalogPlan }) {
+/** One plan of the catalog (tablero Planes y precios): its price before VAT, who is on it and what it includes. Read only: the catalog changes in code. */
+export default function PlanCard({
+    plan,
+    popular,
+}: {
+    plan: CatalogPlan;
+    /** The plan with the most companies: «El más usado». */
+    popular: boolean;
+}) {
     const price = planPrice(plan);
 
     return (
@@ -13,14 +21,17 @@ export default function PlanCard({ plan }: { plan: CatalogPlan }) {
             className="flex flex-col card"
         >
             <div className="grid gap-1 p-6 pb-4">
-                <h3
-                    id={`plan-${plan.key}`}
-                    className="text-lg font-semibold tracking-[-0.01em]"
-                >
-                    {plan.label}
-                </h3>
+                <div className="flex items-center gap-3">
+                    <h3
+                        id={`plan-${plan.key}`}
+                        className="flex-1 text-lg font-semibold tracking-[-0.01em]"
+                    >
+                        {plan.label}
+                    </h3>
+                    {popular && <Badge variant="success">El más usado</Badge>}
+                </div>
                 <p>
-                    <span className="text-2xl font-semibold tabular-nums">
+                    <span className="text-[32px] leading-10 font-semibold tracking-[-0.01em] tabular-nums">
                         {price.amount}
                     </span>{' '}
                     <span className="text-muted-foreground">{price.per}</span>

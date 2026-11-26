@@ -55,3 +55,13 @@ export function planReach(plan: CatalogPlan): string {
         ? companies
         : `${companies} · ${plan.renewing} ${plural(plan.renewing, 'renueva', 'renuevan')} en 90 días`;
 }
+
+/** The plan with the most companies on it («El más usado»); null while no company is on any. */
+export function mostUsed(plans: CatalogPlan[]): string | null {
+    const top = plans.reduce<CatalogPlan | null>(
+        (best, plan) => (plan.companies > (best?.companies ?? 0) ? plan : best),
+        null,
+    );
+
+    return top?.key ?? null;
+}
