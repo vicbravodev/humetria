@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-17T17:28:22.626Z",
+  "generatedAt": "2026-11-26T05:25:46.000Z",
   "title": "Design System: Humetría",
   "extensions": {
     "colorMeta": {
@@ -170,7 +170,7 @@
       {
         "name": "raised",
         "value": "0 1px 2px rgb(20 33 31 / 5%), 0 4px 16px -6px rgb(20 33 31 / 8%)",
-        "purpose": "Solo el panel de la página sobre el marco del sidebar."
+        "purpose": "El panel de la página sobre el marco del sidebar, las barras inferiores flotantes y la pastilla activa de un control segmentado."
       },
       {
         "name": "float",
@@ -209,7 +209,7 @@
       "refersTo": "button-primary",
       "description": "La acción principal de la vista; una sola por vista o tarjeta.",
       "html": "<button class=\"ds-btn ds-btn-primary\">Enviar recordatorio</button>",
-      "css": ".ds-btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 20px;border-radius:8px;font:500 14px/20px Figtree,system-ui,sans-serif;cursor:pointer;transition:background-color .15s,transform .1s cubic-bezier(.23,1,.32,1)}.ds-btn:active{transform:scale(.97)}.ds-btn:focus-visible{outline:2px solid #0B7A6F;outline-offset:2px}.ds-btn-primary{background:#0B7A6F;color:#fff;border:0}.ds-btn-primary:hover{background:#0A6C62}"
+      "css": ".ds-btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 16px;border-radius:8px;font:500 16px/24px Figtree,system-ui,sans-serif;cursor:pointer;transition:background-color .15s,transform .1s cubic-bezier(.23,1,.32,1)}.ds-btn:active{transform:scale(.97)}.ds-btn:focus-visible{outline:2px solid #0B7A6F;outline-offset:2px}.ds-btn-primary{background:#0B7A6F;color:#fff;border:0}.ds-btn-primary:hover{filter:brightness(1.07)}"
     },
     {
       "name": "Outline Button",
@@ -217,7 +217,7 @@
       "refersTo": "button-outline",
       "description": "Acción secundaria con contorno de control de 3:1.",
       "html": "<button class=\"ds-btn ds-btn-outline\">Ver reporte</button>",
-      "css": ".ds-btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 20px;border-radius:8px;font:500 14px/20px Figtree,system-ui,sans-serif;cursor:pointer;transition:background-color .15s,transform .1s cubic-bezier(.23,1,.32,1)}.ds-btn:active{transform:scale(.97)}.ds-btn:focus-visible{outline:2px solid #0B7A6F;outline-offset:2px}.ds-btn-outline{background:#fff;color:#14211F;border:1px solid #7E8C88}.ds-btn-outline:hover{background:#E5F1EE}"
+      "css": ".ds-btn{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 16px;border-radius:8px;font:500 16px/24px Figtree,system-ui,sans-serif;cursor:pointer;transition:background-color .15s,transform .1s cubic-bezier(.23,1,.32,1)}.ds-btn:active{transform:scale(.97)}.ds-btn:focus-visible{outline:2px solid #0B7A6F;outline-offset:2px}.ds-btn-outline{background:#fff;color:#14211F;border:1px solid #7E8C88}.ds-btn-outline:hover{background:#E5F1EE}"
     },
     {
       "name": "Card",
@@ -225,7 +225,7 @@
       "refersTo": "card",
       "description": "Contenedor con borde, sin sombra, para una entidad viva con estado y acción.",
       "html": "<div class=\"ds-card\"><h3>Planta Apodaca</h3><p>Faltan 44 respuestas</p><div class=\"ds-track\"><span></span></div></div>",
-      "css": ".ds-card{background:#fff;border:1px solid #DCE5E2;border-radius:10px;padding:24px;font-family:Figtree,system-ui,sans-serif;color:#14211F;width:280px}.ds-card h3{margin:0 0 4px;font:600 20px/28px Figtree,system-ui,sans-serif}.ds-card p{margin:0 0 16px;color:#56635F;font:400 16px/24px Figtree,system-ui,sans-serif}.ds-track{height:8px;border-radius:9999px;background:#E3EAE7}.ds-track span{display:block;height:100%;width:64%;border-radius:9999px;background:#0B7A6F}"
+      "css": ".ds-card{background:#fff;border:1px solid #DCE5E2;border-radius:14px;padding:24px;font-family:Figtree,system-ui,sans-serif;color:#14211F;width:280px}.ds-card h3{margin:0 0 4px;font:600 20px/28px Figtree,system-ui,sans-serif}.ds-card p{margin:0 0 16px;color:#56635F;font:400 16px/24px Figtree,system-ui,sans-serif}.ds-track{height:8px;border-radius:9999px;background:#E3EAE7}.ds-track span{display:block;height:100%;width:64%;border-radius:9999px;background:#0B7A6F}"
     },
     {
       "name": "Input",
@@ -249,19 +249,20 @@
       "refersTo": "sidebar-item-active",
       "description": "Elemento activo de la navegación lateral.",
       "html": "<nav class=\"ds-nav\"><a class=\"on\">Aplicaciones</a><a>Personal</a></nav>",
-      "css": ".ds-nav{display:flex;flex-direction:column;gap:4px;width:220px;padding:8px;background:#F2F6F5;border-radius:10px;font-family:Figtree,system-ui,sans-serif}.ds-nav a{display:flex;align-items:center;height:44px;padding:0 12px;border-radius:8px;color:#14211F;font:400 14px/20px Figtree,system-ui,sans-serif;cursor:pointer;transition:background-color .15s}.ds-nav a:hover{background:#E5F1EE}.ds-nav a.on{background:#E5F1EE;font-weight:600;color:#0B7A6F}"
+      "css": ".ds-nav{display:flex;flex-direction:column;gap:4px;width:220px;padding:8px;background:#F2F6F5;border-radius:10px;font-family:Figtree,system-ui,sans-serif}.ds-nav a{display:flex;align-items:center;height:44px;padding:0 12px;border-radius:8px;color:#14211F;font:400 14px/20px Figtree,system-ui,sans-serif;cursor:pointer;transition:background-color .15s}.ds-nav a:hover{background:#EDF3F1}.ds-nav a.on{background:#fff;box-shadow:0 0 0 1px #DCE5E2;font-weight:500}.ds-nav a.on svg{color:#0B7A6F}"
     }
   ],
   "narrative": {
     "northStar": "La mesa de trabajo clara",
-    "overview": "El panel es una mesa bien iluminada donde RH ve de un vistazo qué aplicaciones requieren atención y abre cada una para actuar. La personalidad sale de PRODUCT.md: *clara, cercana y rigurosa*. Clara en el siguiente paso que pide, cercana en el trato y el lenguaje de RH en México, rigurosa en lo que comunica sobre estado, privacidad y alcance. El sistema responde con superficies casi blancas, un solo acento jade, bordes en lugar de sombras y una jerarquía que sale del espacio, no del color.\n\nLa densidad es media: una pregunta por pantalla, una acción primaria por vista, listas con filtros junto a los datos y paso del resumen al detalle (modelo Linear y Stripe Dashboard). La encuesta de la persona trabajadora es otra cosa: letra de 18 a 20 px, un solo flujo, áreas táctiles de 44 px o más, y nunca avanza sola.\n\nEl sistema rechaza lo infantil, lo frío y el gris corporativo, lo cargado, el color sin jerarquía, la plantilla genérica de SaaS con IA y el portal de trámites.",
+    "overview": "**La app es la fuente de verdad:** toda pantalla nueva parte de la más parecida de la app y se arma con sus piezas. Este\ndocumento rige el panel de RH, el portal de la persona trabajadora (la app instalable) y la encuesta. Los marcos, la tabla\nde piezas, las reglas completas de la app instalable, el movimiento y el sitio público están en\n`docs/design-system/design-system.md`; quién usa Humetría y qué no debe parecer, en `PRODUCT.md`.\n\nEl panel es una mesa bien iluminada donde RH ve de un vistazo qué aplicaciones requieren atención y abre cada una para actuar. La personalidad sale de PRODUCT.md: *clara, cercana y rigurosa*. Clara en el siguiente paso que pide, cercana en el trato y el lenguaje de RH en México, rigurosa en lo que comunica sobre estado, privacidad y alcance. El sistema responde con superficies casi blancas, un solo acento jade, bordes en lugar de sombras y una jerarquía que sale del espacio, no del color.\n\nLa densidad es media: una pregunta por pantalla, una acción primaria por vista, listas con filtros junto a los datos y paso del resumen al detalle (modelo Linear y Stripe Dashboard). La encuesta y el portal de la persona trabajadora son otra cosa: una columna para una mano, letra de 18 a 20 px en la encuesta, áreas táctiles de 44 px o más, y nada avanza solo.\n\nEl sistema rechaza lo infantil, lo frío y el gris corporativo, lo cargado, el color sin jerarquía, la plantilla genérica de SaaS con IA y el portal de trámites.",
     "keyCharacteristics": [
-      "Un solo acento (`primary`), neutros con tinte jade.",
-      "Tarjetas con borde y sin sombra; solo lo que flota lleva sombra.",
+      "Un solo acento (`primary`), neutros con tinte jade. Con white label, la empresa cambia su logo y su acento (`BrandPalette` lo ajusta a 4.5:1); tipografía y disposición nunca cambian.",
+      "Tarjetas con borde y sin sombra; solo el panel de la página, las barras flotantes y lo que flota llevan sombra.",
       "Riesgo en tres señales: medidor de 5 segmentos, texto y color sobrio.",
       "Figtree 400/500/600, cuerpo de 16 px, sin cursivas ni pesos 700+.",
-      "Movimiento que confirma lo hecho, máximo 300 ms; reducido respeta `prefers-reduced-motion`.",
-      "Claro y oscuro con la misma jerarquía."
+      "Movimiento que confirma lo hecho, máximo 300 ms; con `prefers-reduced-motion` solo quedan desvanecidos.",
+      "Claro y oscuro con la misma jerarquía.",
+      "Espacio: la página llena hasta 1440 px centrada; formularios y lectura a 880 px a la izquierda; 32 px entre bloques, 48 px entre grupos; margen lateral de 16 px en el celular y 40 px desde `md`."
     ],
     "rules": [
       {
@@ -296,24 +297,27 @@
       }
     ],
     "dos": [
-      "**Do** poner el siguiente paso de cada pantalla en un solo botón primario `primary` de 44 px.",
-      "**Do** mostrar el estado real de cada aplicación primero, y abrir el detalle desde él.",
-      "**Do** decir la confidencialidad antes de la primera pregunta y prometer solo lo que el sistema garantiza.",
-      "**Do** usar `RiskLevel` para todo nivel de riesgo, con medidor, texto y color.",
-      "**Do** usar `shadow-float` solo en lo que flota y `shadow-raised` solo en el panel.",
-      "**Do** mantener texto ≥ 4.5:1, controles ≥ 3:1 y áreas táctiles ≥ 44 px, en claro y oscuro.",
-      "**Do** escribir panel en tuteo, encuesta en «usted», es-MX, sin signos de exclamación ni emoji."
+      "partir de la pantalla más parecida de la app y armar la nueva con sus piezas.",
+      "poner el siguiente paso de cada pantalla en un solo botón primario `primary` de 44 px.",
+      "mostrar el estado real de cada aplicación primero, y abrir el detalle desde él; lo que importa, en la primera pantalla y media.",
+      "dejar un solo desplazamiento por eje, el de la página; el marco queda fijo.",
+      "decir la confidencialidad antes de la primera pregunta y prometer solo lo que el sistema garantiza.",
+      "usar `RiskLevel` para todo nivel de riesgo, con medidor, texto y color.",
+      "usar `shadow-float` solo en lo que flota y `shadow-raised` solo en el panel, las barras flotantes y la pastilla de un control segmentado.",
+      "mantener texto ≥ 4.5:1, controles ≥ 3:1 y áreas táctiles ≥ 44 px, en claro y oscuro.",
+      "escribir el panel en tuteo, la encuesta y el portal en «usted», es-MX, sin signos de exclamación ni emoji."
     ],
     "donts": [
-      "**Don't** verse infantil: ni burbujas, ni radios mayores a 14 px en contenedores, ni ilustraciones juguetonas.",
-      "**Don't** verse frío ni gris corporativo: ningún gris puro, todo neutro lleva el tinte jade.",
-      "**Don't** cargar la pantalla: más de 3 KPIs, o más de una acción primaria por vista.",
-      "**Don't** usar color sin jerarquía: ningún segundo acento, ningún color de estado sin un dato que lo justifique.",
-      "**Don't** hacer plantilla genérica de SaaS con IA: nada de titulares válidos para cualquier empresa, rejillas de tarjetas idénticas para cada módulo, etiquetas decorativas ni mockups que no muestren el producto.",
-      "**Don't** hacer portal de trámites: nada de menús que reflejen la estructura del sistema, formularios que piden todo de golpe ni lenguaje normativo donde la persona necesita una instrucción sencilla.",
-      "**Don't** usar rojo ni verde de semáforo, ni comunicar un nivel solo con color.",
-      "**Don't** usar `border-left` o `border-right` mayor a 1px como acento de tarjeta o alerta, texto con degradado, glassmorphism decorativo ni tarjetas dentro de tarjetas.",
-      "**Don't** animar propiedades de layout, usar rebotes ni pasar de 300 ms (salvo el informe al abrirse); nunca avanzar la encuesta sola."
+      "verse infantil: ni burbujas ni ilustraciones juguetonas. Tarjetas, diálogos y paneles llevan como máximo 14 px de radio; excepciones que ya existen: la hoja inferior del portal (16 px arriba), las barras en píldora y el sitio público.",
+      "verse frío ni gris corporativo: todo neutro lleva el tinte jade (el blanco de `card` y el gris #6B7472 del sello son las dos excepciones).",
+      "cargar la pantalla: más de 3 KPIs, o más de una acción primaria por vista.",
+      "usar color sin jerarquía: ningún segundo acento, ningún color de estado sin un dato que lo justifique.",
+      "hacer plantilla genérica de SaaS con IA: nada de titulares válidos para cualquier empresa, rejillas de tarjetas idénticas para cada módulo (las listas de entidades con estado propio sí van en tarjetas), etiquetas decorativas ni mockups que no muestren el producto.",
+      "hacer portal de trámites: nada de menús que reflejen la estructura del sistema, formularios que piden todo de golpe ni lenguaje normativo donde la persona necesita una instrucción sencilla.",
+      "encerrar contenido en cajas con scroll propio ni tablas de altura fija dentro de la página (excepciones: un espacio de trabajo de altura completa, lo que flota, una tabla ancha en el celular).",
+      "usar rojo ni verde de semáforo, ni comunicar un nivel solo con color.",
+      "usar `border-left` o `border-right` mayor a 1px como acento de tarjeta o alerta (las líneas que estructuran sí: la guía y la marca del submenú del sidebar, los conectores del organigrama, la cita de un comentario), texto con degradado, glassmorphism decorativo (única excepción: las barras inferiores flotantes del celular) ni tarjetas dentro de tarjetas.",
+      "animar propiedades de layout, usar rebotes ni pasar de 300 ms (salvo el informe al abrirse); nunca avanzar la encuesta sola."
     ]
   }
 }
