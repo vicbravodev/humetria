@@ -12,7 +12,7 @@ use Illuminate\Validation\Rule;
 
 /**
  * "Entrar" from the console: as the owner, or (only in the demo company) as its HR. A real company asks why and for how long (30,
- * 60 or 120 minutes); the demo company, shown to prospects, asks neither and lasts the longest.
+ * 60 or 120 minutes); the demo company, shown to prospects, asks neither and does not end by itself.
  */
 final class ImpersonateRequest extends FormRequest
 {
@@ -71,9 +71,10 @@ final class ImpersonateRequest extends FormRequest
         return $this->filled('reason') ? $this->string('reason')->trim()->toString() : null;
     }
 
-    public function minutes(): int
+    /** How long the entry lasts; null for the demo company, which is shown to prospects and never ends by itself. */
+    public function minutes(): ?int
     {
-        return $this->filled('minutes') ? $this->integer('minutes') : max(self::MINUTES);
+        return $this->tenant()?->is_demo === true ? null : $this->integer('minutes');
     }
 
     private function tenant(): ?Tenant

@@ -89,9 +89,10 @@ final readonly class Impersonation
 
     /**
      * Signs in as the target, recorded first as the superadmin with why and for how long. The tenant the console row
-     * belongs to, if any, comes from the Context. Logging in gives the session a new id. It ends by itself after `$minutes`.
+     * belongs to, if any, comes from the Context. Logging in gives the session a new id. It ends by itself after `$minutes`;
+     * with null minutes it lasts until "Salir".
      */
-    public function start(User $impersonator, User $target, ?string $tenantId = null, ?string $reason = null, int $minutes = 120): void
+    public function start(User $impersonator, User $target, ?string $tenantId = null, ?string $reason = null, ?int $minutes = 120): void
     {
         Context::scope(function () use ($target, $reason, $minutes): void {
             $why = $reason === null ? [] : ['reason' => $reason, 'minutes' => $minutes];
@@ -101,11 +102,8 @@ final readonly class Impersonation
 
         $this->switchTo($target);
         $this->session->forget(self::PASSWORD_CONFIRMED_KEY);
-        $this->session->put([
-            self::SESSION_KEY => $impersonator->id,
-            self::IMPERSONATED_KEY => $target->id,
-            self::ENDS_AT_KEY => now()->addMinutes($minutes)->getTimestamp(),
-        ]);
+        $this->session->put([self::SESSION_KEY => $impersonator->id, self::IMPERSONATED_KEY => $target->id]);
+        $minutes === null ? $this->session->forget(self::ENDS_AT_KEY) : $this->session->put(self::ENDS_AT_KEY, now()->addMinutes($minutes)->getTimestamp());
         $tenantId === null ? $this->session->forget(self::TENANT_KEY) : $this->session->put(self::TENANT_KEY, $tenantId);
     }
 

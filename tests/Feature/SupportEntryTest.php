@@ -89,3 +89,19 @@ it('never opens the personal account of whoever it works as', function (): void 
 
     $this->get(route('profile.edit'))->assertNotFound();
 });
+
+it('never ends an entry to the demo company by itself: no countdown, still inside hours later', function (array $entry): void {
+    $this->travelTo('2026-11-25 18:00 UTC');
+    $demo = Tenant::factory()->demo()->create();
+    $owner = ownerOf($demo);
+    $this->actingAs(superadmin())->post(route('companies.impersonate', $demo), $entry)->assertRedirect(route('dashboard'));
+
+    $this->travel(5)->hours();
+
+    $this->followingRedirects()->get(route('dashboard'))->assertOk()->assertInertia(fn (Assert $page) => $page->missing('impersonationLeft'));
+    $this->assertAuthenticatedAs($owner);
+    expect(AuditEntry::query()->where('event', 'impersonation.expired')->exists())->toBeFalse();
+})->with([
+    'nothing asked' => [[]],
+    'even with minutes sent' => [['minutes' => 30]],
+]);
