@@ -10,12 +10,14 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Notifications\CompanyReactivated;
 use App\Modules\Tenancy\Notifications\CompanyRestricted;
 use App\Modules\Tenancy\Notifications\ToolsChanged;
+use App\Modules\Tenancy\Notifications\TrialExtended;
 use Carbon\CarbonImmutable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
 
 /**
- * What the owner of a company is told when the platform changes what it can do: it stopped, it came back, its tools changed.
+ * What the owner of a company is told when the platform changes what it can do: it stopped, it came back, its tools changed,
+ * its ended trial runs again.
  * The change is already made; when there is nobody to tell (no owner, or one who never verified the email) it says so in the
  * log and goes on.
  */
@@ -29,6 +31,14 @@ final readonly class OwnerNotices
     public function reactivated(Tenant $tenant): void
     {
         $this->send($tenant, 'tenant.reactivated', fn (): CompanyReactivated => new CompanyReactivated(CompanyDirectory::summaryOf($tenant), $this->support()));
+    }
+
+    /** A trial that had ended runs again until `$endsAt`: the owner reads the day in Mexico City's time. */
+    public function trialExtended(Tenant $tenant, CarbonImmutable $endsAt): void
+    {
+        $endsOn = $endsAt->setTimezone(config()->string('app.display_timezone'))->isoFormat('D [de] MMMM');
+
+        $this->send($tenant, 'tenant.trial_extended', fn (): TrialExtended => new TrialExtended(CompanyDirectory::summaryOf($tenant), $endsOn));
     }
 
     /**
