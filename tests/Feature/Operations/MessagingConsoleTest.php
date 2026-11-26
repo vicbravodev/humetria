@@ -93,6 +93,18 @@ it('tells the state of the connection with Meta and the opt-outs, in counts', fu
         ->where('optOuts', ['everyCompany' => 1, 'oneCompany' => 2, 'lastThirtyDays' => 3]));
 });
 
+it('opens on the summary, or on the view its tab asks for', function (?string $asked, string $view): void {
+    test()->actingAs(superadmin())->get(route('operations.messaging', $asked === null ? [] : ['view' => $asked]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->where('view', $view)->has('templates')->has('companies'));
+})->with([
+    'no view' => [null, 'summary'],
+    'templates' => ['templates', 'templates'],
+    'mail' => ['mail', 'mail'],
+    'companies' => ['companies', 'companies'],
+    'an unknown one' => ['messages', 'summary'],
+]);
+
 it('never gives the page a message, a phone or its hash', function (): void {
     Delivery::factory()->create(['status' => DeliveryStatus::Failed, 'provider_message_id' => 'wamid.secret']);
     Delivery::factory()->count(5)->create(['tenant_id' => Delivery::query()->sole()->tenant_id, 'status' => DeliveryStatus::Failed]);
