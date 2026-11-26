@@ -183,6 +183,18 @@ it('says in the launch dialog how many people will not get the email', function 
         ->assertNoJavaScriptErrors();
 });
 
+// At 375 px the notice's sentence keeps a readable width: its button goes under it instead of squeezing it a word per line.
+it('keeps the notice of who has no contact readable on a phone', function (): void {
+    $tenant = campaignsCompany();
+    $plant = WorkCenter::factory()->for($tenant)->create(['name' => 'Planta Norte']);
+    staffOf($tenant, $plant, 3)->first()->forceFill(['email' => null, 'mobile' => null])->save();
+    $this->post(route('tenant.campaigns.store', $tenant), ['work_center_id' => $plant->id]);
+    $campaign = Campaign::query()->withoutGlobalScopes()->sole();
+
+    visitPage('campaigns/show', "/admin/acme/campaigns/{$campaign->id}", mobile: true)
+        ->assertScript('() => document.querySelector(\'[data-slot="notice"] p\').getBoundingClientRect().width >= 200', true);
+});
+
 // With WhatsApp on, the draft and the launch dialog say through which channel each person is reached, never «correo» for all.
 it('says by channel how the draft reaches people when the company writes by WhatsApp', function (): void {
     config(['whatsapp.enabled' => true, 'whatsapp.paused' => false, 'messaging.recipient_keys' => [1 => base64_encode('a-key')]]);
