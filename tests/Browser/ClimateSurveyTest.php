@@ -41,7 +41,7 @@ it('lets RH review the draft before launching it', function (bool $dark, bool $m
         ->assertSee('Clima · noviembre 2026')
         ->assertSee('Borrador')
         ->assertSee('Revisa tres cosas y lanza.')
-        ->assertSee('2 personas no tienen correo.')
+        ->assertSee('2 personas no tienen correo ni celular.')
         ->assertSee('Lo que van a contestar')
         ->assertSee('Lanzar e invitar a 4 personas')
         ->assertNoJavaScriptErrors()

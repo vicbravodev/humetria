@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { MapPin, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import ZoneDialog from '@/components/attendance/zone-dialog';
 import ZoneMap from '@/components/attendance/zone-map';
 import ZonesTable from '@/components/attendance/zones-table';
@@ -28,6 +28,8 @@ export default function CenterZones({
 }) {
     const tenantSlug = useTenantSlug();
     const [adding, setAdding] = useState(false);
+    // The map is drawn again only when the zones change, not when the dialog opens.
+    const mapped = useMemo(() => mapZones(zones.data), [zones.data]);
     const add = canManage ? (
         <Button onClick={() => setAdding(true)}>
             <Plus aria-hidden />
@@ -72,7 +74,7 @@ export default function CenterZones({
                 </EmptyState>
             ) : (
                 <>
-                    {canManage && <ZoneMap zones={mapZones(zones.data)} />}
+                    {canManage && <ZoneMap zones={mapped} />}
                     <ZonesTable
                         zones={zones.data}
                         centerId={centerId}

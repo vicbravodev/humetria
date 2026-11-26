@@ -152,10 +152,26 @@ it('tells RH, on the draft, who will be invited, who cannot be reached and who i
 
     $props = $this->actingAs($this->hr)->get(route('tenant.climate.show', [$this->tenant, $survey]))->assertOk()->inertiaProps();
 
-    expect($props['draft'])->toMatchArray(['people' => 11, 'withoutEmail' => 2, 'companyOnly' => 5, 'minGroup' => 5, 'canLaunch' => true])
+    expect($props['draft'])->toMatchArray(['people' => 11, 'withoutContact' => 2, 'whatsapp' => 0, 'companyOnly' => 5, 'minGroup' => 5, 'canLaunch' => true])
         ->and($props['draft']['limits'])->toBe(['min' => '2026-11-10', 'suggested' => '2026-11-23', 'max' => '2027-01-08'])
         ->and($props['unreachable']['total'])->toBe(2)
         ->and($props['participation'])->toBeNull();
+});
+
+it('counts as reached, on the draft, whoever WhatsApp reaches when the company writes by it', function (): void {
+    config(['whatsapp.enabled' => true, 'whatsapp.paused' => false, 'messaging.recipient_keys' => [1 => base64_encode('a-key')]]);
+    Database\Factories\Tenancy\TenantChannelFactory::new()->for($this->tenant)->whatsAppEnabled()->create(['preference' => 1]);
+    Database\Factories\Tenancy\TenantChannelFactory::new()->for($this->tenant)->create(['channel' => 'mail', 'preference' => 2]);
+    $plant = App\Modules\Tenancy\Models\WorkCenter::factory()->for($this->tenant)->create();
+    climatePanelStaff($this->tenant, $plant, 3, ['mobile' => null]);
+    climatePanelStaff($this->tenant, $plant, 2, ['email' => null, 'mobile' => '+528186875700']);
+    climatePanelStaff($this->tenant, $plant, 1, ['email' => null, 'mobile' => null]);
+    $survey = Survey::factory()->create(['tenant_id' => $this->tenant->id]);
+
+    $props = $this->actingAs($this->hr)->get(route('tenant.climate.show', [$this->tenant, $survey]))->inertiaProps();
+
+    expect($props['draft'])->toMatchArray(['people' => 6, 'withoutContact' => 1, 'whatsapp' => 2])
+        ->and($props['unreachable']['total'])->toBe(1);
 });
 
 it('pages the people who cannot be reached, by name, and says nothing else about them', function (): void {

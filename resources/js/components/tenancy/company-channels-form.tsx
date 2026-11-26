@@ -1,4 +1,4 @@
-import { Form } from '@inertiajs/react';
+import { Form, usePage } from '@inertiajs/react';
 import { Mail } from 'lucide-react';
 import ChoiceField from '@/components/humetria/choice-field';
 import InputError from '@/components/humetria/input-error';
@@ -21,6 +21,8 @@ export default function CompanyChannelsForm({
     page: CompanyChannelsPage;
 }) {
     const tenantSlug = useTenantSlug();
+    // Whoever works as the owner only reads: the save is the owner's alone (ChannelsNotices says so).
+    const { impersonator } = usePage().props;
     const { choice, change } = useChannelsChoice(page);
     const both =
         choice.mail &&
@@ -84,12 +86,14 @@ export default function CompanyChannelsForm({
                             error={errors['preferred']}
                         />
                     )}
-                    <div className="flex justify-end border-t pt-[18px]">
-                        <Button disabled={processing}>
-                            {processing && <Spinner />}
-                            Guardar
-                        </Button>
-                    </div>
+                    {impersonator === null && (
+                        <div className="flex justify-end border-t pt-[18px]">
+                            <Button disabled={processing}>
+                                {processing && <Spinner />}
+                                Guardar
+                            </Button>
+                        </div>
+                    )}
                 </>
             )}
         </Form>

@@ -51,7 +51,10 @@ export type ClimateSurveyHistoryRow = {
 /** What RH reviews on a draft before launching it. */
 export type ClimateDraft = {
     people: number;
-    withoutEmail: number;
+    /** People neither email nor WhatsApp reaches. */
+    withoutContact: number;
+    /** People who get their link by WhatsApp; the rest of the reached, by email. */
+    whatsapp: number;
     /** People reported only with the whole company: every group they could be in is too small. */
     companyOnly: number;
     minGroup: number;

@@ -18,6 +18,11 @@ describe('peopleEmpty', () => {
         expect(peopleEmpty({ ...filters, status: 'all' }).title).toBe(
             'Nadie está invitado',
         );
+        // With WhatsApp on, a person with only a phone is reached too: «sin contacto» is having neither.
+        expect(peopleEmpty({ ...filters, status: 'unreachable' })).toEqual({
+            title: 'Todas tienen contacto',
+            text: 'Cada persona invitada recibe su enlace por correo o por WhatsApp.',
+        });
     });
 
     it('keeps «Nadie coincide» for a search or an area that found nobody', () => {

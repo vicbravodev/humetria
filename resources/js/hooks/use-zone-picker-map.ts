@@ -36,7 +36,8 @@ const handle = (className: string) =>
         iconAnchor: [11, 11],
     });
 
-function openMap(element: HTMLElement, center: Point | null): Map {
+/** A Leaflet map of OpenStreetMap streets on `element`, at the street of `center` or Mexico whole without one. */
+export function openMap(element: HTMLElement, center: Point | null): Map {
     const map = createMap(element, { attributionControl: false }).setView(
         center ?? MEXICO,
         center === null ? 5 : STREET_ZOOM,
