@@ -27,7 +27,7 @@ final class UserConsoleController extends Controller
 
         $search = trim($request->string('q')->toString());
         $tab = $request->string('tab')->toString();
-        $tab = in_array($tab, ['team', 'permissions'], true) ? $tab : 'people';
+        $tab = in_array($tab, ['people', 'permissions'], true) ? $tab : 'team';
 
         return Inertia::render('tenancy/users', [
             'users' => $tab === 'permissions' ? null : $pages->handle($search, $tab === 'team'),

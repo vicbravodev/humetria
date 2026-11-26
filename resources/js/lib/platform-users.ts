@@ -14,7 +14,7 @@ export function usersQuery(
 
     return {
         ...(q === '' ? {} : { q }),
-        ...(filters.tab === 'people' ? {} : { tab: filters.tab }),
+        ...(filters.tab === 'team' ? {} : { tab: filters.tab }),
     };
 }
 

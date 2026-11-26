@@ -87,11 +87,11 @@ describe('actionCopy', () => {
 
 describe('usersQuery', () => {
     it('keeps the view and the search in the address, and leaves out what is the default', () => {
-        expect(usersQuery({ q: ' ana ', tab: 'team' })).toEqual({
+        expect(usersQuery({ q: ' ana ', tab: 'people' })).toEqual({
             q: 'ana',
-            tab: 'team',
+            tab: 'people',
         });
-        expect(usersQuery({ q: '', tab: 'people' })).toEqual({});
+        expect(usersQuery({ q: '', tab: 'team' })).toEqual({});
         expect(usersQuery({ q: '', tab: 'permissions' })).toEqual({
             tab: 'permissions',
         });

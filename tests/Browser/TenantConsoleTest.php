@@ -730,7 +730,7 @@ it('shows the superadmin the platform users, each with a menu that asks before i
     signInAsSuperadmin();
     User::factory()->create(['name' => 'Ana Pérez', 'email' => 'ana@acme.mx', 'two_factor_confirmed_at' => now(), 'two_factor_secret' => 's', 'two_factor_recovery_codes' => 'c']);
 
-    visitPage('tenancy/users', '/admin/platform-users', $dark, $mobile)
+    visitPage('tenancy/users', '/admin/platform-users?tab=people', $dark, $mobile)
         ->assertSee('Usuarios')
         ->assertSee('Ana Pérez')
         ->assertSee('ana@acme.mx')
@@ -747,7 +747,7 @@ it('shows the team with its support entries, and what each platform role may do'
     signInAsSuperadmin();
     support()->forceFill(['name' => 'Soporte Uno'])->save();
 
-    visitPage('tenancy/users', '/admin/platform-users?tab=team', $dark, $mobile)
+    visitPage('tenancy/users', '/admin/platform-users', $dark, $mobile)
         ->assertSee('Equipo Humetría')
         ->assertSee('Soporte Uno')
         ->click('Permisos por rol')

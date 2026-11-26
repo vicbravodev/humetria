@@ -62,7 +62,7 @@ it('lists the users with their role, two-factor, verification and companies, new
     $help = support();
     $help->forceFill(['name' => 'Soporte Uno', 'email_verified_at' => null])->save();
 
-    $this->actingAs(superadmin())->get(route('platform-users.index'))
+    $this->actingAs(superadmin())->get(route('platform-users.index', ['tab' => 'people']))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('tenancy/users')
@@ -81,7 +81,7 @@ it('lists the users with their role, two-factor, verification and companies, new
 it('never sends the secret of a user to the page', function (): void {
     userWithTwoFactor(['name' => 'Ana López']);
 
-    $json = $this->actingAs(superadmin())->get(route('platform-users.index'))->getContent();
+    $json = $this->actingAs(superadmin())->get(route('platform-users.index', ['tab' => 'people']))->getContent();
 
     expect($json)->not->toContain('secret')->not->toContain('codes')->not->toContain('remember_token');
 });
@@ -90,7 +90,7 @@ it('searches by name and email, ignoring accents, case and the order of the word
     User::factory()->create(['name' => 'Juan Pérez', 'email' => 'juan@acme.mx']);
     User::factory()->create(['name' => 'Rosa Medina', 'email' => 'rosa@beta.mx']);
 
-    $this->actingAs(superadmin())->get(route('platform-users.index', ['q' => $search]))
+    $this->actingAs(superadmin())->get(route('platform-users.index', ['tab' => 'people', 'q' => $search]))
         ->assertInertia(fn (Assert $page) => $page
             ->where('filters.q', $search)
             ->where('users.data', fn ($rows) => collect($rows)->pluck('name')->sort()->values()->all() === $names));
@@ -104,7 +104,7 @@ it('searches by name and email, ignoring accents, case and the order of the word
 it('pages by 25', function (): void {
     User::factory()->count(26)->create();
 
-    $this->actingAs(superadmin())->get(route('platform-users.index'))
+    $this->actingAs(superadmin())->get(route('platform-users.index', ['tab' => 'people']))
         ->assertInertia(fn (Assert $page) => $page->where('users.per_page', 25)->has('users.data', 25)->where('users.total', 27));
 });
 
@@ -314,7 +314,22 @@ it('names every permission of the platform in Spanish', function (): void {
                 && collect($rows)->every(fn ($row) => $row['label'] !== $row['ability'])));
 });
 
-it('opens on the people with an account, also for a view it does not know', function (?string $tab): void {
+it('opens on the team, also for a view it does not know', function (?string $tab): void {
+    User::factory()->create(['name' => 'Cliente Uno']);
+
     $this->actingAs(superadmin())->get(route('platform-users.index', ['tab' => $tab]))
-        ->assertInertia(fn (Assert $page) => $page->where('filters.tab', 'people'));
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('filters.tab', 'team')
+            ->where('users.total', 1));
 })->with(['none' => null, 'unknown' => 'everyone']);
+
+it('shows everyone with an account in their own view, keeping the search', function (): void {
+    User::factory()->create(['name' => 'Ana Cliente']);
+    support()->forceFill(['name' => 'Ana Soporte'])->save();
+
+    $this->actingAs(superadmin())->get(route('platform-users.index', ['tab' => 'people', 'q' => 'ana']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('filters.tab', 'people')
+            ->where('counts', ['team' => 1, 'people' => 2])
+            ->where('users.total', 2));
+});
