@@ -1,0 +1,113 @@
+{
+  "pkg": "humetria",
+  "globalName": "Humetria",
+  "shape": "package",
+  "buildCmd": "node .design-sync/build-dist.mjs",
+  "cssEntry": "dist/styles.css",
+  "guidelinesGlob": [
+    "../../docs/design-system/*.md",
+    "../../docs/design-system/humi/03-ui-spec.md",
+    "../../PRODUCT.md",
+    "../../DESIGN.md"
+  ],
+  "srcDir": "../../resources/js/components",
+  "docsDir": "../../docs/design-system/componentes",
+  "componentSrcMap": {
+    "ChoiceField": "../../resources/js/components/humetria/choice-field.tsx",
+    "RowMenu": "../../resources/js/components/humetria/row-menu.tsx"
+  },
+  "overrides": {
+    "ConfirmDialog": {
+      "cardMode": "single",
+      "viewport": "720x420"
+    },
+    "Dialog": {
+      "cardMode": "single",
+      "viewport": "720x420"
+    },
+    "Sheet": {
+      "cardMode": "single",
+      "viewport": "900x560"
+    },
+    "FormSheet": {
+      "cardMode": "single",
+      "viewport": "900x620"
+    },
+    "FormDialog": {
+      "cardMode": "single",
+      "viewport": "720x480"
+    },
+    "DropdownMenu": {
+      "cardMode": "single",
+      "viewport": "480x320"
+    },
+    "Tooltip": {
+      "cardMode": "single",
+      "viewport": "420x200"
+    },
+    "RowMenu": {
+      "cardMode": "single",
+      "viewport": "480x320"
+    },
+    "Popover": {
+      "cardMode": "single",
+      "viewport": "480x380"
+    },
+    "Sidebar": {
+      "cardMode": "single",
+      "viewport": "1000x640"
+    },
+    "PosterPage": {
+      "cardMode": "column",
+      "viewport": "1280x900"
+    },
+    "InspectionDossier": {
+      "cardMode": "column"
+    },
+    "CertificateSheet": {
+      "cardMode": "column"
+    },
+    "WaterfallChart": {
+      "cardMode": "column"
+    },
+    "AppSidebarLayout": {
+      "cardMode": "single",
+      "viewport": "1280x800"
+    },
+    "AppSidebar": {
+      "cardMode": "single",
+      "viewport": "1000x700"
+    },
+    "AppSidebarHeader": {
+      "cardMode": "column"
+    },
+    "PersonFrame": {
+      "cardMode": "single",
+      "viewport": "390x780"
+    },
+    "WorkerFrame": {
+      "cardMode": "single",
+      "viewport": "390x780"
+    },
+    "PortalTabBar": {
+      "cardMode": "single",
+      "viewport": "390x300"
+    },
+    "MobileTabBar": {
+      "cardMode": "single",
+      "viewport": "390x300"
+    }
+  },
+  "readmeHeader": ".design-sync/conventions.md",
+  "docsMap": {
+    "AppSidebarLayout": "../../.design-sync/docs/marcos.md",
+    "AppSidebar": "../../.design-sync/docs/marcos.md",
+    "AppSidebarHeader": "../../.design-sync/docs/marcos.md",
+    "AppBreadcrumbs": "../../.design-sync/docs/marcos.md",
+    "MobileTabBar": "../../.design-sync/docs/marcos.md",
+    "CompanyMark": "../../.design-sync/docs/marcos.md",
+    "PersonFrame": "../../.design-sync/docs/marcos.md",
+    "WorkerFrame": "../../.design-sync/docs/marcos.md",
+    "PortalTabBar": "../../.design-sync/docs/marcos.md"
+  }
+}
