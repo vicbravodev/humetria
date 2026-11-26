@@ -1,5 +1,6 @@
 import { Head } from '@inertiajs/react';
 import PageHeader from '@/components/humetria/page-header';
+import ChannelsNotices from '@/components/tenancy/channels-notices';
 import CompanyChannelsForm from '@/components/tenancy/company-channels-form';
 import type { CompanyChannelsPage } from '@/types';
 
@@ -13,6 +14,7 @@ export default function Channels(props: CompanyChannelsPage) {
                     title="Canales de comunicación"
                     description="Por dónde les escribe Humetría a las personas de tu empresa: invitaciones a las encuestas y, después, otros avisos."
                 />
+                <ChannelsNotices isDemo={props.isDemo} />
                 <CompanyChannelsForm page={props} />
             </div>
         </>
