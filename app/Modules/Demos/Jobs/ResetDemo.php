@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Demos\Jobs;
 
 use App\Modules\Demos\Contracts\DemoWorkspace;
+use App\Modules\Demos\Enums\DemoSessionStatus;
 use App\Modules\Demos\Models\DemoRun;
+use App\Modules\Demos\Models\DemoSession;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Throwable;
@@ -15,7 +17,8 @@ use Throwable;
  * a demo that exists wipes it first, under the step «Borrando la demo»: once, not twice). Only
  * its run travels in the job, and the run shows each step. Once only: a half-told story is not safe to tell again on top
  * (the next run starts by wiping it). A failure stays on the run with its class and step, never its message, and the job
- * ends without rethrowing it, so the message never reaches failed_jobs either.
+ * ends without rethrowing it, so the message never reaches failed_jobs either. A session that was ending ends with it;
+ * after a failed reset it stays ending, for the console to end it again.
  */
 final class ResetDemo implements ShouldQueue
 {
@@ -52,6 +55,7 @@ final class ResetDemo implements ShouldQueue
         }
 
         $run->finish();
+        DemoSession::query()->where('status', DemoSessionStatus::Ending)->first()?->markEnded();
     }
 
     /** The worker gave up on it (its time ran out): the run must not stay running. */

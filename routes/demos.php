@@ -38,6 +38,8 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('admin/demo', [DemoRoomController::class, 'show'])->name('demo-room.show');
     Route::post('admin/demo/prepare', [DemoRoomController::class, 'prepare'])->name('demo-room.prepare');
     Route::post('admin/demo/reset', [DemoRoomController::class, 'reset'])->name('demo-room.reset');
+    Route::post('admin/demo/session', [DemoRoomController::class, 'startSession'])->name('demo-room.session.start');
+    Route::delete('admin/demo/session', [DemoRoomController::class, 'endSession'])->name('demo-room.session.end');
     Route::post('admin/demo/door', [DemoRoomController::class, 'openDoor'])->name('demo-room.door.open');
     Route::delete('admin/demo/door', [DemoRoomController::class, 'closeDoor'])->name('demo-room.door.close');
     Route::post('admin/demo/kiosk', [DemoRoomController::class, 'reissueKiosk'])->name('demo-room.kiosk.reissue');

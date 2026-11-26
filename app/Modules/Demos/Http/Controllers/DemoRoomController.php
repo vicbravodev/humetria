@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace App\Modules\Demos\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Demos\Actions\EndDemoSession;
 use App\Modules\Demos\Actions\StartDemoRun;
+use App\Modules\Demos\Actions\StartDemoSession;
 use App\Modules\Demos\Contracts\DemoShowcase;
 use App\Modules\Demos\Contracts\DoorControl;
 use App\Modules\Demos\Http\Requests\DemoRoomRequest;
+use App\Modules\Demos\Http\Requests\StartDemoSessionRequest;
 use App\Modules\Demos\Support\DemoRoomPage;
 use App\Modules\Demos\Support\QrCode;
 use App\Modules\Tenancy\Contracts\DemoCompanies;
@@ -21,6 +24,8 @@ final class DemoRoomController extends Controller
 {
     /** A live session's length, in minutes. */
     private const int DOOR_MINUTES = 120;
+
+    private const string UNQUEUED = 'No se pudo encolar la preparación: inténtalo de nuevo en unos minutos.';
 
     public function show(DemoRoomRequest $request, DemoRoomPage $page): Response
     {
@@ -35,6 +40,29 @@ final class DemoRoomController extends Controller
     public function reset(DemoRoomRequest $request, StartDemoRun $start): RedirectResponse
     {
         return $this->started($start->handle('reset'), 'Reiniciando la demo: tarda alrededor de medio minuto.');
+    }
+
+    public function startSession(StartDemoSessionRequest $request, StartDemoSession $start): RedirectResponse
+    {
+        Inertia::flash('toast', match ($start->handle($request->clientName(), $request->tours())) {
+            'started' => ['type' => 'success', 'message' => 'Preparando la sesión: tarda alrededor de medio minuto.'],
+            'busy' => ['type' => 'error', 'message' => 'Ya hay una sesión en curso o una preparación corriendo: espera a que termine.'],
+            'unqueued' => ['type' => 'error', 'message' => self::UNQUEUED],
+        });
+
+        return back();
+    }
+
+    public function endSession(DemoRoomRequest $request, EndDemoSession $end): RedirectResponse
+    {
+        Inertia::flash('toast', match ($end->handle()) {
+            'started' => ['type' => 'success', 'message' => 'Terminando la sesión: la demo se reinicia y borra lo que dejó el público.'],
+            'busy' => ['type' => 'error', 'message' => 'Hay una preparación corriendo: espera a que termine para terminar la sesión.'],
+            'unqueued' => ['type' => 'error', 'message' => self::UNQUEUED],
+            'none' => ['type' => 'error', 'message' => 'No hay una sesión en curso.'],
+        });
+
+        return back();
     }
 
     public function openDoor(DemoRoomRequest $request, DoorControl $door, QrCode $qr): RedirectResponse
@@ -73,7 +101,7 @@ final class DemoRoomController extends Controller
         Inertia::flash('toast', match ($outcome) {
             'started' => ['type' => 'success', 'message' => $message],
             'busy' => ['type' => 'error', 'message' => 'Ya hay una preparación corriendo: espera a que termine.'],
-            'unqueued' => ['type' => 'error', 'message' => 'No se pudo encolar la preparación: inténtalo de nuevo en unos minutos.'],
+            'unqueued' => ['type' => 'error', 'message' => self::UNQUEUED],
         });
 
         return back();

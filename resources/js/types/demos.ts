@@ -50,7 +50,7 @@ export type DemoRoom = {
 };
 
 export type DemoRunState = {
-    kind: 'prepare' | 'reset';
+    kind: 'prepare' | 'reset' | 'session';
     status: 'running' | 'finished' | 'failed';
     step: string | null;
     error_class: string | null;
