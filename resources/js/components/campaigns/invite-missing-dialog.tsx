@@ -25,7 +25,7 @@ export default function InviteMissingDialog({
             open={open}
             onOpenChange={onOpenChange}
             title="¿Invitar a quien falte?"
-            description="Reciben su enlace quienes entraron al centro de trabajo después del lanzamiento, quienes volvieron y quienes no lo recibieron por no tener correo. A los demás no les llega nada."
+            description="Reciben su enlace quienes entraron al centro de trabajo después del lanzamiento, quienes volvieron y quienes no lo recibieron por no tener correo ni celular. A los demás no les llega nada."
             confirmLabel="Invitar"
             destructive={false}
             disabled={missing.people === 0}
