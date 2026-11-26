@@ -13,6 +13,7 @@ use App\Modules\Billing\Actions\ListAccounts;
 use App\Modules\Billing\Actions\ListAccountStatements;
 use App\Modules\Billing\Actions\ListAccountTransfers;
 use App\Modules\Billing\Actions\SummarizeAccount;
+use App\Modules\Billing\Actions\SummarizeAccountYear;
 use App\Modules\Billing\Actions\SummarizeReceivable;
 use App\Modules\Billing\Actions\UpdateAccount;
 use App\Modules\Billing\Enums\AccountKind;
@@ -74,9 +75,11 @@ final class AccountConsoleController extends Controller
         return redirect()->route('billing.accounts.show', $account);
     }
 
-    public function show(BillingAccount $account, ListAccountCompanies $listCompanies, ListAccountCharges $listCharges, SummarizeAccount $summarize, ListAccountStatements $listStatements, ListAccountPayments $listPayments, SummarizeReceivable $receivable, ListAccountTransfers $listTransfers): Response
+    public function show(Request $request, BillingAccount $account, ListAccountCompanies $listCompanies, ListAccountCharges $listCharges, SummarizeAccount $summarize, ListAccountStatements $listStatements, ListAccountPayments $listPayments, SummarizeReceivable $receivable, ListAccountTransfers $listTransfers, SummarizeAccountYear $year): Response
     {
         Gate::authorize('view-billing');
+
+        $open = $request->string('statements')->toString() === 'open';
 
         return Inertia::render('billing/account', [
             ...$this->satCatalogs(),
@@ -86,7 +89,9 @@ final class AccountConsoleController extends Controller
             'summary' => $summarize->handle($account),
             'companies' => $listCompanies->handle($account),
             'charges' => $listCharges->handle($account),
-            'statements' => $listStatements->handle($account),
+            'statements' => $listStatements->handle($account, $open),
+            'statementsView' => $open ? 'open' : 'all',
+            'year' => $year->handle($account),
             'payments' => $listPayments->handle($account),
             'receivable' => $receivable->handle($account),
             'transfers' => $listTransfers->handle($account),
