@@ -18,7 +18,7 @@ final readonly class AddCharge
     public function __construct(private RecordAudit $recordAudit) {}
 
     /**
-     * Adds an extra charge to the company's plan: recurring (the accompaniment) or once (an implementation, a study), approved by
+     * Adds an extra charge to the company's plan: recurring (the monthly accompaniment) or once (the assisted implementation, a study), quoted by hand: no plan includes them, approved by
      * whoever adds it. It changes nothing else: statements will pick it up when they are made.
      *
      * @throws CompanyHasNoPlan

@@ -1,7 +1,7 @@
 # Sso (Inicio de sesión único)
 
 Las personas con cuenta en `/admin` (dueño, RH, consulta…) entran con el proveedor de identidad de su empresa por OpenID
-Connect: Microsoft Entra, Google Workspace u Okta. Es una herramienta del catálogo (`sso`, solo el plan **Enterprise**; un
+Connect: Microsoft Entra, Google Workspace u Okta. Es una herramienta del catálogo (`sso`, solo el plan **Integral**; un
 trial la trae). No es para la persona trabajadora sin cuenta (WorkerAccess) ni usa SAML. Sin intermediarios de pago: la
 empresa paga su propio proveedor y nosotros solo hablamos OIDC.
 
