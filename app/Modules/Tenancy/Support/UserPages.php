@@ -16,15 +16,18 @@ final class UserPages
 {
     private const int PER_PAGE = 25;
 
+    /** The quick help of the team view: a few people at a time, beside the team. */
+    public const int HELP_PER_PAGE = 5;
+
     /**
      * @return LengthAwarePaginator<int, array{id: int, name: string, email: string, platformRole: string|null, companies: string, twoFactor: bool, verified: bool, lastLogin: string|null, supportEntries: int}>
      */
-    public function handle(string $search, bool $staffOnly = false): LengthAwarePaginator
+    public function handle(string $search, bool $staffOnly = false, int $perPage = self::PER_PAGE, string $pageName = 'page'): LengthAwarePaginator
     {
         $page = $this->matching($search, $staffOnly)
             ->latest('created_at')
             ->orderByDesc('id')
-            ->paginate(self::PER_PAGE)
+            ->paginate($perPage, pageName: $pageName)
             ->withQueryString();
 
         $ids = array_values($page->getCollection()->map(fn (User $user): int => $user->id)->all());
@@ -71,13 +74,13 @@ final class UserPages
     }
 
     /**
-     * How many people the search finds in each view: Humetría's staff, and everyone with an account.
+     * How many each view holds: Humetría's staff, always whole, and everyone with an account the search finds.
      *
      * @return array{team: int, people: int}
      */
     public function counts(string $search): array
     {
-        return ['team' => $this->matching($search, true)->count(), 'people' => $this->matching($search, false)->count()];
+        return ['team' => $this->matching('', true)->count(), 'people' => $this->matching($search, false)->count()];
     }
 
     /** @return Builder<User> */

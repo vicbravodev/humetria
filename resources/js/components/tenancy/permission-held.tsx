@@ -1,16 +1,34 @@
 import { Check, Minus } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-/** Whether a role holds a permission: a check and «Sí», or a dash and «No»; never color alone. */
-export default function PermissionHeld({ held }: { held: boolean }) {
-    return held ? (
-        <span className="inline-flex items-center gap-1.5">
-            <Check aria-hidden className="size-4 text-primary" />
-            Sí
-        </span>
-    ) : (
-        <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-            <Minus aria-hidden className="size-4" />
-            No
+/**
+ * Whether a role holds a permission: a check and «Sí», or a dash and «No»; never color alone. Compact (the card beside
+ * the team), the word is said only to screen readers and the mark is centered.
+ */
+export default function PermissionHeld({
+    held,
+    compact = false,
+}: {
+    held: boolean;
+    compact?: boolean;
+}) {
+    const Icon = held ? Check : Minus;
+
+    return (
+        <span
+            className={cn(
+                'inline-flex items-center gap-1.5',
+                !held && 'text-muted-foreground',
+                compact && 'w-full justify-center',
+            )}
+        >
+            <Icon
+                aria-hidden
+                className={cn('size-4', held && 'text-primary')}
+            />
+            <span className={cn(compact && 'sr-only')}>
+                {held ? 'Sí' : 'No'}
+            </span>
         </span>
     );
 }

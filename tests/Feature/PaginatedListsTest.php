@@ -359,7 +359,7 @@ it('sends each list of records as a paginator', function (string $component, Clo
         signInAsSuperadmin();
 
         return route('platform-users.index');
-    }, ['users']],
+    }, ['users', 'people']],
     'audit trail' => ['tenancy/audit', function () {
         App\Models\AuditEntry::query()->forceCreate(['id' => (string) Illuminate\Support\Str::uuid(), 'event' => 'tenant.created', 'metadata' => [], 'created_at' => now()]);
         signInAsSuperadmin();

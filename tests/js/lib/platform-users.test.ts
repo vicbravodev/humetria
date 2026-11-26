@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vite-plus/test';
 
 import {
     actionCopy,
+    helpActions,
+    helpLine,
     platformRoleLabel,
     userActions,
     usersQuery,
@@ -95,5 +97,46 @@ describe('usersQuery', () => {
         expect(usersQuery({ q: '', tab: 'permissions' })).toEqual({
             tab: 'permissions',
         });
+    });
+});
+
+describe('helpLine', () => {
+    it('says what helps to get a person back in: email, companies, two-factor and last sign-in', () => {
+        expect(
+            helpLine(
+                user({
+                    companies: 'Acme (owner)',
+                    twoFactor: true,
+                    lastLogin: '12 nov 2026',
+                }),
+            ),
+        ).toBe(
+            'ana@acme.mx · Acme (owner) · 2FA activa · Último acceso 12 nov 2026',
+        );
+    });
+
+    it('says when a person has no company, no two-factor, never signed in or an unverified email', () => {
+        expect(helpLine(user({ verified: false }))).toBe(
+            'ana@acme.mx · Sin empresas · Sin 2FA · Nunca ha entrado · Correo sin verificar',
+        );
+    });
+
+    it('names the platform role of someone of the team', () => {
+        expect(helpLine(user({ platformRole: 'support' }))).toBe(
+            'ana@acme.mx · Soporte · Sin 2FA · Nunca ha entrado',
+        );
+    });
+});
+
+describe('helpActions', () => {
+    it('offers the password link, and taking two-factor off where the console may', () => {
+        expect(helpActions(user())).toEqual(['reset']);
+        expect(helpActions(user({ twoFactor: true }))).toEqual([
+            'reset',
+            'two_factor',
+        ]);
+        expect(
+            helpActions(user({ platformRole: 'superadmin', twoFactor: true })),
+        ).toEqual(['reset']);
     });
 });

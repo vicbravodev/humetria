@@ -29,9 +29,15 @@ final class UserConsoleController extends Controller
         $tab = $request->string('tab')->toString();
         $tab = in_array($tab, ['people', 'permissions'], true) ? $tab : 'team';
 
+        // The team is always whole: on its view the search finds people for the quick help beside it (tablero Equipo).
         return Inertia::render('tenancy/users', [
-            'users' => $tab === 'permissions' ? null : $pages->handle($search, $tab === 'team'),
-            'permissions' => $tab === 'permissions' ? $permissions->handle() : null,
+            'users' => match ($tab) {
+                'team' => $pages->handle('', true),
+                'people' => $pages->handle($search),
+                default => null,
+            },
+            'people' => $tab === 'team' ? $pages->handle($search, perPage: UserPages::HELP_PER_PAGE, pageName: 'people_page') : null,
+            'permissions' => $tab === 'people' ? null : $permissions->handle(),
             'counts' => $pages->counts($search),
             'filters' => ['q' => $search, 'tab' => $tab],
         ]);

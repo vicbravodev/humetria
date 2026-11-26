@@ -21,7 +21,7 @@ export default function UsersList({
                     Prueba con otro nombre o con una parte del correo.
                 </EmptyState>
             ) : (
-                <UsersTable users={users.data} team={filters.tab === 'team'} />
+                <UsersTable users={users.data} />
             )}
             <Pagination
                 previous="Ver más recientes"

@@ -45,6 +45,38 @@ export function userActions(user: PlatformUserRow): UserAction[] {
     ];
 }
 
+/** The quick help's line under a person's name (tablero Equipo): what helps to tell why they cannot get in. */
+export function helpLine(user: PlatformUserRow): string {
+    const role =
+        user.platformRole === null
+            ? []
+            : [platformRoleLabel(user.platformRole)];
+    const companies =
+        user.companies !== ''
+            ? [user.companies]
+            : role.length === 0
+              ? ['Sin empresas']
+              : [];
+
+    return [
+        user.email,
+        ...role,
+        ...companies,
+        user.twoFactor ? '2FA activa' : 'Sin 2FA',
+        user.lastLogin === null
+            ? 'Nunca ha entrado'
+            : `Último acceso ${user.lastLogin}`,
+        ...(user.verified ? [] : ['Correo sin verificar']),
+    ].join(' · ');
+}
+
+/** What the quick help offers on a person, as buttons: getting them back in, never their role. */
+export function helpActions(user: PlatformUserRow): UserAction[] {
+    return userActions(user).filter(
+        (action) => action === 'reset' || action === 'two_factor',
+    );
+}
+
 type Copy = {
     menu: string;
     title: string;

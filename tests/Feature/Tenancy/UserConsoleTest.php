@@ -264,16 +264,35 @@ it('shows the team apart: only Humetría staff, with how many each view holds', 
             ->where('users.data', fn ($rows) => collect($rows)->pluck('platformRole')->sort()->values()->all() === ['superadmin', 'support']));
 });
 
-it('keeps the search across the views, and counts what it finds in each', function (): void {
+it('searches on the team view only the quick help for people with an account: the team is always whole', function (): void {
     User::factory()->create(['name' => 'Ana Cliente']);
+    User::factory()->create(['name' => 'Rosa Cliente']);
     support()->forceFill(['name' => 'Ana Soporte'])->save();
 
     $this->actingAs(superadmin())->get(route('platform-users.index', ['tab' => 'team', 'q' => 'ana']))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('counts', ['team' => 1, 'people' => 2])
-            ->where('users.total', 1)
-            ->where('users.data.0.name', 'Ana Soporte'));
+            ->where('counts', ['team' => 2, 'people' => 2])
+            ->where('users.total', 2)
+            ->where('people.total', 2)
+            ->where('people.data', fn ($rows) => collect($rows)->pluck('name')->sort()->values()->all() === ['Ana Cliente', 'Ana Soporte']));
 });
+
+it('offers the quick help five people at a time on its own page, with what each role may do beside the team', function (): void {
+    User::factory()->count(6)->create();
+
+    $this->actingAs(superadmin())->get(route('platform-users.index', ['people_page' => 2]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('people.per_page', 5)
+            ->where('people.current_page', 2)
+            ->has('people.data', 2)
+            ->where('users.current_page', 1)
+            ->where('permissions', fn ($rows) => collect($rows)->pluck('ability')->contains('view-audit')));
+});
+
+it('sends no quick help to the views that do not show it', function (string $tab): void {
+    $this->actingAs(superadmin())->get(route('platform-users.index', ['tab' => $tab]))
+        ->assertInertia(fn (Assert $page) => $page->where('people', null));
+})->with(['people', 'permissions']);
 
 it('says how many times each person entered a company as support in the last 30 days', function (): void {
     $help = support();
@@ -330,6 +349,6 @@ it('shows everyone with an account in their own view, keeping the search', funct
     $this->actingAs(superadmin())->get(route('platform-users.index', ['tab' => 'people', 'q' => 'ana']))
         ->assertInertia(fn (Assert $page) => $page
             ->where('filters.tab', 'people')
-            ->where('counts', ['team' => 1, 'people' => 2])
+            ->where('counts', ['team' => 2, 'people' => 2])
             ->where('users.total', 2));
 });

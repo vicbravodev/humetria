@@ -763,6 +763,24 @@ it('shows the team with its support entries, and what each platform role may do'
         ->assertSee('Superadmin');
 })->with($looks);
 
+it('shows the team beside what each role may do, and the quick help that helps anyone with an account back in', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    support()->forceFill(['name' => 'Soporte Uno'])->save();
+    User::factory()->create(['name' => 'Ana Pérez', 'email' => 'ana@acme.mx', 'two_factor_confirmed_at' => now(), 'two_factor_secret' => 's', 'two_factor_recovery_codes' => 'c']);
+
+    visitPage('tenancy/users', '/admin/platform-users', $dark, $mobile)
+        ->assertSee('Entró como soporte (30 d)')
+        ->assertSee('Qué puede hacer cada rol')
+        ->assertSee('nunca ve respuestas')
+        ->assertSee('Personas con cuenta: ayuda rápida')
+        ->assertSee('ana@acme.mx · Sin empresas · 2FA activa')
+        ->click('[aria-label="Quitar 2FA…: Ana Pérez"]')
+        ->assertSee('¿Quitar la verificación en dos pasos de Ana Pérez?')
+        ->click('Cancelar')
+        ->click('[aria-label="Gestionar a Soporte Uno"]')
+        ->assertSee('Quitar rol de soporte');
+})->with($looks);
+
 it('opens the detail of an entry in a side panel with what it changed, and offers the export', function (bool $dark, bool $mobile): void {
     signInAsSuperadmin();
     App\Models\AuditEntry::query()->forceCreate([
