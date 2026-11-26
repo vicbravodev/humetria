@@ -1,6 +1,6 @@
 # Decisiones
 
-Una línea por decisión importante, con el porqué frente a la personalidad: cálida como una psicóloga, moderna como una startup.
+Una línea por decisión importante, con el porqué frente a la personalidad: clara, cercana y rigurosa (`PRODUCT.md`); cálida como una psicóloga, moderna como una startup.
 
 ## Color
 
