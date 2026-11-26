@@ -533,13 +533,13 @@ it('enters as the owner from the console, shows the banner on every page, and co
     $tenant = Tenant::factory()->create(['trade_name' => 'Grupo Ejemplo', 'slug' => 'grupo-ejemplo']);
     TenantMembership::factory()->for($tenant)->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
 
-    visit('/admin/companies')
+    $page = visit('/admin/companies')
         ->click('@tenant-actions')->click('Entrar como owner')
         ->assertScript(pathBecomes('/admin/grupo-ejemplo'), true)
         ->assertPathIs('/admin/grupo-ejemplo')
-        ->assertSee('Estás viendo Humetría como Ana Pérez · Salir')
-        // Settings has its own layout inside the frame: the banner is there too.
-        ->navigate('/admin/settings/appearance')
+        ->assertSee('Estás viendo Humetría como Ana Pérez · Salir');
+    // Settings has its own layout inside the frame: the banner is there too.
+    openPath($page, '/admin/settings/appearance')
         ->assertSee('Estás viendo Humetría como Ana Pérez')
         ->click('@stop-impersonation')
         ->assertScript(pathBecomes('/admin/companies'), true)
@@ -553,9 +553,9 @@ it('leaves only the appearance settings while impersonating', function (): void 
     signInAsSuperadmin();
     TenantMembership::factory()->for(Tenant::factory()->create())->create();
 
-    visit('/admin/companies')
-        ->click('@tenant-actions')->click('Entrar como owner')
-        ->navigate('/admin/settings/appearance')
+    $page = visit('/admin/companies')
+        ->click('@tenant-actions')->click('Entrar como owner');
+    openPath($page, '/admin/settings/appearance')
         ->assertSee('Apariencia')
         ->assertDontSee('Perfil')
         ->assertDontSee('Seguridad')

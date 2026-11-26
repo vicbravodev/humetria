@@ -17,10 +17,9 @@ beforeEach(function (): void {
 });
 
 it('asks a person who entered with a link to confirm it is them with a code, and then takes them on', function (bool $dark, bool $mobile): void {
-    $page = visitPage('worker-access/proof', '/me/acme/proof', $dark, $mobile, enteringTo($this->ana->id, 'Confirme que es usted'))
+    $page = accessible(visitPage('worker-access/proof', '/me/acme/proof', $dark, $mobile, enteringTo($this->ana->id, 'Confirme que es usted'))
         ->assertSee('Enviarme un código')
-        ->assertDontSee('Confirmar con mi huella')
-        ->assertNoAccessibilityIssues(1);
+        ->assertDontSee('Confirmar con mi huella'), 1);
 
     provedWithCode($page, 'Todavía sin marcas');
 })->with([
@@ -39,12 +38,11 @@ it('tells a person without a key or an email to ask RH for their access', functi
 it('asks a person with a key to confirm it is them with the fingerprint as the one action at the foot, and «Atrás» on top', function (bool $dark, bool $mobile): void {
     App\Modules\WorkerAccess\Models\WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
 
-    visitPage('worker-access/proof', '/me/acme/proof', $dark, $mobile, enteringTo($this->ana->id, 'Confirme que es usted'))
+    accessible(visitPage('worker-access/proof', '/me/acme/proof', $dark, $mobile, enteringTo($this->ana->id, 'Confirme que es usted'))
         ->assertSeeIn('.sticky.bottom-0', 'Confirmar con mi huella')
         ->assertDontSee('Volver a mi portal')
         ->assertSeeIn('header a[href$="/me/acme"]', 'Atrás')
-        ->assertPresent('[data-slot="state-message"]')
-        ->assertNoAccessibilityIssues(1);
+        ->assertPresent('[data-slot="state-message"]'), 1);
 })->with([
     'light mobile' => [false, true],
     'dark mobile' => [true, true],

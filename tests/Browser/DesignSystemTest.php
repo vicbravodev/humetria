@@ -137,18 +137,18 @@ it('opens an entry into its submenu as the sidebar design draws it', function (b
 it('folds a submenu away from its parent and lights the closest child on a deeper page', function (): void {
     signInToPanel();
 
-    visit('/admin/acme/telework')
+    $page = visit('/admin/acme/telework')
         ->click('[data-sidebar="menu-button"][aria-expanded="true"]')
         // NOM-035 is a submenu too, folded: the one that just folded is NOM-037, and no submenu is open.
-        ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="menu-button"][aria-expanded="false"]\')].some((button) => button.textContent.includes("NOM-037")) && document.querySelector(\'[data-sidebar="menu-sub"]\') === null')
-        ->navigate('/admin/acme/telework/documents')
+        ->assertScript('() => [...document.querySelectorAll(\'[data-sidebar="menu-button"][aria-expanded="false"]\')].some((button) => button.textContent.includes("NOM-037")) && document.querySelector(\'[data-sidebar="menu-sub"]\') === null');
+    openPath($page, '/admin/acme/telework/documents')
         ->assertScript('() => document.querySelector(\'[data-sidebar="menu-sub-button"][aria-current="page"]\')?.textContent', 'Documentos');
 });
 
 it('folds the sidebar to its icons and remembers it', function (bool $dark): void {
     $panel = signInToPanel(superadmin());
 
-    $page = visitPage('dashboard', $panel, $dark)
+    $page = accessible(visitPage('dashboard', $panel, $dark)
         ->click('[data-sidebar="trigger"]')
         ->assertScript(SETTLED)
         ->assertScript('() => document.querySelector(\'[data-slot="sidebar"]\').dataset.collapsible', 'icon')
@@ -159,8 +159,7 @@ it('folds the sidebar to its icons and remembers it', function (bool $dark): voi
         ->hover('[data-sidebar="menu-button"][href$="/admin/companies"]')
         ->assertScript('() => document.querySelector(\'[role="tooltip"]\')?.textContent', 'Empresas')
         // axe reads colors as painted: let the tooltip finish fading in before it judges the contrast.
-        ->assertScript(SETTLED)
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(SETTLED), 1);
 
     $page->refresh()
         ->assertScript('() => document.querySelector(\'[data-slot="sidebar"]\').dataset.state', 'collapsed')

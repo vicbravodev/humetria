@@ -30,23 +30,20 @@ afterEach(function (): void {
 });
 
 it('prepares this phone from Cuenta after the proof, keeps the key in the phone and says it is ready', function (bool $dark, bool $mobile): void {
-    $page = visitPage('worker-access/home', '/me/acme', $dark, $mobile, enteringTo($this->ana->id, 'Todavía sin marcas'))
-        ->assertNoAccessibilityIssues(1);
+    $page = accessible(visitPage('worker-access/home', '/me/acme', $dark, $mobile, enteringTo($this->ana->id, 'Todavía sin marcas')), 1);
 
-    $page->press('Cuenta')->waitForText('Marcar sin internet con este teléfono')
+    accessible($page->press('Cuenta')->waitForText('Marcar sin internet con este teléfono')
         ->assertSee('Puede preparar hasta 3 teléfonos')
         ->assertScript(spilledOut(), '')
         // The section fades in: axe must judge the settled page, not a frame mid-transition (a slow runner shows it).
-        ->assertScript(settled(), true)
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(settled(), true), 1);
 
     // The server asks for a recent proof first; once given, the preparing goes by itself.
     $page->press('Preparar este teléfono')->waitForText('Confirme que es usted');
-    provedWithCode($page, 'Este teléfono está listo para marcar sin internet')
+    accessible(provedWithCode($page, 'Este teléfono está listo para marcar sin internet')
         ->assertSee('al menos una vez al día')
         ->assertScript(eventuallyAsync('async () => ('.trim(keptInPhone()).')().then((names) => names.includes("device-key") && names.includes("pass"))'), true)
-        ->assertScript(settled(), true)
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(settled(), true), 1);
 
     expect(WorkerDeviceKey::query()->withoutGlobalScopes()->where('employee_id', $this->ana->id)->whereNull('revoked_at')->count())->toBe(1);
 })->with([

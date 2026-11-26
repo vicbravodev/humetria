@@ -181,7 +181,7 @@ function changeInPhone(AwaitableWebpage $page, string $change): void
  */
 function keepTickets(AwaitableWebpage $page, int $count): void
 {
-    $page->navigate('/favicon.svg');
+    openPath($page, '/favicon.svg');
     changeInPhone($page, "(store) => {
         const read = store.get('tickets');
         read.onsuccess = () => store.put(read.result.slice(0, {$count}), 'tickets');

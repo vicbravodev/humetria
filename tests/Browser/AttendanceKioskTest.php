@@ -84,7 +84,7 @@ it('says when it lost the connection, shows no code at all, and keeps retrying',
     $page->script('() => { window.fetch = () => Promise.reject(new TypeError("offline")); }');
 
     // A code on the wall that no longer turns could be photographed and used from elsewhere: nothing of it stays on the screen.
-    $page->waitForText('Esta pantalla perdió la conexión')
+    accessible($page->waitForText('Esta pantalla perdió la conexión')
         ->assertSee('Sin conexión')
         ->assertSee('Último código válido')
         ->assertSee('No se muestran códigos mientras no haya internet')
@@ -92,8 +92,7 @@ it('says when it lost the connection, shows no code at all, and keeps retrying',
         ->assertMissing('img[alt="Código para registrar su entrada o su salida"]')
         ->assertScript('() => document.documentElement.outerHTML.includes("data:image/svg+xml")', false)
         ->assertNoJavaScriptErrors()
-        ->assertScript(cspViolations(), '[]')
-        ->assertNoAccessibilityIssues(1);
+        ->assertScript(cspViolations(), '[]'), 1);
 });
 
 it('asks again at once when «Reintentar ahora» is pressed, and shows a code only when the server answers', function (): void {
