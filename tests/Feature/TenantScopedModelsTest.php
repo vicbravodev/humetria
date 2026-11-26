@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Concerns\BelongsToCurrentTenant;
 use App\Models\AuditEntry;
+use App\Modules\Announcements\Models\Announcement;
 use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Models\CompanyTransfer;
@@ -94,6 +95,8 @@ const PLATFORM_MODELS = [
     // Deduplication of what a provider sends again, before any company is known.
     WebhookEvent::class => 'deduplication of provider callbacks, before any company is known',
     Pause::class => 'an operational stop of the whole feature, for every company',
+    // What Humetría tells the companies: written from the console, which has no current company, and read by every panel.
+    Announcement::class => 'platform data: what the console tells every company, or the ones of a plan',
 ];
 
 /** @return list<class-string<Model>> */

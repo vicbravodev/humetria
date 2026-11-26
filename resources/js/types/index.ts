@@ -1,3 +1,4 @@
+export type * from './announcements';
 export type * from './assistant';
 export type * from './audit';
 export type * from './auth';

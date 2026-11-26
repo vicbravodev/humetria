@@ -7,6 +7,7 @@ namespace App\Modules\Billing\Providers;
 use App\Models\User;
 use App\Modules\Billing\Contracts\CompanyPlans;
 use App\Modules\Billing\Contracts\MailQuota;
+use App\Modules\Billing\Contracts\PlanNames;
 use App\Modules\Billing\Contracts\PlanSteps;
 use App\Modules\Billing\Contracts\PlatformCost;
 use App\Modules\Billing\Contracts\PlatformRevenue;
@@ -42,6 +43,7 @@ final class BillingServiceProvider extends ServiceProvider
     {
         $this->app->bind(PlanSteps::class, SubscriptionSteps::class);
         $this->app->bind(CompanyPlans::class, SubscriptionPlans::class);
+        $this->app->bind(PlanNames::class, SubscriptionPlans::class);
         $this->app->bind(PlatformRevenue::class, ContractedRevenue::class);
         $this->app->bind(Receivables::class, LedgerReceivables::class);
         $this->app->bind(PlatformCost::class, LedgerPlatformCost::class);

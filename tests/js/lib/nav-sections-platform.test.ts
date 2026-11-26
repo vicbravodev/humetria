@@ -31,6 +31,7 @@ describe('navSections for the console', () => {
             'Salud del sistema',
             'Mensajería',
             'Planes y precios',
+            'Avisos',
             'Colas',
         ]);
     });

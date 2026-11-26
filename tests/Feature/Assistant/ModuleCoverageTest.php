@@ -23,6 +23,7 @@ function humiExemptCompanyModules(): array
 function humiExemptCodeModules(): array
 {
     return [
+        'Announcements' => 'Son los avisos de la plataforma y su mantenimiento: cambian lo que la empresa puede hacer por un rato, no lo que tiene o debe, y su panel ya se lo dice con un banner; no es algo de la empresa que Humi informe.',
         'Assistant' => 'Es Humi.',
         'Blog' => 'Es contenido público del sitio, sin datos de ninguna empresa: no hay nada de la empresa que Humi informe.',
         'Demos' => 'Solicitudes de demo y la empresa demo: son del superadmin, no de la empresa.',

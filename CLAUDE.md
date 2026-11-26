@@ -94,6 +94,7 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
 
 ### Módulos
 
+- `Announcements`: avisos de la plataforma a las empresas (banner en su panel, por plan o a todas) y el modo mantenimiento.
 - `Assistant`: Humi, el asistente de IA (ver su README).
 - `Attendance`: asistencia: checadores y kiosco, zonas en mapa, horarios, correcciones, marcas sin conexión y su revisión.
 - `Billing`: cuentas, suscripciones, cargos, estados de cuenta y pagos.

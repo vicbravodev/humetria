@@ -241,6 +241,10 @@ return [
     ],
 
     'attributes' => [
+        'audience' => 'a quién',
+        'starts_time' => 'hora de inicio',
+        'ends_time' => 'hora de fin',
+        'publish' => 'publicación',
         'mail_enabled' => 'correo',
         'whatsapp_enabled' => 'WhatsApp',
         'preferred' => 'canal preferido',

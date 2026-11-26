@@ -27,6 +27,7 @@ final class PlatformPermissions
         'view-audit' => 'Leer la bitácora',
         'view-operations' => 'Ver la salud del sistema y la mensajería',
         'viewHorizon' => 'Ver las colas',
+        'manage-announcements' => 'Publicar avisos a las empresas y poner la plataforma en mantenimiento',
     ];
 
     /**

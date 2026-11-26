@@ -4,6 +4,7 @@ import {
     ChartNoAxesColumn,
     HeartPulse,
     Inbox,
+    Megaphone,
     MessagesSquare,
     Presentation,
     ReceiptText,
@@ -11,6 +12,7 @@ import {
     UserCog,
     WalletCards,
 } from 'lucide-react';
+import { index as announcements } from '@/routes/announcements';
 import { index as audit } from '@/routes/audit';
 import { index as accounts } from '@/routes/billing/accounts';
 import { index as plans } from '@/routes/billing/plans';
@@ -62,6 +64,7 @@ export const platformNavItems = (isSuperadmin: boolean): NavItem[] =>
               { title: 'Salud del sistema', href: health(), icon: HeartPulse },
               { title: 'Mensajería', href: messaging(), icon: MessagesSquare },
               { title: 'Planes y precios', href: plans(), icon: ReceiptText },
+              { title: 'Avisos', href: announcements(), icon: Megaphone },
               // Horizon's own dashboard, outside the panel: a plain address, not an Inertia visit.
               {
                   title: 'Colas',

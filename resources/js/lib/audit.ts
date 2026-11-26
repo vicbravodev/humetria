@@ -213,6 +213,8 @@ const LABELS: Record<string, string> = {
     'billing.report_exported': 'Reporte de cobranza exportado',
     'billing.reminders_sent': 'Recordatorios de cobro enviados',
     'audit.exported': 'Bitácora exportada',
+    'announcement.created': 'Aviso creado',
+    'announcement.updated': 'Aviso editado',
     'billing.payment_reversed': 'Pago revertido',
     'billing.statement_discarded': 'Estado de cuenta descartado',
     'billing.subscription_set': 'Plan de la empresa definido',

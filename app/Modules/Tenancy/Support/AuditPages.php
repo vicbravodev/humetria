@@ -59,6 +59,7 @@ final class AuditPages
         'tenancy' => 'Canales de comunicación',
         'messaging' => 'WhatsApp',
         'audit' => 'Bitácora',
+        'announcement' => 'Avisos de la plataforma',
     ];
 
     /** The keys that store what an entry changed: the detail shows them as before and after, not as rows of their own. */

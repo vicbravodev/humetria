@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Announcements\Providers\AnnouncementsServiceProvider;
 use App\Modules\Assistant\Providers\AssistantServiceProvider;
 use App\Modules\Attendance\Providers\AttendanceServiceProvider;
 use App\Modules\Billing\Providers\BillingServiceProvider;
@@ -61,5 +62,6 @@ return [
     MessagingServiceProvider::class,
     MailTrackingServiceProvider::class,
     OperationsServiceProvider::class,
+    AnnouncementsServiceProvider::class,
     BlogServiceProvider::class,
 ];
