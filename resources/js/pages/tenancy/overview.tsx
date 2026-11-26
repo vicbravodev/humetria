@@ -26,7 +26,7 @@ export default function Overview(data: PlatformOverviewData) {
 
     return (
         <>
-            <Head title="Resumen" />
+            <Head title="Resumen de la plataforma" />
             <div className="flex flex-col gap-6 px-4 py-6 md:px-10 md:py-8">
                 <PageHeader
                     title={greeting(hour, auth.user.name)}
