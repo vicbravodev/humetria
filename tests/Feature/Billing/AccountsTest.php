@@ -228,7 +228,7 @@ it('lists the accounts in a page, newest first, with how many companies each pay
             ->where('accounts.data.1.legal_name', 'Antigua')
             ->hasAll(['accounts.current_page', 'accounts.last_page', 'accounts.per_page', 'accounts.total', 'accounts.links'])
             ->where('counts', ['all' => 2, 'direct' => 1, 'consultant' => 1, 'overdue' => 0, 'receivable' => 0])
-            ->where('filters', ['q' => '', 'kind' => 'all']));
+            ->where('filters', ['q' => '', 'kind' => 'all', 'type' => '', 'age' => '', 'month' => '']));
 });
 
 it('searches by legal name, RFC or contact, without regard to case or accents, and counts what matches', function (): void {

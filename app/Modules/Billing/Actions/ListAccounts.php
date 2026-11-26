@@ -24,13 +24,16 @@ final readonly class ListAccounts
 
     /**
      * The accounts whose legal name, RFC or contact has what was typed, of one kind or all (or only those with something to
-     * collect, or past due), newest first, a page at a time, each with the number of companies it pays now.
+     * collect, or past due, or whose oldest open balance is of one age), newest first, a page at a time, each with the number of
+     * companies it pays now.
      *
+     * @param  string|null  $age  one of OpenBalances::BUCKETS.
      * @return LengthAwarePaginator<int, BillingAccount>
      */
-    public function handle(string $search = '', ?AccountKind $kind = null, bool $overdue = false, bool $receivable = false): LengthAwarePaginator
+    public function handle(string $search = '', ?AccountKind $kind = null, bool $overdue = false, bool $receivable = false, ?string $age = null): LengthAwarePaginator
     {
         return $this->matching($search)
+            ->when($age !== null, fn (Builder $query) => $query->whereIn('id', $this->agedAccounts($age ?? 'current')))
             ->when($overdue, fn (Builder $query) => $query->whereIn('id', $this->overdueAccounts()))
             ->when($receivable, fn (Builder $query) => $query->whereIn('id', $this->receivableAccounts()))
             ->when($kind !== null, fn (Builder $query) => $query->where('kind', $kind))
@@ -73,7 +76,7 @@ final readonly class ListAccounts
      * is (`days` past due, or left to pay while it is current); an account that owes nothing is left out.
      *
      * @param  list<string>  $accountIds
-     * @return array<string, array{outstanding: string, overdue: string|null, aging: array{bucket: string, days: int}}>
+     * @return array<string, array{outstanding: string, outstanding_cents: int, overdue: string|null, aging: array{bucket: string, days: int}}>
      */
     public function standing(array $accountIds): array
     {
@@ -90,6 +93,7 @@ final readonly class ListAccounts
 
         return array_map(fn (array $account): array => [
             'outstanding' => Money::format($account['outstanding']),
+            'outstanding_cents' => $account['outstanding'],
             'overdue' => $account['overdue'] === 0 ? null : Money::format($account['overdue']),
             'aging' => ['bucket' => OpenBalances::bucket($account['days']), 'days' => abs($account['days'])],
         ], $owed);
@@ -117,6 +121,26 @@ final readonly class ListAccounts
     private function receivableAccounts(): QueryBuilder
     {
         return Statement::query()->withBalance()->toBase()->select('billing_account_id');
+    }
+
+    /**
+     * The accounts whose oldest open statement is of that age, by the day it was issued: past due on day
+     * `billing.overdue_after_days` (as OpenBalances counts it), then 1–30, 31–60 and more than 60 days.
+     */
+    private function agedAccounts(string $age): QueryBuilder
+    {
+        $now = CarbonImmutable::now();
+        $due = config()->integer('billing.overdue_after_days');
+        [$after, $until] = match ($age) {
+            '1_30' => [$due + 30, $due],
+            '31_60' => [$due + 60, $due + 30],
+            'over_60' => [null, $due + 60],
+            default => [$due, null],
+        };
+
+        return Statement::query()->withBalance()->toBase()->select('billing_account_id')->groupBy('billing_account_id')
+            ->when($after !== null, fn (QueryBuilder $query) => $query->havingRaw('min(issued_at) > ?', [$now->subDays($after ?? 0)]))
+            ->when($until !== null, fn (QueryBuilder $query) => $query->havingRaw('min(issued_at) <= ?', [$now->subDays($until ?? 0)]));
     }
 
     private function overdueAccounts(): QueryBuilder

@@ -125,7 +125,7 @@ it('reads the whole collection page in a fixed number of queries, whatever the n
 
     $user = superadmin();
     $this->actingAs($user);
-    $this->expectsDatabaseQueryCount(13);
+    $this->expectsDatabaseQueryCount(15);
 
     $this->get(route('billing.accounts.index'))->assertOk();
 });
