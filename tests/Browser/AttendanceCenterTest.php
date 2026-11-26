@@ -68,23 +68,32 @@ it('lets RH put a center without zones nor screens in the field, on the phone', 
     expect(AttendanceCenterMode::query()->where('work_center_id', $plant->id)->sole()->mode)->toBe(CenterMode::Field);
 })->with(['light' => false, 'dark' => true]);
 
-it('lets RH touch the plan of the zones to see whether a mark there would count', function (): void {
+it('shows RH the zones on the street map, each circle with its name, and lets them touch it to see whether a mark there would count', function (bool $dark, bool $mobile): void {
     [$url] = centerPanel();
+    $zones = 'section[aria-labelledby="zonas"]';
 
-    // The plan's center is the center of its only zone; its corner is far outside it.
-    visit($url)
-        ->assertSee('Toca cualquier punto del plano')
-        ->click('svg[aria-label^="Plano de"]')
+    // The map fits its only zone, so its middle is the zone's center.
+    $page = visitPage('attendance/center', $url, $dark, $mobile)
+        ->assertSee('Toca cualquier punto del mapa')
+        ->assertScript(eventually("() => document.querySelectorAll('{$zones} img.leaflet-tile').length > 0"), true)
+        ->assertScript("() => document.querySelectorAll('{$zones} path.leaflet-interactive').length", 1)
+        ->assertScript("() => document.querySelector('{$zones} .leaflet-tooltip')?.textContent", 'Nave 1')
+        ->click('[aria-label^="Mapa de las zonas"]')
         ->waitForText('Dentro de Nave 1')
         ->assertSee('Aquí una marca se acepta')
         ->assertNoJavaScriptErrors()
         ->assertScript(cspViolations(), '[]');
-});
 
-it('shows a viewer no plan, since where the zones are is for whoever may change them', function (): void {
+    accessible($page, 1);
+})->with([
+    'light, desktop' => [false, false],
+    'dark, phone' => [true, true],
+]);
+
+it('shows a viewer no map, since where the zones are is for whoever may change them', function (): void {
     [$url] = centerPanel(role: TenantRole::Viewer);
 
-    visit($url)->assertSee('Nave 1')->assertDontSee('Toca cualquier punto del plano');
+    visit($url)->assertSee('Nave 1')->assertDontSee('Toca cualquier punto del mapa');
 });
 
 it('flags a center without zones with the next step', function (bool $dark): void {

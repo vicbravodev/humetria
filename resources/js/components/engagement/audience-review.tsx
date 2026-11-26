@@ -1,12 +1,13 @@
 import ReviewStep from '@/components/engagement/review-step';
 import UnreachableList from '@/components/engagement/unreachable-list';
 import Notice from '@/components/humetria/notice';
+import { climateReached, climateUnreached } from '@/lib/climate-contact';
 import { countOf } from '@/lib/plural';
 import type { ClimateDraft, ClimateUnreachable, Paginated } from '@/types';
 
 /**
- * The first two things to review on a draft (pantalla Eval-Borrador): who will be invited, and who cannot be reached for
- * lack of an email. RH may know who has none; the survey never knows who answers.
+ * The first two things to review on a draft (pantalla Eval-Borrador): who will be invited, by which channel, and who cannot
+ * be reached for lack of an email and a phone. RH may know who has none; the survey never knows who answers.
  */
 export default function AudienceReview({
     draft,
@@ -29,20 +30,15 @@ export default function AudienceReview({
                 </p>
             </ReviewStep>
             <ReviewStep title="Contacto">
-                {draft.withoutEmail === 0 ? (
+                {draft.withoutContact === 0 ? (
                     <p className="text-sm text-muted-foreground">
-                        Todas tienen correo: a cada una le llega su enlace.
+                        {climateReached(draft)}
                     </p>
                 ) : (
                     <>
                         <Notice>
                             <strong>
-                                {countOf(
-                                    draft.withoutEmail,
-                                    'persona no tiene',
-                                    'personas no tienen',
-                                )}{' '}
-                                correo.
+                                {climateUnreached(draft.withoutContact)}
                             </strong>{' '}
                             No recibirán su enlace.
                         </Notice>

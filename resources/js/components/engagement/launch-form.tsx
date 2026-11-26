@@ -24,7 +24,7 @@ export default function LaunchForm({
     const tenantSlug = useTenantSlug();
     const routes = useEngagementRoutes();
     const [lastDay, setLastDay] = useState(draft.limits.suggested);
-    const reached = draft.people - draft.withoutEmail;
+    const reached = draft.people - draft.withoutContact;
 
     return (
         <Form

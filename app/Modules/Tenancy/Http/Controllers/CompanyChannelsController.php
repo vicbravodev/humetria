@@ -10,6 +10,7 @@ use App\Modules\Billing\Contracts\UsageMeter;
 use App\Modules\Billing\Contracts\WhatsAppQuota;
 use App\Modules\Tenancy\Actions\UpdateCompanyChannels;
 use App\Modules\Tenancy\Contracts\CompanyChannels;
+use App\Modules\Tenancy\Contracts\DemoCompanies;
 use App\Modules\Tenancy\Data\ChannelSetting;
 use App\Modules\Tenancy\Http\Requests\UpdateCompanyChannelsRequest;
 use App\Modules\Tenancy\Models\Tenant;
@@ -21,7 +22,7 @@ use Inertia\Response;
 /** «Canales de comunicación»: through which channels the company's people are written to. The owner's. */
 final class CompanyChannelsController extends Controller
 {
-    public function edit(Tenant $tenant, CompanyChannels $channels, CompanyPlans $plans, WhatsAppQuota $quota, UsageMeter $usage): Response
+    public function edit(Tenant $tenant, CompanyChannels $channels, CompanyPlans $plans, WhatsAppQuota $quota, UsageMeter $usage, DemoCompanies $demo): Response
     {
         Gate::authorize('manage-members');
 
@@ -43,6 +44,8 @@ final class CompanyChannelsController extends Controller
             ],
             'costNotice' => str_replace('{precio}', $quota->price()->label(), config()->string('whatsapp.cost_notice')),
             'whatsAppQuota' => ['used' => $snapshot->used, 'quota' => $snapshot->quota],
+            // The demo never writes by WhatsApp (Messaging's rule): the page says so instead of letting it look on.
+            'isDemo' => $demo->isDemo($tenant->id),
         ]);
     }
 

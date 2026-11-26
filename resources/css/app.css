@@ -1004,7 +1004,7 @@ html:has([data-smooth-scroll]) {
 }
 
 /*
- * The map of a zone (zone-picker-map.tsx): Leaflet's own controls in the design system's colors, and OpenStreetMap's
+ * The maps of zones (zone-picker-map.tsx, zone-map.tsx): Leaflet's own controls in the design system's colors, and OpenStreetMap's
  * light tiles turned dark in the dark theme (there is no dark style of them).
  */
 .zone-picker-map.leaflet-container {
@@ -1017,10 +1017,11 @@ html:has([data-smooth-scroll]) {
     box-shadow: none;
 }
 
-.zone-picker-map .leaflet-bar a {
-    width: 36px;
-    height: 36px;
-    line-height: 36px;
+/* Above `.leaflet-touch .leaflet-bar a` (30 px), which loads later: a touch target is 44 px. */
+.zone-picker-map.leaflet-container .leaflet-bar a {
+    width: 44px;
+    height: 44px;
+    line-height: 44px;
     border-color: var(--color-border);
     background-color: var(--color-card);
     color: var(--color-foreground);
@@ -1033,6 +1034,20 @@ html:has([data-smooth-scroll]) {
 .zone-picker-map .leaflet-control-attribution {
     background-color: color-mix(in oklab, var(--color-card) 85%, transparent);
     color: var(--color-muted-foreground);
+}
+
+.zone-picker-map .leaflet-tooltip {
+    border-color: var(--color-border);
+    background-color: color-mix(in oklab, var(--color-card) 90%, transparent);
+    color: var(--color-foreground);
+    font-weight: 600;
+    box-shadow: none;
+}
+
+.zone-picker-map .leaflet-control-scale-line {
+    border-color: var(--color-muted-foreground);
+    background-color: color-mix(in oklab, var(--color-card) 85%, transparent);
+    color: var(--color-foreground);
 }
 
 .dark .zone-picker-map .leaflet-tile-pane {

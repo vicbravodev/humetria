@@ -143,10 +143,10 @@ export function inviteMissingSummary(missing: {
     const updated = `Se pondrá al día a ${peopleText(missing.people)}.`;
 
     if (missing.links > 0) {
-        return `${updated} ${links}; las demás no tienen correo.`;
+        return `${updated} ${links}; las demás no tienen correo ni celular.`;
     }
 
     return missing.people === 1
-        ? `${updated} No recibe enlace porque no tiene correo.`
-        : `${updated} No reciben enlace porque no tienen correo.`;
+        ? `${updated} No recibe enlace porque no tiene correo ni celular.`
+        : `${updated} No reciben enlace porque no tienen correo ni celular.`;
 }

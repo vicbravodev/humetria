@@ -80,9 +80,12 @@ export default function LaunchForm({
                         }
                         title="¿Lanzar la evaluación?"
                         description={launchSummary(
-                            contact.reachable,
+                            {
+                                emails: contact.reachable - contact.whatsapp,
+                                whatsapp: contact.whatsapp,
+                                withoutContact: contact.unreachable,
+                            },
                             lastDay,
-                            contact.unreachable,
                         )}
                         confirmLabel="Lanzar e invitar"
                         destructive={false}

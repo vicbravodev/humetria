@@ -309,7 +309,7 @@ it('lists who still has a guide pending, by name, with where each stands, only t
             ->where('filters', ['status' => 'pending', 'guide' => 'nom035.guide-ii', 'area' => null, 'q' => ''])
             ->where('people.total', 1)
             ->where('people.data', [[
-                'id' => $ana->id, 'name' => 'Ana López', 'area' => 'Producción', 'reachable' => true, 'inSample' => false,
+                'id' => $ana->id, 'name' => 'Ana López', 'area' => 'Producción', 'reachable' => true, 'channel' => 'mail', 'inSample' => false,
                 'guides' => [
                     ['key' => 'nom035.guide-i', 'title' => 'Guía I', 'status' => 'completed', 'statusLabel' => 'Contestó'],
                     ['key' => 'nom035.guide-ii', 'title' => 'Guía II', 'status' => 'pending', 'statusLabel' => 'Pendiente'],
@@ -320,6 +320,21 @@ it('lists who still has a guide pending, by name, with where each stands, only t
     $this->actingAs(memberOf($this->tenant, TenantRole::Viewer))
         ->get(route('tenant.campaigns.show', [$this->tenant, $campaign->id]))
         ->assertInertia(fn (Assert $page) => $page->where('people', null)->where('standings', null)->where('minDeadline', null)->has('instruments', 2));
+});
+
+it('says by which channel each person got their link: the one it went through, or the one that would reach them', function (): void {
+    $campaign = Campaign::factory()->active()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+    $pending = ['nom035.guide-i' => InstrumentStatus::Pending];
+    personIn($campaign, 'Ana López', $pending, ['invited_via' => 'whatsapp']);
+    personIn($campaign, 'Beatriz Soto', $pending, ['invited_via' => null]);
+    personIn($campaign, 'Carla Ruiz', $pending, ['invited_via' => null], ['email' => null, 'mobile' => null]);
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.campaigns.show', ['tenant' => $this->tenant, 'campaign' => $campaign->id, 'status' => 'all', 'guide' => 'all']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('people.data.0.channel', 'whatsapp')
+            ->where('people.data.1.channel', 'mail')
+            ->where('people.data.2.channel', null));
 });
 
 it('narrows the people by where they stand, counting each standing', function (): void {

@@ -14,6 +14,7 @@ use App\Modules\Engagement\Enums\SurveyStatus;
 use App\Modules\Engagement\Models\Commitment;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
+use App\Modules\Engagement\Notifications\SurveyInvitation;
 use App\Modules\Engagement\Support\Bank\Questionnaire;
 use App\Modules\Engagement\Support\Pulse\OpenCommitments;
 use App\Modules\Engagement\Support\Pulse\PriorityDrivers;
@@ -32,7 +33,7 @@ use Illuminate\Support\Collection;
  * counts: nothing here says who answered, and nothing that follows an answer to a person.
  *
  * @phpstan-type Card array{id: string, name: string, mode: array{value: string, label: string}|null, status: string, statusLabel: string, closesOn: string|null, daysLeft: int|null, invited: int|null, answered: int|null, rate: int|null}
- * @phpstan-type Draft array{people: int, withoutEmail: int, companyOnly: int, minGroup: int, canLaunch: bool, limits: array{min: string, suggested: string, max: string}}
+ * @phpstan-type Draft array{people: int, withoutContact: int, whatsapp: int, companyOnly: int, minGroup: int, canLaunch: bool, limits: array{min: string, suggested: string, max: string}}
  * @phpstan-type Unreachable array{id: string, name: string, area: string}
  * @phpstan-type Section array{title: string, items: list<array{text: string}>}
  * @phpstan-type Totals array{invited: int, answered: int, rate: int|null, pending: int, withoutLink: int, canRemind: bool, minGroup: int, cuts: list<array{key: string, title: string, groups: list<array{label: string, invited: int, answered: int}>}>}
@@ -91,7 +92,15 @@ final readonly class SurveyPages
         $draft = $survey->status === SurveyStatus::Draft;
         $participation = $draft ? null : $this->participation->of($survey, $canManage);
         $people = $draft ? $this->snapshot->invitees() : [];
-        $unreached = array_values(array_filter($people, fn (RosterEntry $person): bool => ($person->email ?? '') === ''));
+        // The channel each person would get their link by today (email or WhatsApp, as the company put them first), or null.
+        $unreached = [];
+        $whatsApp = 0;
+
+        foreach ($people as $person) {
+            $channel = SurveyInvitation::channel($person);
+            $channel === null && $unreached[] = $person;
+            $channel === 'whatsapp' && $whatsApp++;
+        }
 
         return [
             'survey' => $this->card($survey, $participation['answered'] ?? null),
@@ -99,7 +108,8 @@ final readonly class SurveyPages
             'kind' => $survey->kind->value,
             'draft' => $draft ? [
                 'people' => count($people),
-                'withoutEmail' => count($unreached),
+                'withoutContact' => count($unreached),
+                'whatsapp' => $whatsApp,
                 'companyOnly' => $this->snapshot->companyOnly(),
                 'minGroup' => $survey->groupMinimum(),
                 'canLaunch' => $canManage,

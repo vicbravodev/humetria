@@ -38,7 +38,7 @@ export default function ReplacementsDialog({
                 <DialogDescription>
                     Se eligen al azar entre quienes no están en la muestra, del
                     mismo género de quienes no contestarán, y reciben la Guía
-                    III por correo.
+                    III por correo o por WhatsApp.
                 </DialogDescription>
                 <Form
                     {...replacements.form([tenantSlug, campaignId])}
