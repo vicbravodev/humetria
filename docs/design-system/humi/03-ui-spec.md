@@ -1,12 +1,31 @@
 # 03 · UI del panel de RH
 
+> **Cómo quedó en la app (manda sobre lo de abajo).** Esta especificación fue el brief original; la app la siguió con
+> el rediseño del asistente (artifact «Humi: rediseño del asistente», 16-nov). Donde difieren, manda el código de
+> `resources/js/components/assistant/`:
+>
+> - **Panel:** `HumiDock` lo acopla a la derecha como columna de 420 px desde 1280 px y la página sigue usable; por debajo
+>   es un `Sheet`. Encabezado `HumiHeader` de 68 px con tres botones de ícono (nueva conversación, página completa —oculto
+>   en el celular— y cerrar); borrar vive en el historial.
+> - **Página completa:** `HumiPage` en `admin/{tenant}/assistant` (no `/humi`), con `HumiHistory` agrupado y buscable.
+> - **Lanzador:** `HumiLauncher`, 48 px. En lugar del punto de aviso está la burbuja que invita, `HumiInvitation`
+>   (reglas en `lib/assistant/invitation-rules.ts`).
+> - **Inicio:** `HumiEmptyState` con `HumiStarters` que traen datos vivos. Contexto: `HumiContextChip` («Viendo: …») sobre
+>   la caja, con su ✕.
+> - **Respuesta:** avatar de 28 px; `HumiToolSteps`, tarjetas (`HumiRiskCard`, `HumiProgressCard`, `HumiStatusCard`,
+>   `HumiChoicesCard`, `HumiListCard` dentro de `HumiCardFrame`), `HumiSources`, `HumiAnswerFooter` y
+>   `HumiMessageActions` (copiar, pulgares sin motivo, responder de nuevo). No hay punto al final del texto que fluye.
+> - **Fallos:** `HumiFailure` (límite con su espera, error con código de soporte y Reintentar).
+> - Las animaciones del personaje viven en `resources/css/app.css` (`.humi-bob`, `.humi-blink`, `.humi-look`). Las
+>   maquetas están en `maquetas/`.
+
 ## Referencia visual
 
 Maquetas hechas con los tokens del design system. Son la referencia de apariencia; si algo difiere del texto de abajo, manda la imagen y avísame.
 
-- `referencia-visual/panel-rh.png`: el panel acoplado en la página de una campaña, con una respuesta en streaming (contexto de pantalla, pasos de herramienta, tarjeta de resultados, botón Detener).
-- `referencia-visual/estados-panel.png`: estado vacío, pensando, límite o error, y respuesta lista en modo oscuro; además del lanzador y las cuatro expresiones.
-- `referencia-visual/*.html`: el mismo contenido como HTML estático, con medidas, colores y espaciados exactos para consultar.
+- `maquetas/panel-rh.png`: el panel acoplado en la página de una campaña, con una respuesta en streaming (contexto de pantalla, pasos de herramienta, tarjeta de resultados, botón Detener).
+- `maquetas/estados-panel.png`: estado vacío, pensando, límite o error, y respuesta lista en modo oscuro; además del lanzador y las cuatro expresiones.
+- `maquetas/*.html`: el mismo contenido como HTML estático, con medidas, colores y espaciados exactos para consultar.
 
 Los textos de las maquetas (cifras, nombres de campañas) son ejemplos.
 
@@ -30,7 +49,7 @@ Mapean 1:1 a las variables de shadcn. Claro / oscuro:
 | destructive | `#B0463C` | `#EC8F84` |
 | riesgo | jade (nulo, bajo), arena (medio), terracota (alto, muy alto) | — |
 
-Si el repo ya tiene el `globals.css` del design system, úsalo tal cual y no dupliques valores. `assets/components/humi.css` solo añade las variables `--humi-*` y la animación.
+Los valores viven en `resources/css/app.css`; no se duplican. Ahí están también las animaciones del personaje.
 
 ## Superficies
 
@@ -56,7 +75,7 @@ Si el repo ya tiene el `globals.css` del design system, úsalo tal cual y no dup
 | Respuesta terminada con resultado | `listo` | Los trazos del arco reflejan el nivel si la respuesta trae un riesgo |
 | Error | `escucha` con mensaje claro | Sin dramatizar |
 
-Las animaciones respetan `prefers-reduced-motion` (ya lo hace `humi.css`).
+Las animaciones respetan `prefers-reduced-motion`.
 
 ## Streaming
 
@@ -97,4 +116,4 @@ Las animaciones respetan `prefers-reduced-motion` (ya lo hace `humi.css`).
 
 ## Qué entregar
 
-Componentes en la carpeta de componentes del repo: `HumiLauncher`, `HumiPanel`, `HumiThread`, `HumiMessage`, `HumiToolStep`, `HumiComposer`, `HumiSuggestions`, `HumiResultCard`, más el hook que envuelve el cliente de chat. Humi (`assets/components/Humi.tsx` o `Humi.vue`) es la pieza base del avatar.
+Componentes en la carpeta de componentes del repo: `HumiLauncher`, `HumiPanel`, `HumiThread`, `HumiMessage`, `HumiToolStep`, `HumiComposer`, `HumiSuggestions`, `HumiResultCard`, más el hook que envuelve el cliente de chat. Humi (`components/assistant/humi.tsx`) es la pieza base del avatar.

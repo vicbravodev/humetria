@@ -1,6 +1,8 @@
-Humetría ayuda a aplicar la NOM-035-STPS-2018 sin complicarse. Las empresas y los consultores cargan a su personal, la plataforma invita a cada trabajador a contestar las guías oficiales de forma confidencial y RH recibe un diagnóstico listo para actuar y presentar ante la STPS.
+Humetría ayuda a aplicar la NOM-035-STPS-2018 sin complicarse, y hoy también NOM-037, Ley Silla, asistencia, clima y pulso, vacaciones, denuncias y compensación. Las empresas y los consultores cargan a su personal, la plataforma invita a cada trabajador a contestar de forma confidencial y RH recibe un diagnóstico listo para actuar y presentar ante la STPS.
 
-La personalidad es **cálida como una psicóloga y moderna como una startup**. Nunca debe verse infantil, frío, gris corporativo, cargado de información ni demasiado colorido.
+**La app es la fuente de verdad.** Lo que funciona en la app está aprobado; si este documento o un artifact de diseño dice otra cosa, manda la app y se corrige el documento. Las ideas de artifacts que aún no están en la app, y los choques entre artifacts, viven aparte en **Propuestas y contradicciones** (`propuestas-y-contradicciones.md`): no son reglas.
+
+La personalidad es **clara, cercana y rigurosa** (`PRODUCT.md`): cálida como una psicóloga y moderna como una startup. Nunca debe verse infantil, frío, gris corporativo, cargado de información ni demasiado colorido.
 
 Se implementa con **Tailwind CSS v4 + shadcn/ui (Radix)**. Los nombres de los tokens coinciden 1:1 con las variables de shadcn; la tabla completa con contrastes, el `globals.css` y los ajustes a los componentes están en **Tokens para shadcn/ui**. Por qué se eligió cada cosa está en **Decisiones**.
 
@@ -58,9 +60,63 @@ Cinco niveles: **Nulo, Bajo, Medio, Alto y Muy alto**. Usa siempre `RiskLevel`. 
 - Escala de espacio de 4 px: `space-2` dentro de un grupo, `space-4` margen lateral móvil, `space-6` padding de tarjeta, `space-12` entre secciones (activas / cerradas).
 - Ancho de la página: llena el marco hasta **1440 px** y, en un monitor más ancho, queda **centrada** (`data-slot="page-body"` en `AppSidebarLayout`). Ninguna página pone su propio tope de ancho: las de lista y de panel llenan el marco. Solo las de formulario o lectura se angostan a 880 px (960 un expediente), **alineadas a la izquierda**: `max-w-[880px]` sin `mx-auto`, así el contenido de todas empieza en la misma columna al navegar. El informe NOM-035 es la única excepción dentro del marco: conserva el ancho de su hoja (1120 px), también a la izquierda. Las páginas fuera del marco (encuesta, portal, canal público, enlaces compartidos, `SetupFrame`) sí se centran con su propio ancho. Lo hace cumplir `tests/Unit/PageWidthTest.php`, con la razón de cada excepción. El texto corrido lleva su propio `max-w` (≈ 620 px). Margen lateral: 16 px en móvil y 40 px desde `md`, el mismo en todas las páginas del marco.
 - `touch-min` (44 px) es el alto mínimo de botones, inputs, filas de checkbox, elementos del sidebar y pestañas. El botón `sm` mide 36 px a la vista, pero su área táctil se extiende a 44.
-- Radio base 10 px (`radius`): `radius-md` 8 px para botones e inputs, `radius-lg` 10 px para tarjetas y opciones, `radius-xl` 14 px para diálogos y `radius-full` para radios y barras. Es un eco de los remates redondos del logo, sin llegar a lo infantil.
-- Profundidad en dos niveles. `shadow-raised`: el panel de la página, que se levanta sobre el marco del sidebar. `shadow-float`: lo que flota sobre la página (popover, select abierto, diálogo, tooltip, toast). Botones, inputs y tarjetas no llevan sombra: su borde basta. En oscuro la sombra no se ve, así que la profundidad sale de un filo superior iluminado y de un marco más oscuro que el panel.
+- Radio base 10 px (`radius`): `radius-md` 8 px para botones e inputs, `radius-lg` 10 px para opciones y la tarjeta de la empresa en el sidebar, `radius-xl` 14 px para tarjetas (`Card` y la utilidad `card`), el panel de la página, estados vacíos y diálogos, y `radius-full` para radios, barras y badges. Es un eco de los remates redondos del logo, sin llegar a lo infantil.
+- Profundidad en dos niveles. `shadow-raised`: el panel de la página, que se levanta sobre el marco del sidebar, las barras inferiores flotantes del celular y la pastilla activa de un control segmentado. `shadow-float`: lo que flota sobre la página (popover, select abierto, diálogo, tooltip, toast). Botones, inputs y tarjetas no llevan sombra: su borde basta. En oscuro la sombra no se ve, así que la profundidad sale de un filo superior iluminado y de un marco más oscuro que el panel.
 - Foco: contorno sólido de 2 px en `ring` con 2 px de separación, ≥ 3:1 sobre cualquier superficie.
+
+## Composición y espacio
+
+Lo que hace que una pantalla se vea diseñada y no armada al azar. Valores tomados de las páginas de la app.
+
+- **Contenedor de página** (dentro del marco): `flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16`. Entre
+  bloques de una página, 32 px (`gap-8`); entre grupos de distinta naturaleza (activas / cerradas), 48 px (`space-12`).
+  Un mismo valor para lo mismo: no se inventa un `gap-9` para una sola página.
+- **Dentro de una tarjeta:** padding de 24 px (`p-6`); encabezado (título y una frase) arriba, el contenido a todo lo
+  ancho, la acción al pie. Entre tarjetas de una rejilla, 16 px (`gap-4`). Entre campos de un formulario, 16 a 24 px.
+- **Ritmo, no monotonía:** lo relacionado va junto (8 a 12 px), lo distinto se separa (32 a 48 px). Si todo tiene el
+  mismo espacio, nada se lee como grupo.
+- **Sin huecos muertos.**
+  - Una fila de tarjetas se reparte según cuántas hay: si una opcional falta, la otra ocupa todo el ancho y pone su
+    contenido en una fila (`componentes/Card.md`). Nunca una columna vacía «para equilibrar».
+  - Dos columnas solo cuando las dos tienen contenido propio y se leen juntas (resumen y detalle, lista y su panel). Una
+    columna lateral nunca existe solo para el título de una tarjeta.
+  - Listas y tableros llenan el marco hasta 1440 px; formularios y lectura van a 880 px a la izquierda. Una tabla de
+    tres columnas no se estira a 1440 px: se reduce el contenedor o se agregan datos que sirvan.
+  - Con pocos datos, el estado vacío (`EmptyState`) con su siguiente paso ocupa el lugar, en vez de una tabla casi vacía.
+- **Jerarquía por pantalla:** un título (`PageHeader`), una acción primaria, como máximo 3 KPI. Lo que pide atención
+  (`UrgencyList`, `Notice`) va arriba del resto; el detalle, a un clic.
+- **Tarjetas solo donde ayudan:** una entidad con su estado y su acción. Nunca tarjetas dentro de tarjetas, ni rejillas
+  de tarjetas idénticas para todo (ver `PRODUCT.md`, anti-referencias). Lo que se compara va en tabla.
+- **Alineación:** el contenido de todas las páginas empieza en la misma columna (el margen del marco); cifras a la
+  derecha con `tabular-nums`; acciones de una fila al final.
+- **Desplazamiento (scroll): uno por eje, el de la página.** El marco queda fijo (sidebar y barra superior `sticky`) y
+  la página entera se desplaza; así lo hace la app. No se encierra el contenido en una caja con su propio scroll dentro
+  de una página que también se desplaza: el usuario pierde el control y el teclado se enreda (Baymard, SAP Fiori).
+  - Lo importante va en la primera pantalla y media: lo que pide atención, el estado y la acción primaria. El detalle
+    puede quedar abajo; casi nadie lo lee si no lo busca (NN/g: ~74 % del tiempo se pasa en las dos primeras pantallas).
+  - Una lista larga se pagina en el servidor y `Pagination` queda fija al pie en escritorio; no se hace una tabla con
+    altura fija y scroll interno.
+  - Excepciones, y solo estas: un **espacio de trabajo de altura completa** donde cada panel se desplaza solo y la
+    página no (lista y detalle lado a lado, el organigrama, la página de Humi); lo que **flota** (`FormSheet`, diálogos,
+    menús), que desplaza su cuerpo con el pie fijo; y una tabla **ancha** en el celular, que se desplaza de lado dentro de
+    su marco.
+  - Una tabla que pasa de una pantalla de alto mantiene visible su cabecera (`sticky`). Hoy la tabla de la app no la fija:
+    es para pantallas nuevas y para la auditoría, no un cambio en silencio.
+- **Formularios: panel lateral, diálogo o página, según la tarea, no según el módulo.** Una sola regla para todo el
+  producto, la consola y los cobros incluidos (Carbon, Supabase y ServiceNow dicen lo mismo):
+  - **Diálogo centrado** (`ConfirmDialog`, `FormDialog`): confirmar o destruir, o una acción corta de uno o dos campos
+    sobre algo que ya existe (publicar, rechazar, extender, compartir, registrar un pago). También un formulario que
+    necesita el ancho de un mapa (la zona de asistencia).
+  - **Panel lateral derecho** (`FormSheet`): dar de alta o editar un registro de tres campos o más, con la lista o la
+    página detrás a la vista.
+  - **Página propia:** un flujo largo o de varios pasos (importar empleados, una evaluación nueva, escribir una
+    política). En el portal, los datos de una tarea suben en una hoja desde abajo (ver «Reglas de la app instalable»).
+  - Hoy hay altas de varios campos en diálogo que no siguen la regla (`disclosure/record-dialog`,
+    `leave/record-leave-form`, `interventions/follow-up-dialog`, `billing/account-dialog`, `billing/add-charge-dialog`,
+    `tenancy/create-tenant-dialog`, `campaigns/new-evaluation-dialog`, entre otros): se revisan en la auditoría y se
+    mueven a la forma que les toca. Lo nuevo nace con la regla.
+- **Celular primero en el portal, escritorio primero en el panel:** el panel se revisa a 1024 y 1350 px antes que a
+  375; el portal, al revés. Ninguno se rompe en el otro.
 
 ## Movimiento
 
@@ -86,26 +142,117 @@ El movimiento confirma lo que la persona hizo o muestra qué cambió; nunca deco
 
 ## Logo y white label
 
-- Usa siempre los SVG del grupo de recursos **Logo**: `humetria-horizontal-color.svg` sobre claro y `humetria-horizontal-color-oscuro.svg` sobre oscuro (el componente `Logo` los cambia solo). Mínimo 96 px de ancho; por debajo, `humetria-simbolo-*.svg` o el favicon.
+- El logo de Humetría usa siempre los SVG del grupo de recursos **Logo**: `humetria-horizontal-color.svg` sobre claro y `humetria-horizontal-color-oscuro.svg` sobre oscuro (el componente `Logo`, `components/humetria/logo.tsx`, los cambia solo; `kind`: `logo`, `symbol` o `seal`). Mínimo 96 px de ancho; por debajo, el símbolo o el favicon.
 - Área de respeto: la altura del círculo (≈ 1/4 del símbolo) por lado.
-- **White label:** la empresa (o el consultor) cambia el logo y el color de acento (`brand_color`). Tipografía y disposición nunca cambian. El acento se ajusta solo (`BrandPalette`) para que siga leyéndose a 4.5:1 en claro y en oscuro, también como texto sobre su fondo suave.
-- En reportes, invitaciones y la encuesta, el logo del consultor va en el lugar principal (arriba a la izquierda, ≤ 48 px de alto en reportes y ≤ 32 px en la encuesta). Humetría aparece solo como el sello `humetria-sello-hecho-con-gris.svg` (`#6B7472`, 4.81:1 sobre blanco) a 16 px de alto, o la versión blanca sobre fondo oscuro.
-- En el panel del consultor, el logo de Humetría va arriba del sidebar. Si el consultor activa su marca, su logo lo reemplaza.
+- **White label (PR #171, fusionado).** La empresa (o el consultor) cambia su logo (claro y oscuro) y su color de acento (`brand_color`). Tipografía y disposición nunca cambian. El acento pasa por `BrandPalette` (`app/Modules/Tenancy/Data/BrandPalette.php`), que lo ajusta hasta leerse a 4.5:1 en claro y en oscuro, también como texto sobre su fondo suave; `lib/brand-accent.ts` lo pone en la página. Se edita en la consola (`components/tenancy/tenant-brand-color-field.tsx`).
+- **Quién firma la página:** usa siempre `CompanyMark` (`components/company-mark.tsx`), nunca `Logo` directo, en el sidebar, el portal, la encuesta, los reportes y el membrete de impresión. Dentro de una empresa pinta su logo (`CompanyLogoImage`) o, sin logo, sus iniciales y nombre (`CompanyInitialsMark`); fuera de una empresa, el logo de Humetría.
+- Humetría aparece en las páginas de una empresa solo como el sello «hecho con humetría» (`Logo kind="seal"`), gris `#6B7472` (4.81:1 sobre blanco) a 16 px de alto, o blanco sobre oscuro. En reportes el logo de la empresa va arriba a la izquierda (≤ 48 px de alto); en la encuesta, ≤ 32 px.
 
-## Patrones
+## Marcos
 
-Las pantallas completas son las de la app (las maquetas de `pantallas/` se retiraron el 2026-11-15; siguen en el
-historial de git) y son el estándar: toda pantalla, existente o nueva, se arma con sus piezas — marco con migas (`AppBreadcrumbs`), `PageHeader`
-con estado y ficha, `ArcMeter` (el arco de la "h"), `CountTabs`, `Notice`, `Initials`, tablas con cabecera `muted` y
-estados vacíos con el siguiente paso.
+Toda página vive en uno de estos marcos; `layouts/frames.ts` decide cuál. Una pantalla nueva entra en el marco de su audiencia y no inventa otro.
 
+### Panel de la empresa (`/admin/{tenant}`)
 
-- **Panel de RH** (`PanelRH`): encabezado con cliente y título, 3 `KpiCard`, “Campañas activas” en una rejilla de `CampaignCard` y, separadas por `space-12`, las “Campañas cerradas” en una `Table` con su `RiskLevel` final y la descarga del PDF.
-- **Encuesta** (`EncuestaMovil`, `EncuestaEscritorio`): `SurveyShell` con el logo del consultor y “Confidencial”, progreso por sección, instrucción de entrada en un bloque `accent` y `SurveyQuestion` con 5 opciones verticales de 56 px. En móvil va una pregunta por pantalla; en escritorio, hasta 3 de la misma sección. “Siguiente” es explícito y nunca avanza solo.
-- **Escala de riesgo** (`RiskLevel`, `RiskScale`).
-- **Resultados** (`LevelBar`, `LevelLegend`, `ShareMeter`): primero una frase que dice cuántos quedan en riesgo alto o muy alto y qué dominio pesa más, luego la calificación final como una sola barra con su leyenda, y los dominios, categorías y áreas ordenados del peor al mejor, cada uno como barra; los conteos quedan en una tabla a un clic (en el informe, a la vista). Las preguntas van de la más desfavorable a la menos, con un `ShareMeter` por pregunta.
-- **Cabecera de reporte** (`ReportHeader`): sello “hecho con humetría”, la norma y la guía en `primary`, título, empresa y centro, y la ficha (periodo, cuestionarios, instrumento, elaboró).
-- **Informe del numeral 7.7:** barra fija con las secciones, aviso de lo que falta capturar (`risk-medio-bg`), resumen ejecutivo (3 KPI, un cuadro por cuestionario y tres hallazgos), los 3 dominios donde actuar primero, la gráfica divergente categoría → dominio (a la izquierda nulo a medio, a la derecha alto o muy alto), las áreas en tres niveles con las protegidas contadas aparte, los ocho incisos del 7.7 y los anexos. Se imprime siempre en claro, con un salto de página antes de Focos, Dominios, Informe 7.7 y Anexo.
+`layouts/app/app-sidebar-layout.tsx` arma `AppShell` (el `SidebarProvider`, que recuerda si está plegado en la cookie `sidebar_state`), `AppSidebar`, `AppContent`, `MobileTabBar`, `CommandPalette`, el dock de primeros pasos y el de Humi.
+
+- **Panel de la página:** el sidebar es `variant="inset"`; desde `md` el contenido va en un panel `bg-background` con `rounded-xl`, borde `sidebar-border` y `shadow-raised`, sobre el fondo `sidebar`. El cuerpo llena hasta 1440 px y se centra (ver «Espacio, forma y profundidad»).
+- **Sidebar** (`components/app-sidebar.tsx`), de arriba abajo: `CompanyMark` (al staff fuera de una empresa, además la pastilla «Consola» en `warning`); `TenantSwitcher`, la tarjeta de 56 px con iniciales y nombre de la empresa, que abre la lista cuando la persona tiene dos o más; la navegación; al pie `NextObligationCard` (solo con una evaluación en curso) y `NavUser` (fila de 56 px que abre el menú de la cuenta hacia arriba). La lista se desvanece en sus bordes (`scroll-fade`) en vez de mostrar barra.
+- **Grupos** (`lib/nav-sections.ts`, en este orden): sin título (Panel, Centros de trabajo, Empleados, Accesos), Administración, **Cumple la norma**, **Escucha a tu gente**, **Ordena tu operación** y, solo para staff, Consola, Ventas y Plataforma. Cada grupo con nombre es `NavGroup` (`components/nav-group.tsx`): una fila plegable de 44 px con el ícono de la familia, texto 600 y chevron, que empieza abierta cuando contiene la página actual y, plegada, suma los contadores de sus herramientas. Una herramienta con páginas propias (NOM-037) es `NavSubmenu` (ver `componentes/Sidebar.md`).
+- **Fila activa:** fondo `card`, anillo de 1 px en `sidebar-border`, peso 500 e ícono en `sidebar-primary` (`SidebarMenuButton` en `components/ui/sidebar.tsx`). El contador de una fila (evaluaciones en curso de NOM-035) va a la derecha.
+- **Plegado a íconos:** 66 px de ancho, botones de 44 × 44 con el nombre en tooltip; se pliega con el botón de la barra superior o ⌘B. Desaparecen los títulos de grupo y la tarjeta de obligación; el padre de un submenú enlaza a su primera página y la tarjeta de la empresa queda en sus iniciales.
+- **Barra superior** (`AppSidebarHeader`, 64 px, fija al desplazar, con divisor cuando el contenido pasa debajo): a la izquierda el botón de plegar (tooltip «Contraer menú ⌘B», desde `md`) y las migas (`AppBreadcrumbs`: la empresa es el inicio; en el celular solo la última); a la derecha «Buscar o ir a… ⌘K» (`CommandPalette`; solo ícono bajo `lg`) y el tema (`ThemeSwitch` de tres opciones desde `sm`, `ThemeMenu` en el celular). El menú de la cuenta vive en el sidebar, no aquí. Al suplantar, `ImpersonationBanner` va encima.
+- **Celular (< 768 px):** el panel pierde margen, radio y sombra; la navegación es `MobileTabBar` (`components/mobile-tab-bar.tsx`, pestañas de `lib/mobile-tabs.ts`: Panel, Normas, Operación cuando aplica, Quejas y Más), una píldora esmerilada flotando abajo. «Más» abre el sidebar como `Sheet`.
+- **Ajustes de la cuenta** (`settings/*`) van dentro del panel con su propio submarco (`layouts/settings/layout.tsx`).
+
+### Portal de la persona trabajadora (`/me/{slug}`)
+
+Sin sidebar ni migas: una columna para el celular. Lo pinta `PersonFrame` (`components/person-frame.tsx`):
+
+- Encabezado de 60 px: `CompanyMark` a la izquierda y, a la derecha, «Mi portal» o un enlace «Atrás» (`back`). Al pie, el sello. `centered` centra las pantallas de estado; `actions` fija la acción abajo.
+- `WorkerFrame` (`components/worker-access/worker-frame.tsx`) envuelve `PersonFrame` con «Mi portal» y una columna `max-w-md`; en escritorio es la misma columna con más aire.
+- **Barra inferior:** `PortalTabBar` (`components/worker-access/portal-tab-bar.tsx`) con Inicio, Marcar, Pendientes y Cuenta. Marcar es un enlace a la página de marcar y desaparece si la empresa no tiene asistencia (quedan tres). La pestaña actual es la cápsula `primary` que se desliza (`GlideChips`); Pendientes lleva su conteo. La barra solo aparece en el inicio (`HomeScreen`): nunca en Marcar, en una tarea ni en una pantalla anónima. No confundir con `MobileTabBar`, que es la del panel de RH.
+- **Inicio** (`components/worker-access/home-start.tsx`): saludo según la hora, con fecha y centro; con asistencia, la tarjeta del día y las marcas de hoy; luego «Esperan su respuesta» y «Sus herramientas» en listas de tarjetas; al final, la oferta de avisos y `InstallGuide`.
+- **Tareas** (vacaciones, Ley Silla, políticas…): «Atrás» arriba y una acción fija abajo, sin barra; lo que pide datos sube como hoja desde abajo (`components/leave/request-sheet.tsx`, `components/attendance/correction-sheet.tsx`). Las pantallas de estado usan `StateMessage` centrado.
+- **Pantallas anónimas** (encuestas, canal de denuncias) no llevan barra, nombre ni enlace al portal: `SurveyShell` (`components/campaigns/survey/survey-shell.tsx`) y `components/complaints-public/public-shell.tsx`.
+- El portal trata de «usted», como la encuesta.
+
+#### Reglas de la app instalable (PWA)
+
+Lo que hace que el portal se sienta una app del teléfono y no una página web. Salen de la app actual y de la guía de
+web.dev, MDN, Apple (barras de pestañas) y Material (hojas y diálogos); se aplican con las piezas y tokens de Humetría.
+
+- **Se instala en ventana propia** (`display: standalone`; en iPhone es el único modo). Nada de cabecera grande de sitio
+  web: el encabezado de `PersonFrame` (60 px) basta.
+- **Zonas seguras:** todo lo fijo arriba o abajo respeta `env(safe-area-inset-*)`, como ya hacen `PersonFrame` y la barra
+  (`--tab-bar-inset`). Nada queda bajo la muesca ni la barra de inicio.
+- **La barra inferior es solo navegación** (Apple): de 3 a 5 destinos, ícono y nombre corto siempre visibles, nunca una
+  acción. Se muestra en las pantallas de primer nivel (el inicio); una tarea o una pantalla anónima no la llevan.
+- **Una tarea:** «Atrás» arriba, una sola acción primaria fija abajo, al alcance del pulgar y sobre la zona segura. Los
+  datos que pide la tarea suben en una **hoja desde abajo** (`request-sheet`, `correction-sheet`); una confirmación
+  urgente o irreversible es un **diálogo** centrado (Material). Nunca una hoja que abre otra hoja.
+- **Primero el celular:** columna de una mano (`max-w-md`), áreas táctiles de 44 px, campos de 16 px (iOS no hace zoom),
+  la información que importa en la primera pantalla. En escritorio es la misma columna con más aire.
+- **Se siente nativo:** los botones, pestañas y menús no se seleccionan como texto; la transición entre pantallas es la
+  del sistema de movimiento (corta, sin rebote); el estado de carga deja ver la forma de la pantalla.
+- **Sin conexión, dicho y útil:** una pantalla propia que dice qué sí funciona (las marcas se guardan y se envían
+  después) y qué no, nunca la página de error del navegador.
+- **Instalar y avisos no interrumpen:** `InstallGuide` y la oferta de avisos van al final del inicio, nunca como ventana
+  emergente al entrar. El aviso push dice solo de qué tipo es.
+- **Confidencialidad visible** donde se contesta: el portal y la encuesta lo dicen antes de preguntar.
+
+### Consola de superadmin
+
+Es el mismo marco del panel, sin empresa: `CompanyMark` muestra el logo de Humetría con la pastilla «Consola» y los grupos son Consola (Resumen, Empresas, Cuentas), Ventas (Solicitudes de demo, Sala de demo) y Plataforma (`lib/staff-navigation.ts`). Sus pantallas usan las mismas piezas que el panel: `PageHeader`, `CountTabs` y `SearchField` sobre tablas paginadas (`components/tenancy/tenants-toolbar.tsx`, `tenants-table.tsx`), `OverviewCard` en el resumen. Sus formularios siguen la misma regla que el panel («Formularios», en «Composición y espacio»); hoy varias altas de la consola y los cobros son diálogos y quedan para la auditoría.
+
+### Fuera del marco
+
+Autenticación (`layouts/auth-layout.tsx`, con el panel de promesas en `layouts/auth/auth-promises.tsx`), primeros pasos (`SetupFrame`), reportes por enlace temporal (`ReportLinkBar`), el canal público de denuncias y la página de error (`StatusMessage`). Se centran con su propio ancho.
+
+## Piezas para armar una pantalla
+
+Las pantallas completas son las de la app (las maquetas de `pantallas/` se retiraron el 2026-11-15; siguen en el historial de git) y son el estándar: toda pantalla nueva parte de la más parecida y se arma con estas piezas. Todas viven en `components/humetria/` salvo que se diga otra cosa; los nombres de tablero en sus comentarios (V2-Panel, V4-Comp-Reporte…) apuntan al diseño del que salieron.
+
+| Necesitas | Usa | Cuándo |
+|---|---|---|
+| Encabezado de página | `PageHeader` | Toda página del panel: caption opcional, título con su estado (`Badge`), una frase o una fila de datos con íconos, acciones a la derecha con la primaria al final. |
+| Migas | `AppBreadcrumbs` (`components/`) | Las pone el marco; la página solo pasa `breadcrumbs`. |
+| Vistas de una lista con conteo | `CountTabs` | «Pendientes 42 · Contestaron 18 · Todas 60»; cada una es un enlace y el servidor pagina. |
+| Partes de un reporte largo | `SectionTabs` | Pestañas fijas arriba que saltan a cada parte. |
+| Buscar y filtrar una lista | `SearchField`, `ListToolbar` (`components/`), `Pagination` | Toda lista se pagina y busca en el servidor. |
+| Tabla | `Table` (`components/ui/`) con cabecera `muted`; `StackedTable` si en el celular cada fila debe volverse tarjeta | Muchas entidades que se comparan (ver `componentes/Table.md`). |
+| Acciones de una fila | `RowMenu` | Botón de 44 px «Más acciones»; la destructiva al final. |
+| Acciones sobre filas elegidas | `BulkBar` | Solo mientras hay selección. |
+| Tarjeta | `Card` (`components/ui/`) o la utilidad `card` | Pocas entidades con su estado y su acción (ver `componentes/Card.md`). |
+| Avance | `ArcMeter` (el arco de la «h»), `ProgressBar`, `StageBar` | Siempre junto a la cifra escrita. |
+| El siguiente paso | `NextStepCard`, `UrgencyList` | Una sola acción recomendada; lo que no puede esperar, cada uno con su acción. |
+| Algo que revisar, sin alarma | `Notice` | El dato en negritas primero y la acción a la derecha. `ReadOnlyNotice` cuando el rol no puede cambiar nada; `PlanLimitNotice` para el límite del plan. |
+| Lista vacía | `EmptyState` | Ícono, título, qué la llena y el botón al siguiente paso. |
+| Pantalla de error o bloqueo | `StatusMessage` | 403, 404, enlace vencido, sin acceso. |
+| Un ajuste | `SettingRow` | Ícono en cuadro suave, nombre con estado, una frase y su acción a la derecha. |
+| Elegir de una lista corta | `ChoiceField` (tarjetas), `OptionRows` (filas de 52 px, radio o casilla), `PillChoice` (Sí / No en fila) | En pantallas nuevas no se rehace el estilo de tarjeta elegida: se usa una de estas. |
+| Elegir de una lista larga | `Combobox` (con `serverSource` si crece) | |
+| Fechas, horas, teléfono, cifras | `DatePicker`, `DateRangePicker`, `MonthPicker`, `TimePicker`, `PhoneInput`, `NumberStepper`, `FileDropZone` | |
+| Campo de texto con label y error | `FormField` (`components/form-field.tsx`), `InputError` | |
+| Alta o edición de un registro | `FormSheet` | Panel lateral derecho (ver `componentes/Sheet.md`). |
+| Confirmar o acción corta | `ConfirmDialog`, `FormDialog` | Lo que no se deshace, o uno o dos campos (ver `componentes/Dialog.md`). |
+| Una pregunta tras otra | `FlowProgress`, `FlowNav`, `QuestionHeading`, `DocumentPreview` | «Siguiente» explícito; nunca avanza solo. |
+| Persona o empresa sin foto | `Initials` | Personas redondas, empresas cuadradas. |
+| Riesgo | `RiskLevel` | Siempre; nunca un `Badge` de color. |
+| Resultados | `LevelBar`, `LevelLegend`, `ShareMeter`, `BarMeter`, `ProtectedCell` | Ver «Resultados» abajo. |
+| Gráficas de cifras | `BarMeter`, `ColumnChart`, `WaterfallChart`, `WeekRibbon` | En el jade de las gráficas, con su valor escrito. |
+| Ícono de una herramienta | `ToolIcon` | El mismo dibujo dondequiera que se nombre la herramienta. |
+| Imprimir | `PrintButton`, `PosterPage`, `PrintLetterhead` (`components/`) | |
+
+Patrones de pantalla que ya existen y se copian:
+
+- **Panel de inicio** (`pages/dashboard.tsx`): lo urgente («Atiende primero»), las rutas de cada norma con su `StageBar` y el siguiente paso recomendado, con la semana a un lado.
+- **Encuesta** (`SurveyShell` + `SurveyQuestion`, en `components/campaigns/survey/` y `components/engagement/survey/`): `CompanyMark` y «Confidencial», progreso por sección, instrucción de entrada en un bloque `accent` y 5 opciones verticales de 56 px. En móvil va una pregunta por pantalla; en escritorio, hasta 3 de la misma sección. «Siguiente» es explícito y nunca avanza solo.
+- **Escala de riesgo** (`RiskLevel`, y `RiskScale` en `components/results/`).
+- **Resultados** (`LevelBar`, `LevelLegend`, `ShareMeter`): primero una frase que dice cuántos quedan en riesgo alto o muy alto y qué dominio pesa más, luego la calificación final como una sola barra con su leyenda, y los dominios, categorías y áreas ordenados del peor al mejor, cada uno como barra; los conteos quedan en una tabla a un clic (en el informe, a la vista). Las preguntas van de la más desfavorable a la menos, con un `ShareMeter` por pregunta. Un grupo bajo el mínimo muestra `ProtectedCell`.
+- **Cabecera de reporte** (`ReportHeader`, `components/results/report-header.tsx`): `CompanyMark` y el sello «hecho con humetría», la norma y la guía en `primary`, título, empresa y centro, y la ficha (periodo, cuestionarios, instrumento, elaboró).
+- **Informe del numeral 7.7** (`components/results/`): `SectionTabs` con Resumen, Focos, Dominios, Áreas, Informe 7.7 y Anexo, y `PrintButton`; aviso de lo que falta capturar (`risk-medio-bg`, nunca se imprime); resumen ejecutivo (`ReportKpi`, un cuadro por cuestionario y tres hallazgos), los 3 dominios donde actuar primero, la gráfica divergente categoría → dominio (a la izquierda nulo a medio, a la derecha alto o muy alto), las áreas en tres niveles con las protegidas contadas aparte, los ocho incisos del 7.7 y los anexos. Se imprime siempre en claro, con un salto de página antes de Focos, Dominios, Informe 7.7 y Anexo.
+- **Humi** (`components/assistant/`): ver `humi/03-ui-spec.md`.
 
 ## Accesibilidad
 

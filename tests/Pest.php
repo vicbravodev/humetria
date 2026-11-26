@@ -261,6 +261,19 @@ function openPath(AwaitableWebpage|PendingAwaitablePage|On $page, string $path):
 }
 
 /**
+ * In the browser: reloads the page and waits for it to load, once. Not refresh(): Pest retries it like an assertion, one second
+ * per attempt, so a reload that takes longer reloads again and the next step lands in that second load («Execution context was
+ * destroyed»), as openPath() explains for navigate().
+ */
+function reloadPage(AwaitableWebpage|PendingAwaitablePage $page): AwaitableWebpage
+{
+    $webpage = $page instanceof AwaitableWebpage ? $page : $page->assertNoJavaScriptErrors();
+    $webpage->page()->reload();
+
+    return $webpage;
+}
+
+/**
  * In the browser: no accessibility issues at `$level` or worse (axe; 0 critical … 3 minor), as Pest's assertNoAccessibilityIssues()
  * checks them, but axe gets the timeout of the suite. Pest gives it 5 s whatever that timeout is, and a page whose main thread is
  * busy (the landing's videos on a CI runner without a GPU) ran out of them although axe takes a tenth of a second here.
@@ -720,7 +733,8 @@ function settled(): string
  * A script that resolves once no calendar is left in the page, in a popover (desktop) or in a sheet (phone): picking a day
  * closes it with a short animation and, when it unmounts, gives focus back to its field. A click that opens the next date
  * field before that would see its calendar closed again by that focus, so this waits for the unmount, not just for the
- * closed state. A sheet that holds no calendar (a form's own) is not waited on.
+ * closed state. A sheet that holds no calendar (a form's own) is not waited on. A combobox's list is a popover too and
+ * gives focus back the same way: wait for it after picking an option and before opening a date field.
  */
 function calendarClosed(): string
 {

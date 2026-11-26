@@ -48,3 +48,10 @@ yarn-error.log
 /coverage.xml
 /video/node_modules
 /video/out
+
+# /design-sync scratch (the durable set under .design-sync/ is committed)
+/.ds-sync/
+/ds-bundle/
+/.design-sync/.cache/
+/.design-sync/learnings/
+/.design-sync/node_modules

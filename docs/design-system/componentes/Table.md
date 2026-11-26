@@ -10,5 +10,5 @@ pantalla vaya en tarjetas.
 - Encabezado en estilo `caption` sobre `muted`; filas de 52 px con divisor `border`.
 - Números alineados a la derecha con cifras tabulares.
 - Una segunda línea en `muted-foreground` sustituye columnas extra (“Supervisa: L. Garza”).
-- Las acciones de una fila van en un solo botón “…” (`Acciones de {nombre}`) al final, con un menú; la que destruye va al último, separada y en `destructive`. Así la tabla cabe en escritorio sin desplazarse de lado. Lo que solo aplica a una celda (reenviar o cancelar una invitación) se queda en la celda, en botones `sm`.
-- En móvil, la tabla se desplaza en horizontal dentro de su marco; no la conviertas en tarjetas. El marco recibe el foco (con el anillo `ring`) para que también el teclado pueda desplazarla.
+- Las acciones de una fila van en un solo botón “…” (`RowMenu`, `components/humetria/row-menu.tsx`, con `label` «Acciones de {nombre}») al final, con un menú; la que destruye va al último, separada y en `destructive`. Así la tabla cabe en escritorio sin desplazarse de lado. Lo que solo aplica a una celda (reenviar o cancelar una invitación) se queda en la celda, en botones `sm`.
+- En móvil, la tabla se desplaza en horizontal dentro de su marco; no la conviertas en tarjetas a mano. Si en el celular cada fila debe leerse completa (cintas, avisos y su acción), usa `StackedTable` (`components/humetria/stacked-table.tsx`), que hace la tarjeta solo en el celular y sigue siendo tabla en papel. El marco recibe el foco (con el anillo `ring`) para que también el teclado pueda desplazarla.

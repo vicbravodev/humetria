@@ -211,10 +211,24 @@ No hay SMS. WhatsApp sale solo por `Messaging`.
 
 ## Design system
 
-- Fuente de verdad: los tokens de `docs/design-system/` y **la app misma**. Toda pantalla nueva parte de la más parecida y
-  reusa sus piezas (marco con migas, encabezado con estado, tarjetas, tablas `muted`, pestañas con conteo, estados vacíos
-  con siguiente paso); una que se vea como un formulario sin diseñar no está terminada. Antes de cerrar un trabajo con UI,
-  se revisa en el navegador en claro, oscuro y a 375 px.
+- Fuente de verdad: **la app misma** y su contexto de diseño: `PRODUCT.md` (para quién, tono, anti-referencias),
+  `DESIGN.md` (tokens y reglas, formato de Impeccable) y `docs/design-system/` (marcos, piezas y cuándo usar cada una,
+  «Composición y espacio»). La skill `impeccable` los lee sola; el design system «Humetría» de claude.ai
+  (https://claude.ai/artifact/JA4ZDeATtbEkn7cHymwPmb) se genera de ellos y del código con `/design-sync`.
+- **Pantalla nueva o rediseño: primero el diseño, aprobado.** Se diseña en Claude Design con el design system «Humetría»
+  (o con `/impeccable shape`) y se construye solo cuando el dueño lo aprueba; el PR enlaza el diseño. El código lo replica
+  con las piezas que nombra; si una regla del proyecto obliga a desviarse (paginar, privacidad, tenant), se dice en el PR.
+  Un ajuste a una pantalla existente parte de esa pantalla. Las referencias externas (cómo lo resolvió Linear, Stripe o un
+  design system público) informan el diseño, pero se traducen a las piezas y tokens de Humetría: nunca lo reemplazan.
+- Toda pantalla parte de la más parecida y reusa sus piezas (marco con migas, encabezado con estado, tarjetas, tablas
+  `muted`, pestañas con conteo, estados vacíos con siguiente paso); una que se vea como un formulario sin diseñar no está
+  terminada. Una pieza que usan dos o más módulos vive en `components/humetria/`: es la que llega al design system.
+- **Antes de cerrar un trabajo con UI:** `/impeccable critique` y `/impeccable polish` sobre lo cambiado, y revisión en el
+  navegador en claro y oscuro a 375, 768, 1024, 1350 y 2000 px, junto al diseño aprobado: sin huecos muertos ni columnas
+  de relleno.
+- **El design system se mantiene en el mismo PR:** un cambio a `components/ui`, `components/humetria`, los tokens de
+  `resources/css/app.css` o `docs/design-system/` actualiza `DESIGN.md` y los docs que toca, y termina con `/design-sync`
+  (o el PR dice que queda pendiente). Lo que vive solo en claude.ai se pierde en la siguiente sincronización.
 - Un solo acento (`primary`; `brand-*` solo en el logo), salvo el color de cada familia de herramientas en el sitio público (`family-*`); color solo por tokens; texto ≥ 4.5:1, controles ≥ 3:1; los ajustes
   a shadcn tras cada `npx shadcn add` (`DesignTokensOnlyTest`, `DesignSystemTest`, `ShadcnAdjustmentsTest`).
 - El panel tutea y la encuesta trata de "usted"; el riesgo siempre con `RiskLevel`; la encuesta nunca avanza sola.
