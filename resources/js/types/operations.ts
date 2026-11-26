@@ -57,6 +57,9 @@ export type OptOutTally = {
     lastThirtyDays: number;
 };
 
+/** The tabs of «Mensajería». */
+export type MessagingView = 'summary' | 'templates' | 'mail' | 'companies';
+
 export type MessagingConsoleData = {
     month: ChannelTraffic[];
     today: ChannelTraffic[];

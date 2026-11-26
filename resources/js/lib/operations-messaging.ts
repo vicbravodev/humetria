@@ -114,6 +114,15 @@ export function funnel(
     ];
 }
 
+/** «Con problemas»: the templates with a button still pending in the app or a rejection in 30 days. */
+export function troubledTemplates(
+    templates: TemplateTraffic[],
+): TemplateTraffic[] {
+    return templates.filter(
+        ({ pendingInCode, rejected }) => pendingInCode || rejected > 0,
+    );
+}
+
 /** Rejected messages of every channel in a range. */
 export function rejected(list: ChannelTraffic[]): number {
     return list.reduce((sum, traffic) => sum + traffic.rejected, 0);

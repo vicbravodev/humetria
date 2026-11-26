@@ -23,8 +23,8 @@ export default function ConnectionCard({
     ];
 
     return (
-        <section className="card">
-            <header className="flex items-center justify-between gap-4 border-b px-5 py-4">
+        <section className="card p-0">
+            <header className="flex items-center justify-between gap-4 border-b px-6 py-4">
                 <h2 className="text-base font-semibold">Conexión con Meta</h2>
                 <Badge variant={state.variant}>{state.label}</Badge>
             </header>
@@ -32,7 +32,7 @@ export default function ConnectionCard({
                 {rows.map((row) => (
                     <div
                         key={row.label}
-                        className="flex items-center justify-between gap-4 px-5 py-3"
+                        className="flex items-center justify-between gap-4 px-6 py-3.5"
                     >
                         <dt className="text-sm text-muted-foreground">
                             {row.label}

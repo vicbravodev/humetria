@@ -47,6 +47,21 @@ it('lays out health as its board: the hours of mail and WhatsApp, the scheduler 
         ->assertSee('Programador de tareas: sin latido');
 });
 
+it('splits messaging in tabs and narrows the templates to the ones with problems', function (): void {
+    signInAsSuperadmin();
+    Delivery::factory()->create(['template' => 'engagement_invite_v1', 'status' => DeliveryStatus::Failed]);
+    Delivery::factory()->mail()->create(['status' => DeliveryStatus::Delivered]);
+
+    visitPage('operations/messaging', '/admin/operations/messaging', reach: fn ($page) => $page->click('Con problemas'))
+        ->assertSee('Invitación a la encuesta de clima · v1')
+        ->assertDontSee('Invitación a la evaluación NOM-035 · v1')
+        ->assertSee('Del envío a la lectura · hoy');
+
+    visitPage('operations/messaging', '/admin/operations/messaging?view=mail')
+        ->assertSee('Correo del mes, del envío a la lectura')
+        ->assertDontSee('Conexión con Meta');
+});
+
 it('shows the superadmin the messaging of the whole platform, never a message', function (bool $dark, bool $mobile): void {
     signInAsSuperadmin();
     $tenant = Tenant::factory()->create(['trade_name' => 'Textiles del Norte']);

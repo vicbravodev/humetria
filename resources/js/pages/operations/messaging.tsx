@@ -1,74 +1,71 @@
 import { Head } from '@inertiajs/react';
+import CountTabs from '@/components/humetria/count-tabs';
 import PageHeader from '@/components/humetria/page-header';
-import ConnectionCard from '@/components/operations/connection-card';
 import DeliveryFunnel from '@/components/operations/delivery-funnel';
-import FigureCard from '@/components/operations/figure-card';
+import MessagingSummary from '@/components/operations/messaging-summary';
 import RejectingCompanies from '@/components/operations/rejecting-companies';
 import TemplateTable from '@/components/operations/template-table';
-import { count, deliveredShare, trafficOf } from '@/lib/operations';
-import { rejected } from '@/lib/operations-messaging';
-import type { MessagingConsoleData } from '@/types';
+import { trafficOf } from '@/lib/operations';
+import { messaging } from '@/routes/operations';
+import type { MessagingConsoleData, MessagingView } from '@/types';
 
-/** «Mensajería»: WhatsApp and mail of the whole platform. States and counts only: a message's content is never shown. */
-export default function Messaging({
-    month,
-    today,
-    templates,
-    companies,
-    connection,
-    optOuts,
-}: MessagingConsoleData) {
-    const whatsApp = trafficOf(month, 'whatsapp');
-    const mail = trafficOf(month, 'mail');
+/** «Mensajería» (tablero Mensajería): WhatsApp and mail of the whole platform. States and counts only, never a message. */
+export default function Messaging(
+    props: MessagingConsoleData & { view: MessagingView },
+) {
+    const { view, month, today, templates, companies } = props;
+    const tab = (label: string, of: MessagingView, count?: number) => ({
+        label,
+        count,
+        href: messaging(of === 'summary' ? {} : { query: { view: of } }),
+        active: view === of,
+    });
 
     return (
         <>
             <Head title="Mensajería" />
-            <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
+            <div className="flex flex-col gap-6 px-4 py-6 md:px-10 md:py-8">
                 <PageHeader
                     caption="Plataforma"
                     title="Mensajería"
                     description="WhatsApp y correo de toda la plataforma: plantillas, entregas, rechazos y bajas. Solo estados y conteos; el contenido de un mensaje nunca se muestra."
                 />
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <FigureCard
-                        title="WhatsApp del mes"
-                        figure={count(whatsApp?.total ?? 0)}
-                        caption={`${deliveredShare(whatsApp)} entregados`}
-                    />
-                    <FigureCard
-                        title="Correos del mes"
-                        figure={count(mail?.total ?? 0)}
-                        caption={`${deliveredShare(mail)} entregados`}
-                    />
-                    <FigureCard
-                        title="Rechazos hoy"
-                        figure={count(rejected(today))}
-                        caption="De WhatsApp y correo, de toda la plataforma."
-                    />
-                    <FigureCard
-                        title="Bajas de WhatsApp"
-                        figure={count(
-                            optOuts.everyCompany + optOuts.oneCompany,
-                        )}
-                        caption={`${count(optOuts.lastThirtyDays)} en los últimos 30 días`}
-                    />
-                </div>
-                <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-                    <div className="grid min-w-0 content-start gap-4">
-                        <TemplateTable templates={templates} />
-                        <RejectingCompanies companies={companies} />
-                    </div>
-                    <div className="grid min-w-0 content-start gap-4">
+                <CountTabs
+                    label="Vistas de la mensajería"
+                    tabs={[
+                        tab('Resumen', 'summary'),
+                        tab(
+                            'Plantillas de WhatsApp',
+                            'templates',
+                            templates.length,
+                        ),
+                        tab(
+                            'Correo',
+                            'mail',
+                            trafficOf(month, 'mail')?.total ?? 0,
+                        ),
+                        tab('Por empresa', 'companies', companies.length),
+                    ]}
+                />
+                {view === 'summary' && <MessagingSummary {...props} />}
+                {view === 'templates' && (
+                    <TemplateTable templates={templates} />
+                )}
+                {view === 'mail' && (
+                    <div className="grid gap-6 lg:grid-cols-2">
                         <DeliveryFunnel
-                            traffic={trafficOf(today, 'whatsapp')}
+                            title="Correo de hoy, del envío a la lectura"
+                            traffic={trafficOf(today, 'mail')}
                         />
-                        <ConnectionCard
-                            connection={connection}
-                            optOuts={optOuts}
+                        <DeliveryFunnel
+                            title="Correo del mes, del envío a la lectura"
+                            traffic={trafficOf(month, 'mail')}
                         />
                     </div>
-                </div>
+                )}
+                {view === 'companies' && (
+                    <RejectingCompanies companies={companies} />
+                )}
             </div>
         </>
     );

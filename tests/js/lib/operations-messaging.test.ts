@@ -7,6 +7,7 @@ import {
     funnel,
     rejected,
     templateLabel,
+    troubledTemplates,
 } from '@/lib/operations-messaging';
 import type { MessagingConnection } from '@/types';
 
@@ -103,5 +104,26 @@ describe('the traffic', () => {
     it('names the category of a template', () => {
         expect(categoryLabel('UTILITY')).toBe('Utilidad');
         expect(categoryLabel('AUTHENTICATION')).toBe('Autenticación');
+    });
+});
+
+describe('troubledTemplates', () => {
+    it('keeps the templates with a button pending in the app or a rejection', () => {
+        const template = {
+            key: 'survey_invite_v1',
+            category: 'UTILITY' as const,
+            pendingInCode: false,
+            total: 3,
+            delivered: 3,
+            rejected: 0,
+        };
+
+        expect(
+            troubledTemplates([
+                template,
+                { ...template, key: 'a', pendingInCode: true },
+                { ...template, key: 'b', rejected: 1 },
+            ]).map(({ key }) => key),
+        ).toEqual(['a', 'b']);
     });
 });
