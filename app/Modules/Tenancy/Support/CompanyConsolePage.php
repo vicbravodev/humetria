@@ -9,8 +9,11 @@ use App\Modules\Billing\Contracts\CompanyPlans;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantNote;
+use App\Modules\Tenancy\Models\WorkCenter;
+use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * What a company's page in the console shows besides its modules and limits: who owns it and who answers for it, the plan as
@@ -23,18 +26,25 @@ final readonly class CompanyConsolePage
     public function __construct(private CompanyPlans $plans, private CompanyRoles $roles) {}
 
     /**
-     * @return array{owner: array{name: string, email: string}|null, account_manager: array{id: int, name: string}|null, created_on: string}
+     * @return array{owner: array{name: string, email: string}|null, account_manager: array{id: int, name: string}|null, created_on: string, city: string|null, logo_url: string|null, last_access: string|null}
      */
     public function contact(Tenant $tenant): array
     {
         $tenant->loadMissing(['ownerMembership.user', 'accountManager']);
         $owner = $tenant->ownerMembership?->user;
         $manager = $tenant->accountManager;
+        $lastAccess = User::query()->join('tenant_memberships', 'tenant_memberships.user_id', '=', 'users.id')
+            ->where('tenant_memberships.tenant_id', $tenant->id)->max('users.last_login_at');
 
         return [
             'owner' => $owner === null ? null : ['name' => $owner->name, 'email' => $owner->email],
             'account_manager' => $manager === null ? null : ['id' => $manager->id, 'name' => $manager->name],
             'created_on' => DisplayDate::day($tenant->created_at),
+            // Where it is: the town of its first work center that is still open.
+            'city' => WorkCenter::query()->withoutGlobalScopes()->where('tenant_id', $tenant->id)->whereNull('archived_at')
+                ->orderBy('created_at')->orderBy('id')->first(['municipality'])?->municipality,
+            'logo_url' => $tenant->logo_path === null ? null : Storage::disk(config()->string('filesystems.tenant_logos'))->url($tenant->logo_path),
+            'last_access' => is_string($lastAccess) ? DisplayDate::day(CarbonImmutable::parse($lastAccess)) : null,
         ];
     }
 

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Billing\Contracts\Receivables;
 use App\Modules\Billing\Contracts\UsageMeter;
+use App\Modules\Billing\Data\CompanyPayer;
 use App\Modules\Billing\Data\UsageHistoryRow;
 use App\Modules\Billing\Data\UsageSnapshot;
 use App\Modules\Tenancy\Actions\GrantModule;
@@ -28,7 +30,7 @@ use Inertia\Response;
 /** One company in the console, with its modules and what it has used of its plan's limits: the staff reads them, the superadmin grants and takes them away by hand. */
 final class CompanyModulesController extends Controller
 {
-    public function show(Tenant $tenant, CompanyModules $modules, CompanyLimits $limits, UsageMeter $usage, CompanyConsolePage $page, AuditPages $audit): Response
+    public function show(Tenant $tenant, CompanyModules $modules, CompanyLimits $limits, UsageMeter $usage, CompanyConsolePage $page, AuditPages $audit, Receivables $receivables): Response
     {
         Gate::authorize('view-console');
 
@@ -49,6 +51,8 @@ final class CompanyModulesController extends Controller
             ],
             // What Billing says of its plan, in words and dates; never money.
             'plan' => $page->plan($tenant),
+            // Who pays it and what that account owes past due, as Billing tells the staff.
+            'payer' => $this->payer($receivables->payerOf($tenant->id)),
             'members' => $page->members($tenant),
             'invitations' => $page->invitations($tenant),
             // The staff's own notes: the company never sees them.
@@ -94,6 +98,20 @@ final class CompanyModulesController extends Controller
             'can_manage' => Gate::allows('manage-tenants'),
             'can_audit' => Gate::allows('view-audit'),
         ]);
+    }
+
+    /**
+     * @return array{account_id: string, legal_name: string, kind_label: string, overdue_cents: int, days_past_due: int}|null
+     */
+    private function payer(?CompanyPayer $payer): ?array
+    {
+        return $payer === null ? null : [
+            'account_id' => $payer->accountId,
+            'legal_name' => $payer->legalName,
+            'kind_label' => $payer->kindLabel,
+            'overdue_cents' => $payer->overdueCents,
+            'days_past_due' => $payer->daysPastDue,
+        ];
     }
 
     /**

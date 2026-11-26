@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Actions\RecordAudit;
 use App\Models\User;
 use App\Modules\Billing\Contracts\CompanyPlans;
+use App\Modules\Billing\Contracts\Receivables;
+use App\Modules\Billing\Data\CompanyPayer;
 use App\Modules\Billing\Data\PlanSummary;
 use App\Modules\Tenancy\Actions\AddTenantNote;
 use App\Modules\Tenancy\Enums\TenantRestriction;
@@ -12,9 +14,11 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantNote;
+use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
 mutates(AddTenantNote::class);
@@ -45,6 +49,43 @@ it('shows who owns the company, who at Humetría answers for it and the plan Bil
         ->where('company.account_manager', ['id' => $manager->id, 'name' => 'Laura Soporte'])
         ->where('company.created_on', '14 mar 2026')
         ->where('plan', ['name' => 'Crecimiento', 'since' => '14 mar 2026', 'renews_on' => '1 dic 2026']));
+});
+
+it('shows the city of its first work center, its logo and the last time anyone of it signed in', function (): void {
+    $tenant = Tenant::factory()->create(['logo_path' => 'logos/acme.png']);
+    WorkCenter::factory()->for($tenant)->create(['municipality' => 'Monterrey', 'created_at' => '2026-01-01 12:00 UTC']);
+    WorkCenter::factory()->for($tenant)->create(['municipality' => 'Apodaca', 'created_at' => '2026-02-01 12:00 UTC']);
+    memberOf($tenant, TenantRole::Owner)->forceFill(['last_login_at' => '2026-11-20 18:00 UTC'])->save();
+    memberOf($tenant, TenantRole::Hr)->forceFill(['last_login_at' => '2026-11-24 18:00 UTC'])->save();
+    memberOf(Tenant::factory()->create(), TenantRole::Owner)->forceFill(['last_login_at' => '2026-11-25 18:00 UTC'])->save();
+
+    $this->actingAs(superadmin())->get(route('companies.show', $tenant))->assertInertia(fn (Assert $page) => $page
+        ->where('company.city', 'Monterrey')
+        ->where('company.logo_url', Storage::disk(config()->string('filesystems.tenant_logos'))->url('logos/acme.png'))
+        ->where('company.last_access', '24 nov 2026'));
+});
+
+it('leaves out the city, the logo and the last access when there are none', function (): void {
+    $tenant = Tenant::factory()->create();
+    memberOf($tenant, TenantRole::Owner);
+
+    $this->actingAs(superadmin())->get(route('companies.show', $tenant))->assertInertia(fn (Assert $page) => $page
+        ->where('company.city', null)->where('company.logo_url', null)->where('company.last_access', null));
+});
+
+it('tells the staff which account pays the company and what it owes past due, as Billing says', function (): void {
+    app()->instance(Receivables::class, Mockery::mock(Receivables::class, fn ($mock) => $mock->shouldReceive('payerOf')
+        ->andReturn(new CompanyPayer('acc-1', 'Textiles del Norte SA de CV', 'Directa', 1_280_000, 38))));
+
+    foreach ([superadmin(), support()] as $user) {
+        $this->actingAs($user)->get(route('companies.show', Tenant::factory()->create()))->assertInertia(fn (Assert $page) => $page
+            ->where('payer', ['account_id' => 'acc-1', 'legal_name' => 'Textiles del Norte SA de CV', 'kind_label' => 'Directa', 'overdue_cents' => 1_280_000, 'days_past_due' => 38]));
+    }
+});
+
+it('says no account pays the company when Billing has none', function (): void {
+    $this->actingAs(superadmin())->get(route('companies.show', Tenant::factory()->create()))
+        ->assertInertia(fn (Assert $page) => $page->where('payer', null));
 });
 
 it('says the company has no plan when Billing says so', function (): void {
