@@ -44,7 +44,10 @@ export default function TemplateTable({
         <section className="overflow-hidden card [&_[data-slot=table-container]]:rounded-none [&_[data-slot=table-container]]:border-0">
             <header className="flex flex-wrap items-center gap-3 border-b px-6 py-4">
                 <h2 className="flex-1 text-base font-semibold">
-                    Plantillas de WhatsApp
+                    Plantillas de WhatsApp{' '}
+                    <span className="font-normal text-muted-foreground">
+                        · últimos 30 días
+                    </span>
                 </h2>
                 {chip('Todas', !onlyTroubled)}
                 {chip('Con problemas', onlyTroubled)}
@@ -54,14 +57,15 @@ export default function TemplateTable({
                     Ninguna plantilla tiene problemas en los últimos 30 días.
                 </p>
             ) : (
-                <StackedTable>
+                <StackedTable className="md:[&_td]:px-3 md:[&_th]:px-3">
                     <TableHeader>
                         <TableRow className="bg-muted hover:bg-muted">
                             <TableHead>Plantilla</TableHead>
                             <TableHead>Categoría</TableHead>
                             <TableHead>En la app</TableHead>
                             <TableHead className="text-right">
-                                Enviados 30 d
+                                Enviados
+                                <span className="sr-only"> en 30 días</span>
                             </TableHead>
                             <TableHead className="text-right">
                                 Entregados
@@ -74,7 +78,7 @@ export default function TemplateTable({
                     <TableBody>
                         {shown.map((template) => (
                             <TableRow key={template.key}>
-                                <TableCell className="font-medium whitespace-normal max-md:w-full">
+                                <TableCell className="font-medium whitespace-normal max-md:w-full md:min-w-44">
                                     {templateLabel(template.key)}
                                 </TableCell>
                                 <TableCell>
