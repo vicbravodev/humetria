@@ -1,22 +1,36 @@
 import { describeDate } from '@/lib/calendar-date';
 
-/** What launching does, said before it does it (C-03): how many emails go today and the day the evaluation closes. */
-export function launchSummary(
-    emails: number,
-    closesOn: string,
-    withoutEmail = 0,
-): string {
-    const count =
-        emails === 1
-            ? 'Se enviará 1 correo hoy.'
-            : `Se enviarán ${emails} correos hoy.`;
+/** Who launching reaches, by channel: each person goes by one channel only (email or WhatsApp), or by none. */
+export type LaunchReach = {
+    emails: number;
+    whatsapp: number;
+    withoutContact: number;
+};
+
+const emailsText = (n: number): string =>
+    n === 1 ? '1 correo' : `${n} correos`;
+
+/** What goes today, by channel: «1 correo», «3 WhatsApp», or both. */
+const sentText = ({ emails, whatsapp }: LaunchReach): string => {
+    const parts = [
+        ...(emails > 0 || whatsapp === 0 ? [emailsText(emails)] : []),
+        ...(whatsapp > 0 ? [`${whatsapp} WhatsApp`] : []),
+    ];
+    const verb = emails + whatsapp === 1 ? 'Se enviará' : 'Se enviarán';
+
+    return `${verb} ${parts.join(' y ')} hoy.`;
+};
+
+/** What launching does, said before it does it (C-03): what goes today through each channel and the day the evaluation closes. */
+export function launchSummary(reach: LaunchReach, closesOn: string): string {
+    const without = reach.withoutContact;
     const missing =
-        withoutEmail === 0
+        without === 0
             ? ''
-            : withoutEmail === 1
-              ? ' 1 persona no lo recibirá por no tener correo: agrégalo en Empleados.'
-              : ` ${withoutEmail} personas no lo recibirán por no tener correo: agrégalo en Empleados.`;
-    const sent = `${count}${missing}`;
+            : without === 1
+              ? ' 1 persona no lo recibirá por no tener correo ni celular: agrégalo en Empleados.'
+              : ` ${without} personas no lo recibirán por no tener correo ni celular: agrégalo en Empleados.`;
+    const sent = `${sentText(reach)}${missing}`;
     const closes = describeDate(closesOn);
 
     return closes === undefined
