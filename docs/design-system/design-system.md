@@ -64,6 +64,34 @@ Cinco niveles: **Nulo, Bajo, Medio, Alto y Muy alto**. Usa siempre `RiskLevel`. 
 - Profundidad en dos niveles. `shadow-raised`: el panel de la página, que se levanta sobre el marco del sidebar. `shadow-float`: lo que flota sobre la página (popover, select abierto, diálogo, tooltip, toast). Botones, inputs y tarjetas no llevan sombra: su borde basta. En oscuro la sombra no se ve, así que la profundidad sale de un filo superior iluminado y de un marco más oscuro que el panel.
 - Foco: contorno sólido de 2 px en `ring` con 2 px de separación, ≥ 3:1 sobre cualquier superficie.
 
+## Composición y espacio
+
+Lo que hace que una pantalla se vea diseñada y no armada al azar. Valores tomados de las páginas de la app.
+
+- **Contenedor de página** (dentro del marco): `flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16`. Entre
+  bloques de una página, 32 px (`gap-8`); entre grupos de distinta naturaleza (activas / cerradas), 48 px (`space-12`).
+  Un mismo valor para lo mismo: no se inventa un `gap-9` para una sola página.
+- **Dentro de una tarjeta:** padding de 24 px (`p-6`); encabezado (título y una frase) arriba, el contenido a todo lo
+  ancho, la acción al pie. Entre tarjetas de una rejilla, 16 px (`gap-4`). Entre campos de un formulario, 16 a 24 px.
+- **Ritmo, no monotonía:** lo relacionado va junto (8 a 12 px), lo distinto se separa (32 a 48 px). Si todo tiene el
+  mismo espacio, nada se lee como grupo.
+- **Sin huecos muertos.**
+  - Una fila de tarjetas se reparte según cuántas hay: si una opcional falta, la otra ocupa todo el ancho y pone su
+    contenido en una fila (`componentes/Card.md`). Nunca una columna vacía «para equilibrar».
+  - Dos columnas solo cuando las dos tienen contenido propio y se leen juntas (resumen y detalle, lista y su panel). Una
+    columna lateral nunca existe solo para el título de una tarjeta.
+  - Listas y tableros llenan el marco hasta 1440 px; formularios y lectura van a 880 px a la izquierda. Una tabla de
+    tres columnas no se estira a 1440 px: se reduce el contenedor o se agregan datos que sirvan.
+  - Con pocos datos, el estado vacío (`EmptyState`) con su siguiente paso ocupa el lugar, en vez de una tabla casi vacía.
+- **Jerarquía por pantalla:** un título (`PageHeader`), una acción primaria, como máximo 3 KPI. Lo que pide atención
+  (`UrgencyList`, `Notice`) va arriba del resto; el detalle, a un clic.
+- **Tarjetas solo donde ayudan:** una entidad con su estado y su acción. Nunca tarjetas dentro de tarjetas, ni rejillas
+  de tarjetas idénticas para todo (ver `PRODUCT.md`, anti-referencias). Lo que se compara va en tabla.
+- **Alineación:** el contenido de todas las páginas empieza en la misma columna (el margen del marco); cifras a la
+  derecha con `tabular-nums`; acciones de una fila al final.
+- **Celular primero en el portal, escritorio primero en el panel:** el panel se revisa a 1024 y 1350 px antes que a
+  375; el portal, al revés. Ninguno se rompe en el otro.
+
 ## Movimiento
 
 El movimiento confirma lo que la persona hizo o muestra qué cambió; nunca decora ni se mueve solo.
