@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Billing\Contracts;
 
+use App\Modules\Billing\Data\CompanyPayer;
 use App\Modules\Billing\Data\OverdueAccount;
 
 /**
@@ -24,4 +25,7 @@ interface Receivables
 
     /** How many billed plans (active or past due) renew within that many days from today; one that is cancelling ends instead. */
     public function renewingWithin(int $days): int;
+
+    /** The account that pays the company now and what it owes past due; null when no account pays it. */
+    public function payerOf(string $tenantId): ?CompanyPayer;
 }

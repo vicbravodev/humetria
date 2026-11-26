@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Modules\Billing\Support;
 
 use App\Modules\Billing\Contracts\Receivables;
+use App\Modules\Billing\Data\CompanyPayer;
 use App\Modules\Billing\Data\OverdueAccount;
 use App\Modules\Billing\Enums\SubscriptionStatus;
+use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Models\Subscription;
 use Carbon\CarbonImmutable;
@@ -53,5 +55,24 @@ final readonly class LedgerReceivables implements Receivables
         return Subscription::query()->whereIn('status', [SubscriptionStatus::Active, SubscriptionStatus::PastDue])
             ->where('renews_on', '<=', CarbonImmutable::now(config()->string('app.display_timezone'))->addDays($days)->toDateString())
             ->count();
+    }
+
+    public function payerOf(string $tenantId): ?CompanyPayer
+    {
+        $account = AccountCompany::query()->current()->where('tenant_id', $tenantId)->with('account')->first()?->account;
+
+        if ($account === null) {
+            return null;
+        }
+
+        $late = array_filter($this->open->handle([$account->id]), fn (array $statement): bool => $statement['days'] > 0);
+
+        return new CompanyPayer(
+            $account->id,
+            $account->legal_name,
+            $account->kind->label(),
+            array_sum(array_column($late, 'balance')),
+            max([0, ...array_column($late, 'days')]),
+        );
     }
 }
