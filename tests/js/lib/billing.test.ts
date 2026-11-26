@@ -1,34 +1,86 @@
 import { describe, expect, it } from 'vitest';
 import {
     accountsQuery,
-    accountsSummary,
+    ageOf,
     chargeAction,
+    chosenOwed,
+    collectedHint,
     figureHints,
+    kindOf,
 } from '@/lib/billing';
-import type { AccountChargeRow, AccountSummary } from '@/types';
+import type { AccountChargeRow, AccountFilters, AccountSummary } from '@/types';
 
-describe('accountsSummary', () => {
-    it('says how many accounts there are, or that there are none', () => {
-        expect(accountsSummary(0)).toBe('Aún no hay cuentas');
-        expect(accountsSummary(1)).toBe('1 cuenta');
-        expect(accountsSummary(12)).toBe('12 cuentas');
-    });
-});
+const filters: AccountFilters = {
+    q: '',
+    kind: 'all',
+    type: '',
+    age: '',
+    month: '',
+};
 
 describe('accountsQuery', () => {
     it('keeps nothing of the defaults in the address', () => {
-        expect(accountsQuery({ q: '', kind: 'all' })).toEqual({});
-        expect(accountsQuery({ q: '   ', kind: 'all' })).toEqual({});
+        expect(accountsQuery(filters)).toEqual({});
+        expect(accountsQuery({ ...filters, q: '   ' })).toEqual({});
     });
 
     it('carries the trimmed search and the kind that is not all', () => {
-        expect(accountsQuery({ q: ' acme ', kind: 'consultant' })).toEqual({
+        expect(
+            accountsQuery({ ...filters, q: ' acme ', kind: 'consultant' }),
+        ).toEqual({
             q: 'acme',
             kind: 'consultant',
         });
-        expect(accountsQuery({ q: '', kind: 'direct' })).toEqual({
+        expect(accountsQuery({ ...filters, kind: 'direct' })).toEqual({
             kind: 'direct',
         });
+    });
+
+    it('carries the type, the age and the month chosen', () => {
+        expect(
+            accountsQuery({
+                ...filters,
+                type: 'consultant',
+                age: '31_60',
+                month: '2026-10',
+            }),
+        ).toEqual({ type: 'consultant', age: '31_60', month: '2026-10' });
+    });
+});
+
+describe('kindOf and ageOf', () => {
+    it('take only a kind or an age they know, and nothing else', () => {
+        expect(kindOf('consultant')).toBe('consultant');
+        expect(kindOf('direct')).toBe('direct');
+        expect(kindOf('regalo')).toBe('');
+        expect(ageOf('31_60')).toBe('31_60');
+        expect(ageOf('current')).toBe('current');
+        expect(ageOf('viejo')).toBe('');
+    });
+});
+
+describe('collectedHint', () => {
+    it('compares the month with the one before, signed', () => {
+        expect(collectedHint(9, 'octubre')).toBe('+9 % contra octubre');
+        expect(collectedHint(-12, 'octubre')).toBe('−12 % contra octubre');
+        expect(collectedHint(0, 'octubre')).toBe('0 % contra octubre');
+    });
+
+    it('says only that payments were recorded when there is nothing to compare', () => {
+        expect(collectedHint(null, 'octubre')).toBe('Pagos registrados');
+    });
+});
+
+describe('chosenOwed', () => {
+    it('adds up what the chosen accounts owe', () => {
+        const rows = [
+            { id: 'a', outstanding_cents: 1_280_000 },
+            { id: 'b', outstanding_cents: 310_000 },
+            { id: 'c', outstanding_cents: 0 },
+        ];
+
+        expect(chosenOwed(rows, ['a', 'b'])).toBe('$15,900');
+        expect(chosenOwed(rows, [])).toBe('$0');
     });
 });
 

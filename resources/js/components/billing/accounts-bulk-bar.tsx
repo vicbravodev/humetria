@@ -14,9 +14,12 @@ import { store } from '@/routes/billing/reminders';
  */
 export default function AccountsBulkBar({
     chosen,
+    owed,
     onDone,
 }: {
     chosen: string[];
+    /** What the chosen accounts owe together. */
+    owed: string;
     onDone: () => void;
 }) {
     const today = useToday();
@@ -28,6 +31,7 @@ export default function AccountsBulkBar({
             count={chosen.length}
             one="cuenta seleccionada"
             many="cuentas seleccionadas"
+            detail={owed}
             onClear={onDone}
         >
             <Button

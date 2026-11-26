@@ -22,7 +22,7 @@ export default function AccountsTable({
     canManage: boolean;
 }) {
     return (
-        <Table>
+        <Table className="min-w-[960px]">
             <TableCaption className="sr-only">
                 Cuentas, de la más reciente a la más antigua
             </TableCaption>
@@ -39,7 +39,7 @@ export default function AccountsTable({
                     )}
                     <TableHead>Cuenta</TableHead>
                     <TableHead>Tipo</TableHead>
-                    <TableHead>Empresas</TableHead>
+                    <TableHead className="text-right">Empresas</TableHead>
                     <TableHead className="text-right">Por cobrar</TableHead>
                     <TableHead>Antigüedad</TableHead>
                     <TableHead>Último pago</TableHead>

@@ -46,11 +46,7 @@ export default function AccountSuggestedAction({
     }
 
     return (
-        <Button
-            size="sm"
-            variant={action === 'view' ? 'ghost' : 'outline'}
-            asChild
-        >
+        <Button size="sm" variant="outline" asChild>
             <Link href={show(account.id)} aria-label={label}>
                 {LABELS[action]}
             </Link>

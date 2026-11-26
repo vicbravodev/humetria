@@ -26,14 +26,12 @@ it('lists who pays what, with the kind of each account and how many companies it
 
     visitPage('billing/accounts', '/admin/billing/accounts', $dark, $mobile)
         ->assertSee('Cuentas')
-        ->assertSee('2 cuentas')
+        ->assertSee('Quién paga qué y qué falta por cobrar')
         ->assertSee('Consultores Asociados S.C.')
         ->assertSee('CAS010101AB1')
         ->assertSee('Consultor')
-        ->assertSee('2 empresas')
-        ->assertSee('Laura Pérez')
         ->assertSee('Grupo Directo S.A.')
-        ->assertSee('Crear cuenta');
+        ->assertSee('Nueva cuenta');
 })->with($looks);
 
 it('shows an empty list with its next step', function (): void {
@@ -50,14 +48,14 @@ it('shows support the accounts without the button that creates one', function ()
 
     visitPage('billing/accounts', '/admin/billing/accounts')
         ->assertSee('Grupo Directo S.A.')
-        ->assertDontSee('Crear cuenta');
+        ->assertDontSee('Nueva cuenta');
 });
 
 it('creates an account from the list and lands on its page', function (): void {
     signInAsSuperadmin();
 
     visitPage('billing/accounts', '/admin/billing/accounts')
-        ->click('Crear cuenta')
+        ->click('Nueva cuenta')
         ->assertSee('Quien paga por una o varias empresas')
         ->click('Consultor')
         ->fill('legal_name', 'Consultores Nuevos S.C.')
@@ -82,7 +80,7 @@ it('shows an account with the companies it pays, none of them with a plan yet', 
         ->assertSee('Consultores Asociados S.C.')
         ->assertSee('Consultor')
         ->assertSee('CAS010101AB1')
-        ->assertSee('Editar cuenta')
+        ->assertSee('Editar datos fiscales')
         ->assertSee('Vincular empresa')
         ->assertSee('Acme Industrial')
         ->assertSee('Sin plan asignado')
@@ -125,7 +123,7 @@ it('shows an account with its fiscal data and the way to correct it', function (
         ->assertSee('Consultores Asociados S.C.')
         ->assertSee('Consultor')
         ->assertSee('CAS010101AB1')
-        ->assertSee('Editar cuenta');
+        ->assertSee('Editar datos fiscales');
 })->with($looks);
 
 it('shows a consultant\'s portfolio: each company with its plan and cost, and what the account adds up to', function (bool $dark, bool $mobile): void {
@@ -163,7 +161,7 @@ it('chooses the tax regime and the CFDI use from the SAT catalog', function (): 
     $account = BillingAccount::factory()->consultant()->create(['tax_regime' => 'texto libre', 'cfdi_use' => null]);
 
     visitPage('billing/account', "/admin/billing/accounts/{$account->id}")
-        ->click('Editar cuenta')
+        ->click('Editar datos fiscales')
         ->click('#billing-tax_regime')
         ->click('[role="option"]:has-text("601 ·")')
         ->click('#billing-cfdi_use')
@@ -206,7 +204,7 @@ it('shows support the portfolio without the buttons that change it', function ()
         ->assertSee('$4,900')
         ->assertDontSee('Editar plan')
         ->assertDontSee('Vincular empresa')
-        ->assertDontSee('Editar cuenta');
+        ->assertDontSee('Editar datos fiscales');
 });
 
 it('names the tools a plan takes away before it is assigned', function (): void {

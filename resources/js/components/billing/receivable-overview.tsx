@@ -1,5 +1,6 @@
 import AccountFigure from '@/components/billing/account-figure';
 import AgingStrip from '@/components/billing/aging-strip';
+import { collectedHint } from '@/lib/billing';
 import { countOf } from '@/lib/plural';
 import type { ReceivablePortfolio } from '@/types';
 
@@ -36,12 +37,15 @@ export default function ReceivableOverview({
                 <AccountFigure
                     label={`Cobrado en ${receivable.month}`}
                     value={receivable.collected}
-                    hint="Pagos registrados"
+                    hint={collectedHint(
+                        receivable.collected_change,
+                        receivable.previous_month,
+                    )}
                 />
                 <AccountFigure
                     label="Renuevan en 30 días"
                     value={String(receivable.renewing)}
-                    hint="Planes activos"
+                    hint={`${receivable.renewing_yearly} al año`}
                 />
             </dl>
             <AgingStrip aging={receivable.aging} />

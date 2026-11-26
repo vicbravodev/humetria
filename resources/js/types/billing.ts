@@ -1,5 +1,5 @@
 import type { ModulesChange } from '@/types/billing-parts';
-import type { AccountAging } from '@/types/billing-receivable';
+import type { AccountAging, AgingBucket } from '@/types/billing-receivable';
 import type { TenantRow } from '@/types/tenancy';
 
 export type AccountKind = 'direct' | 'consultant';
@@ -7,7 +7,16 @@ export type AccountKind = 'direct' | 'consultant';
 /** A kind of account, all of them, those with something to collect, or the queue of those with a balance past due. */
 export type AccountView = AccountKind | 'all' | 'receivable' | 'overdue';
 
-export type AccountFilters = { q: string; kind: AccountView };
+export type AccountFilters = {
+    q: string;
+    kind: AccountView;
+    /** The kind of account chosen in «Tipo»; empty for all. */
+    type: AccountKind | '';
+    /** The age of the oldest open balance chosen; empty for any. */
+    age: AgingBucket | '';
+    /** The month of what came in, as `2026-10`; empty for this one. */
+    month: string;
+};
 
 /** An account of the console's list: who pays, how to reach them and how many companies they pay now. */
 export type AccountRow = {
@@ -21,6 +30,8 @@ export type AccountRow = {
     companies: number;
     /** What it owes in all, written as pesos; null when nothing is. */
     outstanding: string | null;
+    /** The same in cents (0 when nothing is), to add up a selection. */
+    outstanding_cents: number;
     /** What it owes past due, written as pesos; null when nothing is. */
     overdue: string | null;
     /** How old its oldest open statement is; null when it owes nothing. */

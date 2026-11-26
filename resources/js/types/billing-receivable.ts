@@ -15,5 +15,10 @@ export type ReceivablePortfolio = {
     collected: string;
     /** The month `collected` is of, by name: "noviembre". */
     month: string;
+    /** The month before, by name, and how `collected` compares with it in whole percent; null when nothing came then. */
+    previous_month: string;
+    collected_change: number | null;
     renewing: number;
+    /** What the plans that renew in 30 days are worth a year, before VAT. */
+    renewing_yearly: string;
 };

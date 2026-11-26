@@ -1,14 +1,27 @@
+import { pesos } from '@/lib/overview';
 import { countOf } from '@/lib/plural';
-import type { AccountChargeRow, AccountFilters, AccountSummary } from '@/types';
+import type {
+    AccountChargeRow,
+    AccountFilters,
+    AccountKind,
+    AccountSummary,
+    AgingBucket,
+} from '@/types';
 
-/** The console's line under "Cuentas": how many there are. */
-export function accountsSummary(total: number): string {
-    return total === 0
-        ? 'Aún no hay cuentas'
-        : countOf(total, 'cuenta', 'cuentas');
+const KINDS: AccountKind[] = ['direct', 'consultant'];
+const AGES: AgingBucket[] = ['current', '1_30', '31_60', 'over_60'];
+
+/** A kind of account chosen in a filter; empty for anything else. */
+export function kindOf(value: string): AccountKind | '' {
+    return KINDS.find((kind) => kind === value) ?? '';
 }
 
-/** The list's search and kind as its address carries them: without the defaults. */
+/** An age of a balance chosen in a filter; empty for anything else. */
+export function ageOf(value: string): AgingBucket | '' {
+    return AGES.find((age) => age === value) ?? '';
+}
+
+/** The list's search, view, type, age and month as its address carries them: without the defaults. */
 export function accountsQuery(
     filters: AccountFilters,
 ): Partial<Record<keyof AccountFilters, string>> {
@@ -17,7 +30,31 @@ export function accountsQuery(
     return {
         ...(q === '' ? {} : { q }),
         ...(filters.kind === 'all' ? {} : { kind: filters.kind }),
+        ...(filters.type === '' ? {} : { type: filters.type }),
+        ...(filters.age === '' ? {} : { age: filters.age }),
+        ...(filters.month === '' ? {} : { month: filters.month }),
     };
+}
+
+/** The note under what came in: how it compares with the month before («+9 % contra octubre»), when there is one. */
+export function collectedHint(change: number | null, previous: string): string {
+    if (change === null) {
+        return 'Pagos registrados';
+    }
+
+    return `${change > 0 ? '+' : change < 0 ? '−' : ''}${Math.abs(change)} % contra ${previous}`;
+}
+
+/** What the chosen accounts owe together, for the bar of the selection. */
+export function chosenOwed(
+    accounts: { id: string; outstanding_cents: number }[],
+    chosen: string[],
+): string {
+    return pesos(
+        accounts
+            .filter(({ id }) => chosen.includes(id))
+            .reduce((sum, { outstanding_cents }) => sum + outstanding_cents, 0),
+    );
 }
 
 /** The notes under the figures of an account: what is missing a plan, what needs a quotation, how much of the total is VAT; undefined where there is nothing to say. */
