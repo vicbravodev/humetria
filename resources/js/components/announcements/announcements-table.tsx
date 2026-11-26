@@ -1,18 +1,15 @@
 import { Megaphone } from 'lucide-react';
+import AnnouncementTableRow from '@/components/announcements/announcement-table-row';
 import EmptyState from '@/components/humetria/empty-state';
 import Pagination from '@/components/humetria/pagination';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
     Table,
     TableBody,
     TableCaption,
-    TableCell,
     TableHead,
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-import { kindTone, stateTone } from '@/lib/announcements';
 import type { AnnouncementRow, Paginated } from '@/types';
 
 /** One view of the announcements, a page at a time, each with what it is, to whom, when and where it stands. */
@@ -44,8 +41,11 @@ export default function AnnouncementsTable({
 
     return (
         <div className="grid gap-4">
-            <div className="overflow-x-auto card p-0">
-                <Table className="min-w-[720px]">
+            <section className="overflow-hidden card [&_[data-slot=table-container]]:rounded-none [&_[data-slot=table-container]]:border-0">
+                <header className="border-b px-6 py-4">
+                    <h2 className="text-base font-semibold">Avisos</h2>
+                </header>
+                <Table className="min-w-[640px] [&_td]:px-3 [&_th]:px-3">
                     <TableCaption className="sr-only">
                         {history
                             ? 'Avisos terminados'
@@ -65,44 +65,15 @@ export default function AnnouncementsTable({
                     </TableHeader>
                     <TableBody>
                         {announcements.data.map((row) => (
-                            <TableRow key={row.id}>
-                                <TableCell className="max-w-[320px] whitespace-normal">
-                                    <div className="font-medium">
-                                        {row.title}
-                                    </div>
-                                    <div className="line-clamp-2 text-meta text-muted-foreground">
-                                        {row.message}
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <Badge variant={kindTone(row.kind)}>
-                                        {row.kind_label}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>{row.audience_label}</TableCell>
-                                <TableCell className="text-muted-foreground tabular-nums">
-                                    {row.when}
-                                </TableCell>
-                                <TableCell>
-                                    <Badge variant={stateTone(row.state)}>
-                                        {row.state_label}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell className="text-right">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => onEdit(row)}
-                                        aria-label={`Editar «${row.title}»`}
-                                    >
-                                        Editar
-                                    </Button>
-                                </TableCell>
-                            </TableRow>
+                            <AnnouncementTableRow
+                                key={row.id}
+                                row={row}
+                                onEdit={onEdit}
+                            />
                         ))}
                     </TableBody>
                 </Table>
-            </div>
+            </section>
             <Pagination
                 previous="Ver anteriores"
                 next="Ver siguientes"

@@ -4,12 +4,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { AnnouncementRow } from '@/types';
 
-/** The title the console lists it by and the message the companies read in their banner. */
+/** The title the console lists it by and the message the companies read in their banner, which the preview follows. */
 export default function AnnouncementText({
     announcement,
+    message,
     errors,
 }: {
     announcement: AnnouncementRow | null;
+    message: { value: string; onChange: (value: string) => void };
     errors: Partial<Record<string, string>>;
 }) {
     return (
@@ -34,7 +36,8 @@ export default function AnnouncementText({
                     name="message"
                     maxLength={500}
                     rows={3}
-                    defaultValue={announcement?.message}
+                    value={message.value}
+                    onChange={(event) => message.onChange(event.target.value)}
                     aria-invalid={errors['message'] !== undefined}
                 />
                 <InputError message={errors['message']} />

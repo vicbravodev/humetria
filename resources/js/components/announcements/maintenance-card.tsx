@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { end } from '@/routes/announcements/maintenance';
 import type { MaintenanceState } from '@/types';
 
-/** Whether the platform is in maintenance, since when and why; the switch that starts it, or the button that ends it. */
+/** Whether the platform is in maintenance, since when and why (tablero Avisos); the button that starts it, or the one that ends it. */
 export default function MaintenanceCard({
     maintenance,
 }: {
@@ -15,43 +15,44 @@ export default function MaintenanceCard({
     const [open, setOpen] = useState(false);
 
     return (
-        <section
-            aria-labelledby="maintenance-title"
-            className="flex flex-wrap items-center justify-between gap-4 card"
-        >
-            <div className="grid min-w-0 flex-1 gap-1">
-                <div className="flex flex-wrap items-center gap-3">
-                    <h2
-                        id="maintenance-title"
-                        className="text-xl font-semibold tracking-[-0.01em]"
-                    >
-                        Modo mantenimiento
-                    </h2>
-                    {maintenance.active ? (
-                        <Badge variant="warning">Activo</Badge>
-                    ) : (
-                        <Badge variant="secondary">Apagado</Badge>
-                    )}
-                </div>
-                <p className="text-meta text-muted-foreground">
+        <section aria-labelledby="maintenance-title" className="card">
+            <header className="flex items-center gap-3 border-b px-6 py-4">
+                <h2
+                    id="maintenance-title"
+                    className="flex-1 text-base font-semibold"
+                >
+                    Modo mantenimiento
+                </h2>
+                {maintenance.active ? (
+                    <Badge variant="warning">Activo</Badge>
+                ) : (
+                    <Badge variant="secondary">Apagado</Badge>
+                )}
+            </header>
+            <div className="grid justify-items-start gap-2.5 px-6 py-4">
+                <p className="text-muted-foreground">
                     {maintenance.active
                         ? `Desde el ${maintenance.since}: ${maintenance.reason}. Todas las empresas están en solo lectura; las encuestas y los portales siguen.`
                         : 'Al activarlo, todas las empresas pasan a solo lectura y las encuestas siguen recibiendo respuestas.'}
                 </p>
+                {maintenance.active ? (
+                    <Form {...end.form()}>
+                        {({ processing }) => (
+                            <Button type="submit" disabled={processing}>
+                                Terminar mantenimiento
+                            </Button>
+                        )}
+                    </Form>
+                ) : (
+                    <Button
+                        variant="outline"
+                        className="border-destructive text-destructive hover:text-destructive"
+                        onClick={() => setOpen(true)}
+                    >
+                        Activar mantenimiento
+                    </Button>
+                )}
             </div>
-            {maintenance.active ? (
-                <Form {...end.form()}>
-                    {({ processing }) => (
-                        <Button type="submit" disabled={processing}>
-                            Terminar mantenimiento
-                        </Button>
-                    )}
-                </Form>
-            ) : (
-                <Button variant="destructive" onClick={() => setOpen(true)}>
-                    Activar mantenimiento
-                </Button>
-            )}
             <MaintenanceDialog open={open} onOpenChange={setOpen} />
         </section>
     );

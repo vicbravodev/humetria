@@ -21,10 +21,15 @@ export default function AnnouncementMoment({
 
     return (
         <fieldset className="grid gap-2">
-            <legend className="mb-1 text-sm font-medium">{legend}</legend>
+            <legend className="mb-2 text-sm font-medium">{legend}</legend>
             <div className="grid gap-3 sm:grid-cols-2">
                 <div className="grid gap-1.5">
-                    <Label htmlFor={`announcement-${which}-on`}>Día</Label>
+                    <Label
+                        htmlFor={`announcement-${which}-on`}
+                        className="sr-only"
+                    >
+                        Día
+                    </Label>
                     <DatePicker
                         id={`announcement-${which}-on`}
                         name={`${which}_on`}
@@ -34,7 +39,12 @@ export default function AnnouncementMoment({
                     />
                 </div>
                 <div className="grid gap-1.5">
-                    <Label htmlFor={`announcement-${which}-time`}>Hora</Label>
+                    <Label
+                        htmlFor={`announcement-${which}-time`}
+                        className="sr-only"
+                    >
+                        Hora
+                    </Label>
                     <TimePicker
                         id={`announcement-${which}-time`}
                         name={`${which}_time`}

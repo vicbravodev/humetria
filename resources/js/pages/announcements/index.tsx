@@ -1,8 +1,5 @@
 import { Head } from '@inertiajs/react';
-import { useState } from 'react';
-import AnnouncementDialog from '@/components/announcements/announcement-dialog';
-import AnnouncementsTable from '@/components/announcements/announcements-table';
-import MaintenanceCard from '@/components/announcements/maintenance-card';
+import AnnouncementsWorkArea from '@/components/announcements/announcements-work-area';
 import CountTabs from '@/components/humetria/count-tabs';
 import PageHeader from '@/components/humetria/page-header';
 import { Button } from '@/components/ui/button';
@@ -16,7 +13,7 @@ import type {
 
 /**
  * «Avisos» (tablero Avisos y mantenimiento): what Humetría tells the companies in their panel, the ones to come or running and
- * the history, each a page at a time; a new one or a change opens its dialog.
+ * the history, each a page at a time, with the form of a new one in the page.
  */
 export default function Announcements({
     view,
@@ -33,11 +30,6 @@ export default function Announcements({
     plans: AnnouncementOption[];
     maintenance: MaintenanceState;
 }) {
-    // The announcement being edited, null for a new one; undefined while no dialog is open.
-    const [editing, setEditing] = useState<
-        AnnouncementRow | null | undefined
-    >();
-
     return (
         <>
             <Head title="Avisos" />
@@ -47,11 +39,10 @@ export default function Announcements({
                     title="Avisos y mantenimiento"
                     description="Habla con las empresas desde un solo lugar: un banner en su panel con fecha de inicio y fin, o el modo mantenimiento. Todo queda en la bitácora."
                 >
-                    <Button onClick={() => setEditing(null)}>
-                        Nuevo aviso
+                    <Button asChild>
+                        <a href="#nuevo-aviso">Nuevo aviso</a>
                     </Button>
                 </PageHeader>
-                <MaintenanceCard maintenance={maintenance} />
                 <CountTabs
                     label="Avisos por estado"
                     tabs={[
@@ -69,23 +60,13 @@ export default function Announcements({
                         },
                     ]}
                 />
-                <AnnouncementsTable
+                <AnnouncementsWorkArea
                     announcements={announcements}
                     history={view === 'history'}
-                    onEdit={setEditing}
+                    catalogs={{ kinds, plans }}
+                    maintenance={maintenance}
                 />
             </div>
-            {editing !== undefined && (
-                <AnnouncementDialog
-                    // A new key per announcement, so its fields start from what it says.
-                    key={editing?.id ?? 'new'}
-                    announcement={editing}
-                    kinds={kinds}
-                    plans={plans}
-                    open
-                    onOpenChange={(open) => !open && setEditing(undefined)}
-                />
-            )}
         </>
     );
 }
