@@ -1,6 +1,6 @@
 Marco de la encuesta del trabajador (`components/campaigns/survey/survey-shell.tsx`; clima y pulso tienen el suyo en `components/engagement/survey/`): logo del consultor, aviso de confidencialidad, progreso por sección, instrucción, navegación y sello.
 
-**Recibe:** `section`, `sections`, `answered`, `inSection`, `sectionTitle`, `instruction` (texto oficial de la guía), `clientLogo` (nodo) y `children` (una o más `SurveyQuestion`).
+**Recibe:** `company` (el nombre de la empresa, o nada) y `children`: la página pone dentro el progreso por sección, la instrucción y una o más `SurveyQuestion`.
 
 - Móvil: una pregunta por pantalla. Escritorio: hasta 3 preguntas de la misma sección por página.
 - El progreso cuenta por sección (“Sección 1 de 8 · 1 de 9 respondidas”), no un porcentaje global que avanza lento.
