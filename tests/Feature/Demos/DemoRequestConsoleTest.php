@@ -38,6 +38,7 @@ it('keeps the query string in the links between pages', function (): void {
 });
 
 it('lists every field of a demo request for the superadmin, labelled and in Mexico City time', function (): void {
+    $this->travelTo(Carbon::parse('2026-10-27 18:05:00', 'UTC'));
     $demoRequest = DemoRequest::factory()->create([
         'name' => 'Ana López',
         'email' => 'ana@empresa.mx',
@@ -81,6 +82,9 @@ it('lists every field of a demo request for the superadmin, labelled and in Mexi
                 // Not scheduled nor discarded.
                 'scheduled_for' => null,
                 'discard_reason' => null,
+                // The funnel's card (tablero Demos): its origin and how long it has waited.
+                'origin' => 'Sin dato',
+                'waiting' => ['label' => 'Hace 2 h', 'tone' => 'secondary'],
             ]]));
 });
 

@@ -10,12 +10,15 @@ use App\Modules\Demos\Actions\ExportAdConversions;
 use App\Modules\Demos\Actions\ListDemoRequests;
 use App\Modules\Demos\Actions\ScheduleDemo;
 use App\Modules\Demos\Actions\UpdateDemoRequest;
+use App\Modules\Demos\Enums\DemoOrigin;
 use App\Modules\Demos\Enums\DemoStatus;
 use App\Modules\Demos\Enums\Tool;
 use App\Modules\Demos\Http\Requests\DiscardDemoRequestRequest;
 use App\Modules\Demos\Http\Requests\ScheduleDemoRequest;
 use App\Modules\Demos\Http\Requests\UpdateDemoRequestRequest;
 use App\Modules\Demos\Models\DemoRequest;
+use App\Modules\Demos\Support\DemoCardTime;
+use App\Modules\Demos\Support\DemoListFilters;
 use App\Modules\Demos\Support\DemoMetrics;
 use App\Modules\Demos\Support\DemoOwners;
 use Carbon\CarbonImmutable;
@@ -28,23 +31,25 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class DemoRequestConsoleController extends Controller
 {
+    public function __construct(private readonly DemoCardTime $cardTime) {}
+
     public function index(Request $request, ListDemoRequests $listDemoRequests, DemoOwners $owners, DemoMetrics $metrics): Response
     {
         Gate::authorize('view-demo-requests');
 
         $status = DemoStatus::tryFrom($request->string('status')->toString());
         $search = $request->string('q')->trim()->limit(100, '')->toString();
+        $filters = DemoListFilters::from($search, $request->string('origin')->toString(), $request->string('owner')->toString(), $request->string('size')->toString());
         // The list (paged and searched) or the funnel (a few cards per open stage): only the one shown is read.
         $board = $request->string('view')->toString() === 'board';
-        $counts = $listDemoRequests->counts();
 
         return Inertia::render('demos/index', [
-            'filters' => ['status' => $status->value ?? 'all', 'q' => $search, 'view' => $board ? 'board' : 'list'],
-            'counts' => $counts,
+            'filters' => ['status' => $status->value ?? 'all', 'q' => $search, 'view' => $board ? 'board' : 'list', ...$filters->toArray()],
+            'counts' => $listDemoRequests->counts(),
             'can_manage' => Gate::allows('manage-demo-requests'),
             'can_open_room' => Gate::allows('manage-demo'),
-            'demoRequests' => $board ? null : $listDemoRequests->handle($status, $search)->through($this->row(...)),
-            'board' => $board ? $this->board($listDemoRequests, $counts) : null,
+            'demoRequests' => $board ? null : $listDemoRequests->handle($status, $filters)->through($this->row(...)),
+            'board' => $board ? $this->board($listDemoRequests, $filters) : null,
             // Who of the staff may own a request: only for the form, after the page shows.
             'staff' => Inertia::defer(fn (): array => $owners->options()),
             // The figures at the top: aggregates of 90 days, after the page shows.
@@ -52,20 +57,17 @@ final class DemoRequestConsoleController extends Controller
         ]);
     }
 
-    /**
-     * @param  array<string, int>  $counts
-     * @return list<array{status: string, label: string, total: int, cards: list<array<string, mixed>>}>
-     */
-    private function board(ListDemoRequests $listDemoRequests, array $counts): array
+    /** @return list<array{status: string, label: string, total: int, cards: list<array<string, mixed>>}> */
+    private function board(ListDemoRequests $listDemoRequests, DemoListFilters $filters): array
     {
         $columns = [];
 
-        foreach ($listDemoRequests->board() as $status => $cards) {
+        foreach ($listDemoRequests->board($filters) as $status => $stage) {
             $columns[] = [
                 'status' => $status,
                 'label' => DemoStatus::from($status)->stageLabel(),
-                'total' => $counts[$status] ?? 0,
-                'cards' => array_map($this->row(...), $cards),
+                'total' => $stage['total'],
+                'cards' => array_map($this->row(...), $stage['cards']),
             ];
         }
 
@@ -98,7 +100,18 @@ final class DemoRequestConsoleController extends Controller
             'next_step' => $demoRequest->next_step,
             'scheduled_for' => $demoRequest->scheduled_at === null ? null : str_replace('.', '', $demoRequest->scheduled_at->setTimezone(config()->string('app.display_timezone'))->isoFormat('ddd D MMM, HH:mm')),
             'discard_reason' => $demoRequest->discard_reason,
+            // The funnel's card: where it came from and how long it has waited, or when its demo is.
+            'origin' => $this->origin($demoRequest)->label(),
+            'waiting' => $this->cardTime->of($demoRequest),
         ];
+    }
+
+    /** Read with the request, from the same rule the filter uses. */
+    private function origin(DemoRequest $demoRequest): DemoOrigin
+    {
+        $origin = $demoRequest->getAttribute('origin');
+
+        return is_string($origin) ? DemoOrigin::tryFrom($origin) ?? DemoOrigin::Unknown : DemoOrigin::Unknown;
     }
 
     /** The click conversions for Google Ads, as a CSV to upload by hand. */
