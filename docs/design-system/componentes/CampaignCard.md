@@ -1,4 +1,4 @@
-Tarjeta de una campaña o centro de trabajo en el panel de RH: avance contra la muestra, estado y siguiente acción.
+Tarjeta de una campaña o centro de trabajo en el panel de RH (`components/campaigns/campaign-card.tsx`): avance contra la muestra, estado y siguiente acción.
 
 **Recibe:** `name`, `meta` (guía y fecha), `status` (`active`, `draft`, `ready`, `closed`), `responses`, `sample`, `risk` (opcional, al cerrar), `nextTitle`, `nextNote`, `nextAction`, `nextIcon`, `nextVariant`.
 
