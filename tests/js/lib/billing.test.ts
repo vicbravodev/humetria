@@ -95,6 +95,7 @@ describe('figureHints', () => {
         vat: '$3,192',
         total: '$23,142',
         requiring_quotation: 0,
+        next_renewal_company: null,
         next_renewal: '1 ene 2027',
         discount: null,
         ...overrides,

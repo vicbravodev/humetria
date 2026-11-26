@@ -102,7 +102,7 @@ it('lists the statements and payments of an account with what it owes', function
 
     visitPage('billing/account', "/admin/billing/accounts/{$account->id}", $dark, $mobile)
         ->assertSee('Estados de cuenta')
-        ->assertSee('Saldo por cobrar')
+        ->assertSee('Saldo')
         ->assertSee('$2,684')
         ->assertSee('Pago parcial')
         ->assertSee('dic 2026')
@@ -121,7 +121,7 @@ it('shows support the statements and payments without the buttons that change th
         ->assertSee('SPEI-88')
         ->assertDontSee('Registrar pago')
         ->assertDontSee('Revertir')
-        ->assertDontSee('Generar estado de cuenta');
+        ->assertDontSee('Generar estado');
 });
 
 it('previews the lines of a month and generates its draft', function (): void {
@@ -132,7 +132,7 @@ it('previews the lines of a month and generates its draft', function (): void {
     Subscription::factory()->create(['tenant_id' => $tenant->id, 'starts_on' => '2026-11-01', 'renews_on' => '2026-12-01']);
 
     visitPage('billing/account', "/admin/billing/accounts/{$account->id}")
-        ->click('Generar estado de cuenta')
+        ->click('Generar estado')
         ->fill('period', '2026-12')
         ->assertSee('100 personas × $49 = $4,900')
         ->assertSee('IVA')

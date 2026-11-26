@@ -1,19 +1,35 @@
 import { usePage } from '@inertiajs/react';
 import AccountDialog from '@/components/billing/account-dialog';
-import LinkCompanyDialog from '@/components/billing/link-company-dialog';
+import CompanyPickerAction from '@/components/billing/company-picker-action';
+import RecordPaymentDialog from '@/components/billing/record-payment-dialog';
 import PageHeader from '@/components/humetria/page-header';
 import { Badge } from '@/components/ui/badge';
-import type { AccountDetail, Receivable, SatOption } from '@/types';
+import { accountFacts } from '@/lib/billing-account';
+import type {
+    AccountCompanyRow,
+    AccountDetail,
+    Receivable,
+    SatOption,
+} from '@/types';
 
-/** The head of an account: who it is, its kind and whether it is behind, how to reach it, and (for the superadmin) its actions. */
+/**
+ * The head of an account (tablero Cuenta de facturación): who it is, its kind and whether it is behind, its fiscal data and how
+ * many companies it pays, and (for the superadmin) its fiscal data, an extra charge and a payment.
+ */
 export default function AccountHeader({
     account,
     receivable,
+    companies,
+    companiesTotal,
+    today,
     taxRegimes,
     cfdiUses,
 }: {
     account: AccountDetail;
     receivable: Receivable;
+    companies: AccountCompanyRow[];
+    companiesTotal: number;
+    today: string;
     taxRegimes: SatOption[];
     cfdiUses: SatOption[];
 }) {
@@ -21,11 +37,10 @@ export default function AccountHeader({
 
     return (
         <PageHeader
-            caption="Cuenta"
             title={account.legal_name}
             status={
                 <>
-                    <Badge>{account.kind_label}</Badge>
+                    <Badge variant="outline">{account.kind_label}</Badge>
                     {receivable.overdue !== null && (
                         <Badge variant="destructive">
                             Vencida · {receivable.overdue}
@@ -33,7 +48,7 @@ export default function AccountHeader({
                     )}
                 </>
             }
-            description={`${account.rfc} · ${account.contact_name}, ${account.contact_email}`}
+            description={accountFacts(account, companiesTotal)}
         >
             {auth.isSuperadmin && (
                 <>
@@ -42,7 +57,18 @@ export default function AccountHeader({
                         taxRegimes={taxRegimes}
                         cfdiUses={cfdiUses}
                     />
-                    <LinkCompanyDialog accountId={account.id} />
+                    <CompanyPickerAction
+                        kind="charge"
+                        companies={companies.filter(
+                            ({ subscription }) => subscription !== null,
+                        )}
+                        accountKind={account.kind}
+                        today={today}
+                        size="default"
+                    >
+                        Agregar cargo
+                    </CompanyPickerAction>
+                    <RecordPaymentDialog accountId={account.id} today={today} />
                 </>
             )}
         </PageHeader>

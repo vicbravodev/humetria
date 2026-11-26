@@ -43,7 +43,12 @@ export type AccountRow = {
 /** An account with the fiscal data a CFDI will need and the contract notes. */
 export type AccountDetail = Omit<
     AccountRow,
-    'companies' | 'outstanding' | 'overdue' | 'aging' | 'last_payment'
+    | 'companies'
+    | 'outstanding'
+    | 'outstanding_cents'
+    | 'overdue'
+    | 'aging'
+    | 'last_payment'
 > & {
     tax_regime: string | null;
     postal_code: string | null;
@@ -156,6 +161,8 @@ export type AccountSummary = {
     total: string | null;
     requiring_quotation: number;
     next_renewal: string | null;
+    /** The company that renews next. */
+    next_renewal_company: string | null;
     discount: DiscountNote | null;
 };
 
@@ -198,21 +205,9 @@ export type StatementRow = {
     balance: string | null;
     state: StatementState;
     state_label: string;
-};
-
-/** A payment of the account: what came in, how much of it settled statements, and why it was reversed if it was. */
-export type PaymentRow = {
-    id: string;
-    reference: string;
-    paid_on: string;
-    amount: string;
-    applied: string;
-    unapplied: string;
-    note: string | null;
-    recorded_by: string;
-    reversed: boolean;
-    reversal_reason: string | null;
-    can_apply: boolean;
+    /** The days it was issued and is due; null while it is a draft. */
+    issued_on: string | null;
+    due_on: string | null;
 };
 
 /** What the account owes across its issued statements, what of it is past due and how old its oldest open statement is. */

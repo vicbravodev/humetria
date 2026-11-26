@@ -7,6 +7,7 @@ export type * from './sso';
 export type * from './billing-parts';
 export type * from './billing-receivable';
 export type * from './billing-catalog';
+export type * from './billing-account';
 export type * from './campaigns';
 export type * from './compensation';
 export type * from './compensation-compare';

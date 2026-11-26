@@ -1,17 +1,16 @@
 import { Head, setLayoutProps } from '@inertiajs/react';
-import AccountBalance from '@/components/billing/account-balance';
-import AccountCompaniesEmpty from '@/components/billing/account-companies-empty';
-import AccountCompaniesTable from '@/components/billing/account-companies-table';
-import AccountFigures from '@/components/billing/account-figures';
+import AccountCompaniesCard from '@/components/billing/account-companies-card';
 import AccountHeader from '@/components/billing/account-header';
 import AccountLedger from '@/components/billing/account-ledger';
-import Pagination from '@/components/humetria/pagination';
+import AccountUpcoming from '@/components/billing/account-upcoming';
+import AccountYearFigures from '@/components/billing/account-year-figures';
 import { index } from '@/routes/billing/accounts';
 import type {
     AccountChargeRow,
     AccountCompanyRow,
     AccountDetail,
     AccountSummary,
+    AccountYear,
     Paginated,
     PaymentRow,
     Receivable,
@@ -21,18 +20,20 @@ import type {
 } from '@/types';
 
 /**
- * One payer account (tablero Cuenta de facturación): who it is and whether it is behind, the companies it pays, then its
- * statements, payments, transfers and charges, with what it owes and what it pays a month in the side panel.
+ * One payer account (tablero Cuenta de facturación): who it is and whether it is behind, its four figures, then its statements
+ * and payments on the left and, on the right, the companies it pays and what comes next.
  */
 export default function Account({
     account,
     companies,
     charges,
     statements,
+    statementsView,
     payments,
     receivable,
     transfers,
     summary,
+    year,
     today,
     taxRegimes,
     cfdiUses,
@@ -41,17 +42,19 @@ export default function Account({
     companies: Paginated<AccountCompanyRow>;
     charges: Paginated<AccountChargeRow>;
     statements: Paginated<StatementRow>;
+    statementsView: 'all' | 'open';
     payments: Paginated<PaymentRow>;
     receivable: Receivable;
     transfers: Paginated<TransferRow>;
     summary: AccountSummary;
+    year: AccountYear;
     today: string;
     taxRegimes: SatOption[];
     cfdiUses: SatOption[];
 }) {
     setLayoutProps({
         breadcrumbs: [
-            { title: 'Cuentas y cobranza', href: index() },
+            { title: 'Cuentas', href: index() },
             { title: account.legal_name },
         ],
     });
@@ -59,48 +62,43 @@ export default function Account({
     return (
         <>
             <Head title={account.legal_name} />
-            <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
+            <div className="flex flex-col gap-6 px-4 py-6 md:px-10 md:py-8">
                 <AccountHeader
                     account={account}
                     receivable={receivable}
+                    companies={companies.data}
+                    companiesTotal={companies.total}
+                    today={today}
                     taxRegimes={taxRegimes}
                     cfdiUses={cfdiUses}
                 />
-                <div className="grid gap-8 2xl:grid-cols-[minmax(0,1fr)_360px] 2xl:items-start">
-                    <aside
-                        aria-label="Resumen de la cuenta"
-                        className="grid gap-4 lg:grid-cols-2 2xl:order-last 2xl:grid-cols-1"
-                    >
-                        <AccountBalance receivable={receivable} />
-                        {companies.data.length > 0 && (
-                            <AccountFigures summary={summary} />
-                        )}
-                    </aside>
-                    <div className="flex min-w-0 flex-col gap-8">
-                        {companies.data.length === 0 ? (
-                            <AccountCompaniesEmpty />
-                        ) : (
-                            <AccountCompaniesTable
-                                companies={companies.data}
-                                accountKind={account.kind}
-                                today={today}
-                            />
-                        )}
-                        <Pagination
-                            previous="Ver más recientes"
-                            next="Ver más antiguas"
-                            page={companies}
-                            label="Páginas de empresas de la cuenta"
-                        />
+                <AccountYearFigures receivable={receivable} year={year} />
+                <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+                    <div className="flex min-w-0 flex-col gap-6">
                         <AccountLedger
                             accountId={account.id}
+                            accountKind={account.kind}
                             today={today}
                             statements={statements}
+                            statementsView={statementsView}
                             payments={payments}
                             transfers={transfers}
                             charges={charges}
+                            companies={companies.data}
                         />
                     </div>
+                    <aside
+                        aria-label="Empresas y próximos cargos"
+                        className="flex min-w-0 flex-col gap-6"
+                    >
+                        <AccountCompaniesCard
+                            accountId={account.id}
+                            accountKind={account.kind}
+                            companies={companies}
+                            today={today}
+                        />
+                        <AccountUpcoming summary={summary} today={today} />
+                    </aside>
                 </div>
             </div>
         </>
