@@ -66,7 +66,7 @@ it('keeps the actions of each row in one menu, so the table fits without scrolli
         ->assertScript('() => { const box = document.querySelector(\'[data-slot="table-container"]\'); return box.scrollWidth <= box.clientWidth; }')
         ->assertScript('() => document.querySelectorAll(\'[data-test="tenant-actions"]\').length', 1)
         ->click('[aria-label="Acciones de Grupo Ejemplo"]')
-        ->assertScript(MENU_ITEMS, 'Activar, Invitar owner, Editar, Logo de los correos, Asistente Humi, Solo lectura, Suspender, Archivar')
+        ->assertScript(MENU_ITEMS, 'Activar, Invitar owner, Editar, Logo y color, Asistente Humi, Solo lectura, Suspender, Archivar')
         // Suspender is apart from the rest and in the destructive color (Solo lectura is the mild one).
         ->assertScript('() => document.querySelector(\'[role="menuitem"][data-variant="destructive"]\')?.textContent', 'Suspender')
         ->assertScript('() => document.querySelector(\'[role="menu"] [role="separator"]\') !== null');
@@ -222,13 +222,15 @@ it('passes the accessibility and CSP checks with the edit dialog open', function
 })->with($looks);
 
 // C4: the logo is dropped on the zone or chosen from it.
-it('passes the accessibility and CSP checks with the logo dialog open', function (bool $dark, bool $mobile): void {
+it('passes the accessibility and CSP checks with the brand dialog open', function (bool $dark, bool $mobile): void {
     signInAsSuperadmin();
     Tenant::factory()->create();
 
-    visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('@tenant-actions')->click('Logo de los correos')
-        ->assertSee('Arrastra aquí el logo o elígelo')
-        ->assertSee('PNG, JPG o WebP de hasta 2 MB'));
+    visitPage('tenancy/index', '/admin/companies', $dark, $mobile, fn ($page) => $page->click('@tenant-actions')->click('Logo y color')
+        ->assertSee('Arrastra aquí el archivo o elígelo')
+        ->assertSee('PNG, JPG o WebP de hasta 2 MB')
+        ->assertSee('Logo para modo oscuro (opcional)')
+        ->assertSee('Color de acento'));
 })->with($looks);
 
 it('activates a company that has not started, choosing the date', function (): void {
@@ -299,7 +301,7 @@ it('offers to change the end date of an active company instead of activating it 
 
     visit('/admin/companies')
         ->click('@tenant-actions')
-        ->assertScript(MENU_ITEMS, 'Cambiar vigencia, Invitar owner, Editar, Logo de los correos, Asistente Humi, Solo lectura, Suspender, Archivar')
+        ->assertScript(MENU_ITEMS, 'Cambiar vigencia, Invitar owner, Editar, Logo y color, Asistente Humi, Solo lectura, Suspender, Archivar')
         ->click('Cambiar vigencia')
         ->assertSee('Elige el último día')
         ->assertSeeIn('[role=dialog] button[type=submit]', 'Guardar');
@@ -330,7 +332,7 @@ it('suspends an active company after showing what changes and asking the reason,
         ->assertSee('Suspendida el')
         ->assertSee('Motivo: Falta de pago de octubre')
         ->click('@tenant-actions')
-        ->assertScript(MENU_ITEMS, 'Reactivar, Invitar owner, Editar, Logo de los correos, Asistente Humi, Solo lectura, Archivar')
+        ->assertScript(MENU_ITEMS, 'Reactivar, Invitar owner, Editar, Logo y color, Asistente Humi, Solo lectura, Archivar')
         ->assertNoJavaScriptErrors();
 
     $tenant = Tenant::query()->sole();
@@ -432,7 +434,7 @@ it('does not offer the restriction a company already has', function (): void {
 
     visit('/admin/companies')
         ->click('@tenant-actions')
-        ->assertScript(MENU_ITEMS, 'Reactivar, Invitar owner, Editar, Logo de los correos, Asistente Humi, Solo lectura, Archivar');
+        ->assertScript(MENU_ITEMS, 'Reactivar, Invitar owner, Editar, Logo y color, Asistente Humi, Solo lectura, Archivar');
 });
 
 it('passes the accessibility and CSP checks with the restriction dialogs open', function (bool $dark, bool $mobile): void {

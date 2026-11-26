@@ -8,7 +8,9 @@ use App\Http\Impersonation;
 use App\Models\User;
 use App\Modules\Campaigns\Contracts\OpenCampaigns;
 use App\Modules\FirstSteps\Contracts\FirstSteps;
+use App\Modules\Tenancy\Contracts\CompanyBranding;
 use App\Modules\Tenancy\Contracts\DemoCompanies;
+use App\Modules\Tenancy\Data\CompanyBrand;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Middleware;
@@ -74,6 +76,9 @@ final class HandleInertiaRequests extends Middleware
             // Every page of the demo company, its reports above all, carries the «DEMO» mark (DemoMark). Read when the page
             // renders: the company routes and the report links set the company before then.
             'demo' => fn (): bool => app(DemoCompanies::class)->isCurrent(),
+            // White label: the logo, the name and the accent of the company the page works in (null outside one). Humetría stays
+            // only as the "hecho con humetría" seal.
+            'brand' => fn (): ?CompanyBrand => app(CompanyBranding::class)->current(),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }
@@ -116,6 +121,7 @@ final class HandleInertiaRequests extends Middleware
             'inCourse' => null,
             'firstSteps' => null,
             'demo' => false,
+            'brand' => null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

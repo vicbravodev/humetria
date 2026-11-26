@@ -1,3 +1,4 @@
+import CompanyMark from '@/components/company-mark';
 import { Lock } from 'lucide-react';
 import type { ReactNode } from 'react';
 import Logo from '@/components/humetria/logo';
@@ -17,7 +18,10 @@ export default function PortalShell({
         <div className="flex min-h-dvh flex-col bg-background text-lg leading-7">
             <header className="flex h-[60px] shrink-0 items-center justify-between gap-3 border-b bg-card px-4">
                 <p className="text-base font-semibold">
-                    {company ?? 'Su portal'}
+                    <CompanyMark
+                        name={company ?? 'Su portal'}
+                        className="h-8"
+                    />
                 </p>
                 <p className="flex items-center gap-1.5 text-base font-medium text-primary">
                     <Lock aria-hidden="true" className="size-4" />

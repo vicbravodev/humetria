@@ -9,6 +9,7 @@ use App\Modules\Attendance\Actions\RecordMark;
 use App\Modules\Attendance\Data\MarkContext;
 use App\Modules\Attendance\Data\Position;
 use App\Modules\Attendance\Enums\MarkMethod;
+use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Enums\WorkMode;
 use App\Modules\Attendance\Exceptions\AgreementOutdated;
 use App\Modules\Attendance\Exceptions\InvalidMarkSequence;
@@ -67,6 +68,9 @@ final readonly class MarkController
     /** The code this browser scanned when it opened the page, while it counted: its center and when (hallazgo 27). */
     private const string SCAN_KEY = 'attendance.scan';
 
+    /** «¿No es usted?» said in this browser: the portal's person is not greeted until someone marks in it. */
+    private const string DECLINED_KEY = 'attendance.declined';
+
     public function __construct(private Roster $roster, private Companies $companies, private CurrentTenant $tenant, private WorkerCredentials $credentials, private Timezones $timezones, private WorkCenters $workCenters, private WorkerSession $session) {}
 
     /**
@@ -79,6 +83,7 @@ final readonly class MarkController
         // Who this page speaks to, for how they mark and their clock: who marked here, or else the person of the portal's
         // session (never shown as them: whoever taps signs).
         $known = $person ?? $this->fromPortal();
+        $greeted = $person ?? ($request->session()->get(self::DECLINED_KEY) === true ? null : $known);
         // The day and the clock of that person, in their center's zone; the company's before anyone is known.
         $timezone = $known === null ? $this->timezones->forTenant() : $this->timezones->forCenter($known->workCenterId);
         $q = $request->query('q');
@@ -95,9 +100,10 @@ final readonly class MarkController
             'qr' => $qr,
             // When the code was read, at the clock of its center: «Escaneó a las 09:00, tiene 3 minutos».
             'scannedAt' => $scanned === null ? null : CarbonImmutable::now($this->timezones->forCenter($scanned->id))->format('H:i'),
-            // Who taps next may be someone else: the position is always asked when marking (and dropped by the server when
-            // the verified person does not need it).
-            'person' => $person === null ? null : ['name' => $person->name, 'next' => PunchDay::of($person->id, $timezone)['next']],
+            // The person this browser knows, who marked here or entered the portal in it: their name and next step, so an
+            // installed app opens on what they do now. Who taps may still be someone else: the position is always asked when
+            // marking (and dropped by the server when the verified person does not need it), and the signature names who marks.
+            'person' => $greeted === null ? null : ['name' => $greeted->name, 'next' => PunchDay::of($greeted->id, $timezone)['next']],
             'optionsUrl' => route('attendance.device.punch.options', $tenant),
             'punchUrl' => route('attendance.device.punch.store', $tenant),
             'forgetUrl' => route('attendance.device.punch.forget', $tenant),
@@ -116,6 +122,9 @@ final readonly class MarkController
             'timezone' => $timezone,
             // How they mark: a remote person is asked for no code nor zone (their position is dropped); null for nobody known.
             'mode' => $known === null ? null : ($this->schedule($known->id, $timezone)?->work_mode === WorkMode::Remote ? 'remote' : 'onsite'),
+            // The marks that ask for the code: tapping one reads the screen's code first, and the key comes after. Nobody known: what the
+            // company's policy says, the rest the server tells when marking.
+            'qrTypes' => array_map(fn (MarkType $type): string => $type->value, $known === null ? MarkPolicyCheck::policyTypes(CompanyPolicy::current()) : MarkPolicyCheck::qrTypesOf($known, $timezone)),
             // The server's clock, in milliseconds: the page's clock follows it, not the phone's.
             'now' => CarbonImmutable::now()->getTimestampMs(),
         ]);
@@ -127,6 +136,7 @@ final readonly class MarkController
     public function forget(Request $request): RedirectResponse
     {
         $request->session()->forget(self::SESSION_KEY);
+        $request->session()->put(self::DECLINED_KEY, true);
 
         return back();
     }
@@ -152,6 +162,7 @@ final readonly class MarkController
         AttachOfflineTickets::signedBy($person->id);
         $timezone = $this->timezones->forCenter($person->workCenterId);
         $request->session()->put(self::SESSION_KEY, ['id' => $person->id, 'at' => CarbonImmutable::now()->getTimestamp()]);
+        $request->session()->forget(self::DECLINED_KEY);
 
         $qr = $request->qr();
         $now = CarbonImmutable::now();
@@ -172,7 +183,7 @@ final readonly class MarkController
 
             $context = $away !== null
                 ? MarkPolicyCheck::away($schedule, CompanyPolicy::current(), $away->id, $request->position(), $signed->credentialId)
-                : $this->decide($person, $schedule, $qrValid, $qr !== null && $qrValid === false && QrToken::expired($qr, $this->tenant->id(), $person->workCenterId, $now), $zones, $request->position(), $signed->credentialId);
+                : $this->decide($person, $schedule, $qrValid, $qr !== null && $qrValid === false && QrToken::expired($qr, $this->tenant->id(), $person->workCenterId, $now), $zones, $request->position(), $signed->credentialId, $request->type());
             $record->handle($person->id, $request->type(), $context);
         } catch (MarkRejected|InvalidMarkSequence $rejected) {
             Log::info('attendance.mark_rejected', ['employee_id' => $person->id, 'key_id' => $signed->credentialId, 'type' => $request->type()->value, 'reason' => $rejected->reason]);
@@ -268,7 +279,7 @@ final readonly class MarkController
      *
      * @throws MarkRejected
      */
-    private function decide(RosterEntry $person, ?AttendanceSchedule $schedule, ?bool $qrValid, bool $expired, array $zones, ?Position $position, string $credentialId): MarkContext
+    private function decide(RosterEntry $person, ?AttendanceSchedule $schedule, ?bool $qrValid, bool $expired, array $zones, ?Position $position, string $credentialId, MarkType $type): MarkContext
     {
         try {
             return MarkPolicyCheck::decide(
@@ -281,6 +292,7 @@ final readonly class MarkController
                 $credentialId,
                 KioskDevice::inUseIn($person->workCenterId),
                 AttendanceCenterMode::isField($person->workCenterId),
+                $type,
             );
         } catch (MarkRejected $rejected) {
             throw $rejected->reason === 'qr_invalid' && $expired ? new MarkRejected('qr_expired') : $rejected;

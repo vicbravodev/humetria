@@ -1,3 +1,4 @@
+import CompanyMark from '@/components/company-mark';
 import { Lock } from 'lucide-react';
 import type { ReactNode } from 'react';
 import Logo from '@/components/humetria/logo';
@@ -17,7 +18,10 @@ export default function SurveyShell({
         <div className="flex min-h-dvh flex-col bg-background text-lg leading-7">
             <header className="flex min-h-[3.75rem] shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b bg-card px-4 py-2">
                 <p className="min-w-0 text-base font-semibold break-words">
-                    {company ?? 'Evaluación'}
+                    <CompanyMark
+                        name={company ?? 'Evaluación'}
+                        className="h-8"
+                    />
                 </p>
                 <p className="flex shrink-0 items-center gap-1.5 text-base font-medium text-primary">
                     <Lock aria-hidden="true" className="size-4" />

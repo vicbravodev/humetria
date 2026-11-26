@@ -26,7 +26,10 @@ export type AttendanceCenterPageProps = AttendanceCenterProps & {
 export type AttendancePolicy = {
     outOfZone: 'block' | 'allow_and_flag';
     maxAccuracyM: number;
+    /** The QR is obligatory on the start and the end of the day. */
     requireQrOnsite: boolean;
+    /** The QR is obligatory on the break marks too. */
+    requireQrBreaks: boolean;
     trustedMayUseBrowser: boolean;
     retentionMonths: number;
     /** Minutes after a start time that still count as on time: the lateness is shown, never sanctioned. */

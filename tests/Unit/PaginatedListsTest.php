@@ -155,6 +155,7 @@ const ARRAY_PROPS = [
     'tenancy/index:staff' => 'el equipo de Humetría a quien se asigna una empresa: un puñado de personas, no registros que crecen',
     'announcements/index:kinds' => 'catálogo fijo: los cuatro tipos de aviso (AnnouncementKind)',
     'announcements/index:plans' => 'catálogo fijo: los planes del catálogo de cobranza, cinco',
+    'attendance/punch:qrTypes' => 'catálogo fijo: las marcas (MarkType) que piden leer el QR del centro, cuatro a lo más',
     'billing/accounts:taxRegimes' => 'catálogo fijo del SAT: los regímenes fiscales (c_RegimenFiscal)',
     'billing/accounts:cfdiUses' => 'catálogo fijo del SAT: los usos de CFDI (c_UsoCFDI)',
     'billing/account:taxRegimes' => 'catálogo fijo del SAT: los regímenes fiscales (c_RegimenFiscal)',

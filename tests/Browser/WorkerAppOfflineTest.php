@@ -107,7 +107,7 @@ function phoneWithTickets(): AwaitableWebpage
 {
     $page = visitPage('worker-access/link', accessLinkPath(test()->ana->id), mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
     linkThePhone($page, test()->ana->id);
-    $page->navigate('/me/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))->waitForText('Marcar su jornada');
+    $page->navigate('/me/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))->waitForText(', Ana');
     standingAt($page, 19.4327, -99.1332);
     $page->press('button:has-text("Entrada")')->waitForText('Entrada registrada')->press('Listo');
     $page->assertScript(eventuallyAsync('async () => ('.trim(keptInPhone()).')().then((names) => names.includes("tickets") && names.includes("context"))'), true);
@@ -204,7 +204,10 @@ it('keeps only the mark the server cannot read as not accepted, and delivers the
     withoutNetwork($page);
     markOffline($page, 'Salir a comer', 'Salida a comer sin internet');
     $page->press('Listo');
-    markOffline($page, 'Marcar salida', 'Salida sin internet');
+    // The exit asks for the screen's code: the tap opens the reader (the camera is a canvas that draws it), and the key follows.
+    withCameraShowing($page, originOf($page).'/me/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()));
+    // With a code read there is no sheet: the key signs at once and the mark is kept.
+    $page->press('button:has-text("Marcar salida")')->waitForText('Guardada sin conexión');
     $page->press('Listo')->assertSee('2 marcas sin enviar');
     damageMark($page, 1);
 
@@ -240,10 +243,10 @@ it('«¿No es usted?» takes the tickets out of the phone but not the mark that 
 it('sends one mark when the button is tapped twice before the screen changes', function (): void {
     $page = visitPage('worker-access/link', accessLinkPath($this->ana->id), mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
     linkThePhone($page, $this->ana->id);
-    $page->navigate('/me/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()))->waitForText('Marcar su jornada');
+    $page->navigate('/me/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()))->waitForText(', Ana');
     standingAt($page, 19.4327, -99.1332);
 
-    $page->script('() => { const button = [...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "Entrada"); button.click(); button.click(); }');
+    $page->script('() => { const button = [...document.querySelectorAll("button")].find((b) => b.textContent.trim() === "Marcar entrada"); button.click(); button.click(); }');
     $page->waitForText('Entrada registrada');
 
     expect(AttendanceMark::query()->count())->toBe(1);
@@ -305,7 +308,7 @@ it('marks from the shell of the installed app, with no page of the server: the s
     $page->waitForText('Marcar sin internet')
         ->assertSee('Entrada')
         ->assertSee('Salir a comer')
-        ->assertSee('Leer el código de la pantalla')
+        ->assertDontSee('Leer el código de la pantalla')
         ->assertSee('Reintentar con internet')
         ->assertDontSee('Ana')
         ->assertNoJavaScriptErrors()
@@ -324,6 +327,23 @@ it('marks from the shell of the installed app, with no page of the server: the s
 
     expect(AttendanceOfflineMark::query()->sole()->outcome)->toBe('accepted');
 })->with(['light' => [false]]);
+
+it('asks the shell for the screen\'s code only on the marks the policy asks it for, as Marcar does with a connection', function (): void {
+    $page = phoneWithTickets();
+    $page->navigate('/me/acme/offline')->waitForText('No hay internet');
+    withoutNetwork($page);
+    $page->script("() => { history.pushState({}, '', '/me/acme/punch'); window.dispatchEvent(new PopStateEvent('popstate')); }");
+    $page->waitForText('Marcar sin internet')->assertDontSee('Leer el código de la pantalla');
+
+    // A mark the policy does not ask the code for goes on to the hour, with no reader in between.
+    markOffline($page, 'Salir a comer', 'Salida a comer sin internet');
+    $page->press('Listo')->assertMissing('[role="dialog"][aria-label="Leer el código de la pantalla"]');
+
+    // One it asks for opens the reader first (the camera is a canvas that draws the code), and with the code read the key signs at once.
+    withCameraShowing($page, originOf($page).'/me/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()));
+    $page->press('button:has-text("Salida")')->waitForText('Guardada sin conexión');
+    $page->press('Listo')->assertSee('2 marcas sin enviar');
+});
 
 it('opens the shell with the count of the marks that wait and the way to Marcar', function (): void {
     $page = phoneWithTickets();

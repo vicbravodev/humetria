@@ -208,7 +208,7 @@ final readonly class AttendancePages
             // Where the map of a new zone opens; only whoever may add one needs it.
             'centerAddress' => $manage ? $this->workCenters->profile($center->id)?->address : null,
             'qrSeconds' => config()->integer('attendance.qr.window_seconds'),
-            'requiresQr' => $policy->require_qr_onsite,
+            'requiresQr' => $policy->require_qr_onsite || $policy->require_qr_breaks,
             'tolerance' => $policy->max_accuracy_m,
             'screens' => KioskDevice::query()->where('work_center_id', $center->id)->whereNotNull('last_seen_at')->whereNull('revoked_at')->count(),
             'people' => count($this->roster->activeIdsIn($center->id)),

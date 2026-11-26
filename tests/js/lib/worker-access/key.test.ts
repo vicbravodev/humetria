@@ -96,6 +96,19 @@ describe('registerKey', () => {
         expect(await register(() => Promise.resolve(null))).toBe('failed');
     });
 
+    it('does not call it a network failure when the device cannot make the key (a domain it refuses, no way to keep keys)', async () => {
+        const register = (name: string) =>
+            registerKey(request, {
+                fetcher: server(json(options)),
+                createKey: () => Promise.reject(new DOMException('x', name)),
+                xsrf: null,
+            });
+
+        expect(await register('SecurityError')).toBe('unsupported');
+        expect(await register('NotSupportedError')).toBe('unsupported');
+        expect(await register('AbortError')).toBe('failed');
+    });
+
     it('says what happened and what to do for every failure', () => {
         expect(keyProblem('full').title).toBe('Ya tiene 3 llaves');
         expect(keyProblem('forbidden').text).toContain('enlace');

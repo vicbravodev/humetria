@@ -52,6 +52,9 @@
         @if (request()->is('me/*') && ($page['component'] ?? '') !== 'error' && is_string($appSlug = request()->route('tenant')))
             {{-- The installable app of the company of the person's pages (WorkerAccess): only under /me/{slug}. --}}
             <link rel="manifest" href="{{ route('worker.app.manifest', $appSlug) }}">
+            {{-- The phone's status bar takes the page's own background, light and dark (the tokens of resources/css/app.css). --}}
+            <meta name="theme-color" content="#fbfdfc" media="(prefers-color-scheme: light)">
+            <meta name="theme-color" content="#0f1716" media="(prefers-color-scheme: dark)">
             @if (config('worker_access.pwa_sw_kill'))
                 {{-- The service worker is switched off (PWA_SW_KILL): the page neither registers it nor keeps the one that is there. --}}
                 <meta name="pwa-sw-kill" content="1">
@@ -63,6 +66,10 @@
         @viteReactRefresh
         {{-- The frame of the panel is a chunk fetched on demand; listing it here has the browser fetch it with the page's own code, not after it. --}}
         @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx", ...App\Http\PageFrame::layouts($page['component'] ?? '')])
+        @if (is_string($brandCss = data_get($page['props']['brand'] ?? null, 'css')))
+            {{-- White label: the accent of the company of the page (BrandPalette, always readable), after the stylesheet so it wins. Only hex colors we wrote. --}}
+            <style id="brand-accent" nonce="{{ Vite::cspNonce() }}">{!! $brandCss !!}</style>
+        @endif
         <x-inertia::head>
             @if (isset($page['props']['seo']))
                 @include('partials.seo-fallback')

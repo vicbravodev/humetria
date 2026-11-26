@@ -7,10 +7,10 @@ import type { PortalTab } from '@/components/worker-access/portal-tab-bar';
 import WorkerFrame from '@/components/worker-access/worker-frame';
 import { usePassRenewal } from '@/hooks/use-pass-renewal';
 import { pendingTotal, splitSections } from '@/lib/worker-access/portal';
-import type { ProofStep, WorkerSection } from '@/types';
+import type { ProofStep, WorkerDay, WorkerSection } from '@/types';
 
 /**
- * The person's portal (findings 3 and 29): three tabs, the same for everyone. Inicio, with what waits for them first; Pendientes,
+ * The person's portal (findings 3 and 29): four tabs (three where the company has no attendance). Inicio, with what waits for them first; Pendientes,
  * what waits across their tools; Cuenta, their key for this device and «Salir». Each tab fades in as it opens.
  */
 export default function HomeScreen({
@@ -21,6 +21,10 @@ export default function HomeScreen({
     keyUrl,
     hasKey,
     deviceKey,
+    punchUrl,
+    weekUrl,
+    day,
+    now,
     leaveUrl,
 }: {
     company: string;
@@ -34,6 +38,10 @@ export default function HomeScreen({
         storeUrl: string;
         proof: ProofStep;
     } | null;
+    punchUrl: string | null;
+    weekUrl: string | null;
+    day: WorkerDay | null;
+    now: number;
     leaveUrl: string;
 }) {
     usePassRenewal(slug);
@@ -49,6 +57,7 @@ export default function HomeScreen({
                 <PortalTabBar
                     current={tab}
                     pending={pendingTotal(sections)}
+                    punchUrl={punchUrl}
                     onSelect={setTab}
                 />
             }
@@ -64,6 +73,10 @@ export default function HomeScreen({
                         slug={slug}
                         waiting={waiting}
                         tools={tools}
+                        day={day}
+                        punchUrl={punchUrl}
+                        weekUrl={weekUrl}
+                        serverNow={now}
                     />
                 )}
                 {tab === 'pending' && <HomePending waiting={waiting} />}
@@ -75,6 +88,7 @@ export default function HomeScreen({
                         keyUrl={keyUrl}
                         hasKey={hasKey}
                         deviceKey={deviceKey}
+                        weekUrl={weekUrl}
                         leaveUrl={leaveUrl}
                     />
                 )}

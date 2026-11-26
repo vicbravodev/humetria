@@ -11,7 +11,7 @@ export default function Logo({
     className,
 }: {
     kind?: 'logo' | 'symbol' | 'seal';
-    className?: string;
+    className?: string | undefined;
 }) {
     const [light, dark] = files[kind];
 

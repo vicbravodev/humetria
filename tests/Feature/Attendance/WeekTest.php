@@ -393,7 +393,7 @@ describe('reading the week', function (): void {
 
 describe('tickets', function (): void {
     it('brings tickets and context with the week read, with a refusal and with an answer, and none with a signature that does not verify', function (): void {
-        $shape = ['tickets' => [['ticket', 'issuedAt']], 'context' => ['tenantId', 'employeeId', 'centerId', 'agreementVersion', 'rpId', 'offline']];
+        $shape = ['tickets' => [['ticket', 'issuedAt']], 'context' => ['tenantId', 'employeeId', 'centerId', 'agreementVersion', 'rpId', 'offline', 'qrTypes']];
         anaWorkedLastWeek();
 
         anaReadsWeek()->assertOk()->assertJsonStructure($shape);

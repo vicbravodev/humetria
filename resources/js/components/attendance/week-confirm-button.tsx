@@ -29,6 +29,11 @@ export default function WeekConfirmButton({
                 <Fingerprint aria-hidden className="size-5" />
                 Confirmar mi semana
             </Button>
+            {block === null && (
+                <p className="text-center text-base text-pretty text-muted-foreground">
+                    Al confirmar, RH ve que usted revisó sus marcas.
+                </p>
+            )}
             {block !== null && (
                 <p
                     id="week-confirm-block"

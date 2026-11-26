@@ -13,6 +13,9 @@ teléfonos reales. El diseño está en `docs/superpowers/specs/2026-11-20-worker
   por eso la respuesta lleva la cabecera `Service-Worker-Allowed`. Guarda solo archivos del build y el cascarón; nunca HTML de
   Inertia ni datos de personas.
 - **Cascarón**: `/me/{slug}/offline`, lo que abre el ícono sin conexión (Marcar).
+- **Marcar conoce a la persona** de la sesión del portal (o de quien marcó en ese navegador): la saluda y ofrece solo su siguiente
+  paso, nunca sus marcas; «¿No es usted?» deja de saludarla hasta que alguien marque. Quien firma la marca sigue siendo quien
+  verifica la llave.
 - **Cola de marcas** en el teléfono (almacenamiento del navegador): las marcas hechas sin conexión esperan ahí hasta entregarse.
 - **Boletos**: `POST /me/{slug}/tickets` (`attendance.device.tickets`). Un boleto firmado con `APP_KEY` es la cota inferior de la
   hora de una marca sin conexión: el servidor lo entrega con cada respuesta firmada y el teléfono guarda los últimos.

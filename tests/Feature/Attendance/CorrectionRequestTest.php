@@ -251,7 +251,7 @@ describe('from the device', function (): void {
     });
 
     it('brings tickets and context with the answer and with a refusal, and none with a mark that is not the person\'s', function (): void {
-        $shape = ['tickets' => [['ticket', 'issuedAt']], 'context' => ['tenantId', 'employeeId', 'centerId', 'agreementVersion', 'rpId', 'offline']];
+        $shape = ['tickets' => [['ticket', 'issuedAt']], 'context' => ['tenantId', 'employeeId', 'centerId', 'agreementVersion', 'rpId', 'offline', 'qrTypes']];
         $bob = EmployeeFactory::new()->create(['tenant_id' => $this->tenant->id]);
 
         anaSends()->assertOk()->assertJsonStructure($shape);

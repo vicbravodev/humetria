@@ -22,13 +22,14 @@ beforeEach(function (): void {
     workIn($this->tenant);
 });
 
-it('starts a company\'s policy blocking out of zone, at 100 m, with the QR on site and the trusted browser, kept 12 months', function (): void {
+it('starts a company\'s policy blocking out of zone, at 100 m, with the QR on the start and the end (not on a break) and the trusted browser, kept 12 months', function (): void {
     $policy = AttendancePolicy::query()->create(['tenant_id' => $this->tenant->id])->fresh();
 
     expect($policy)
         ->out_of_zone->toBe(OutOfZoneRule::Block)
         ->max_accuracy_m->toBe(100)
         ->require_qr_onsite->toBeTrue()
+        ->require_qr_breaks->toBeFalse()
         ->trusted_may_use_browser->toBeTrue()
         ->retention_months->toBe(12);
 });

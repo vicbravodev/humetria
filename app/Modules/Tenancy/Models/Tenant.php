@@ -45,6 +45,10 @@ use Illuminate\Database\Query\Builder;
  * @property string $timezone The IANA zone of what is the company's and not a center's (billing, the owner's digests).
  * @property int|null $logo_width
  * @property int|null $logo_height
+ * @property string|null $logo_dark_path The version of its logo for dark mode; only with a logo for light.
+ * @property int|null $logo_dark_width
+ * @property int|null $logo_dark_height
+ * @property string|null $brand_color The accent of its own pages, as #rrggbb; null follows Humetría's.
  * @property int|null $min_group The company's minimum of people per group (C-23); null follows the platform's.
  * @property int|null $owner_user_id Who at Humetría answers for the company (its account manager); never one of its members.
  * @property CarbonImmutable|null $last_access_at Only on the console's list: the latest sign-in of anyone who belongs to it.
@@ -54,7 +58,7 @@ use Illuminate\Database\Query\Builder;
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['legal_name', 'trade_name', 'rfc', 'slug', 'type', 'trial_started_at', 'active_until', 'restriction', 'restriction_reason', 'restricted_at', 'logo_path', 'logo_width', 'logo_height', 'min_group'])] // @pest-mutate-ignore: RemoveArrayItem
+#[Fillable(['legal_name', 'trade_name', 'rfc', 'slug', 'type', 'trial_started_at', 'active_until', 'restriction', 'restriction_reason', 'restricted_at', 'logo_path', 'logo_width', 'logo_height', 'logo_dark_path', 'logo_dark_width', 'logo_dark_height', 'brand_color', 'min_group'])] // @pest-mutate-ignore: RemoveArrayItem
 #[UseFactory(TenantFactory::class)]
 final class Tenant extends Model
 {
@@ -219,6 +223,8 @@ final class Tenant extends Model
             'is_demo' => 'boolean',
             'logo_width' => 'integer',
             'logo_height' => 'integer',
+            'logo_dark_width' => 'integer',
+            'logo_dark_height' => 'integer',
             'min_group' => 'integer',
             'owner_user_id' => 'integer',
             'seats_used' => 'integer',

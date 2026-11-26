@@ -52,6 +52,8 @@ it('lists each company with its status for the superadmin', function (): void {
                 'slug' => 'grupo-ejemplo',
                 'type' => 'company',
                 'logo_url' => null,
+                'logo_dark_url' => null,
+                'brand_color' => null,
                 'status' => 'trial',
                 'status_label' => 'En prueba',
                 'status_date' => 'Prueba hasta 3 nov 2026',

@@ -127,3 +127,50 @@ it('shows the console the logo of each company', function (): void {
     $this->actingAs(superadmin())->get(route('companies.index'))
         ->assertInertia(fn ($page) => $page->where('tenants.data.0.logo_url', Storage::disk('public')->url((string) $this->tenant->refresh()->logo_path)));
 });
+
+/** A 400 x 200 image with a 100 x 40 mark in the middle: on a transparent background, or on an opaque one of the given color. */
+function logoWithMargins(?int $background): UploadedFile
+{
+    $image = imagecreatetruecolor(400, 200);
+    imagealphablending($image, false);
+    imagesavealpha($image, true);
+    imagefill($image, 0, 0, $background ?? (int) imagecolorallocatealpha($image, 0, 0, 0, 127));
+    imagefilledrectangle($image, 150, 80, 249, 119, (int) imagecolorallocate($image, 20, 60, 160));
+    $path = tempnam(sys_get_temp_dir(), 'logo').'.png';
+    imagepng($image, $path);
+
+    return new UploadedFile($path, 'logo.png', 'image/png', test: true);
+}
+
+/** @return array{int, int} the stored logo's width and height in px */
+function storedLogoSize(Tenant $tenant): array
+{
+    [$width, $height] = getimagesizefromstring((string) Storage::disk('public')->get((string) $tenant->refresh()->logo_path)) ?: [0, 0];
+
+    return [$width, $height];
+}
+
+it('trims the empty margins around the mark, so the logo fills the space it is given', function (?int $background): void {
+    uploadLogo($this->tenant, logoWithMargins($background))->assertSessionHasNoErrors();
+
+    [$width, $height] = storedLogoSize($this->tenant);
+
+    // The mark is 100 x 40 (2.5 : 1): with the margins gone the logo has that shape, give or take its breathing room.
+    expect($height)->toBe(80)
+        ->and($width / $height)->toBeGreaterThan(2.2)->toBeLessThan(2.8);
+})->with([
+    'transparent' => [null],
+    'white' => [0xFFFFFF],
+]);
+
+it('does not trim a logo that already reaches its edges', function (): void {
+    $image = imagecreatetruecolor(300, 120);
+    imagefill($image, 0, 0, (int) imagecolorallocate($image, 255, 255, 255));
+    imagefilledrectangle($image, 0, 0, 299, 119, (int) imagecolorallocate($image, 20, 60, 160));
+    $path = tempnam(sys_get_temp_dir(), 'logo').'.png';
+    imagepng($image, $path);
+
+    uploadLogo($this->tenant, new UploadedFile($path, 'logo.png', 'image/png', test: true));
+
+    expect(storedLogoSize($this->tenant))->toBe([200, 80]);
+});

@@ -22,14 +22,15 @@ const saved: AttendancePolicy = {
     outOfZone: 'block',
     maxAccuracyM: 100,
     requireQrOnsite: true,
+    requireQrBreaks: false,
     trustedMayUseBrowser: true,
     retentionMonths: 12,
     lateToleranceMinutes: 10,
 };
 
 describe('markCases', () => {
-    it('gives the five cases the level the server decides, under each of the eight policies', () => {
-        expect(rows).toHaveLength(8);
+    it('gives the six cases the level the server decides, under each of the ten policies', () => {
+        expect(rows).toHaveLength(10);
 
         for (const { policy, outcomes } of rows) {
             const levels = Object.fromEntries(
@@ -38,56 +39,6 @@ describe('markCases', () => {
 
             expect(levels, JSON.stringify(policy)).toEqual(outcomes);
         }
-    });
-
-    it('says with words what each case does under the default policy', () => {
-        expect(markCases(saved)).toEqual([
-            {
-                id: 'qr_and_inside',
-                text: 'En el centro, con QR y ubicación dentro de la zona',
-                outcome: {
-                    level: 'strong',
-                    label: 'Fuerte',
-                    note: 'QR y ubicación',
-                },
-            },
-            {
-                id: 'inside_no_qr',
-                text: 'En el centro, sin escanear el QR',
-                outcome: {
-                    level: 'rejected',
-                    label: 'Se rechaza',
-                    note: 'Pide escanear la pantalla',
-                },
-            },
-            {
-                id: 'qr_inaccurate',
-                text: 'Con QR, pero con ubicación peor que 100 m',
-                outcome: {
-                    level: 'rejected',
-                    label: 'Se rechaza',
-                    note: 'No se sabe si está dentro de la zona',
-                },
-            },
-            {
-                id: 'qr_outside',
-                text: 'Con QR, pero fuera de todas las zonas',
-                outcome: {
-                    level: 'rejected',
-                    label: 'Se rechaza',
-                    note: 'No se guarda la marca',
-                },
-            },
-            {
-                id: 'trusted_browser',
-                text: 'Personal de confianza, desde su navegador',
-                outcome: {
-                    level: 'basic',
-                    label: 'Básica',
-                    note: 'Sin ubicación guardada',
-                },
-            },
-        ]);
     });
 
     it('keeps what is allowed with its flag: stored without a zone, as medium evidence', () => {
@@ -135,6 +86,83 @@ describe('markCases', () => {
     });
 });
 
+describe('markCases in words', () => {
+    it('says with words what each case does under the default policy', () => {
+        expect(markCases(saved)).toEqual([
+            {
+                id: 'qr_and_inside',
+                text: 'En el centro, con QR y ubicación dentro de la zona',
+                outcome: {
+                    level: 'strong',
+                    label: 'Fuerte',
+                    note: 'QR y ubicación',
+                },
+            },
+            {
+                id: 'inside_no_qr',
+                text: 'Al entrar o salir, sin escanear el QR',
+                outcome: {
+                    level: 'rejected',
+                    label: 'Se rechaza',
+                    note: 'Pide escanear la pantalla',
+                },
+            },
+            {
+                id: 'qr_inaccurate',
+                text: 'Con QR, pero con ubicación peor que 100 m',
+                outcome: {
+                    level: 'rejected',
+                    label: 'Se rechaza',
+                    note: 'No se sabe si está dentro de la zona',
+                },
+            },
+            {
+                id: 'qr_outside',
+                text: 'Con QR, pero fuera de todas las zonas',
+                outcome: {
+                    level: 'rejected',
+                    label: 'Se rechaza',
+                    note: 'No se guarda la marca',
+                },
+            },
+            {
+                id: 'trusted_browser',
+                text: 'Personal de confianza, desde su navegador',
+                outcome: {
+                    level: 'basic',
+                    label: 'Básica',
+                    note: 'Sin ubicación guardada',
+                },
+            },
+            {
+                id: 'break_no_qr',
+                text: 'En la comida, sin escanear el QR',
+                outcome: {
+                    level: 'medium',
+                    label: 'Media',
+                    note: 'Solo la ubicación',
+                },
+            },
+        ]);
+    });
+});
+
+describe('markCases on a break', () => {
+    it('asks for the QR on a break only where the policy says so', () => {
+        const note = (requireQrBreaks: boolean) =>
+            markCases({ ...saved, requireQrBreaks }).find(
+                (item) => item.id === 'break_no_qr',
+            )?.outcome;
+
+        expect(note(true)).toEqual({
+            level: 'rejected',
+            label: 'Se rechaza',
+            note: 'Pide escanear la pantalla',
+        });
+        expect(note(false)?.level).toBe('medium');
+    });
+});
+
 describe('policyChanges', () => {
     it('counts the settings that differ from the saved ones', () => {
         expect(policyChanges(saved, saved)).toBe(0);
@@ -144,11 +172,12 @@ describe('policyChanges', () => {
                 outOfZone: 'allow_and_flag',
                 maxAccuracyM: 60,
                 requireQrOnsite: false,
+                requireQrBreaks: true,
                 trustedMayUseBrowser: false,
                 retentionMonths: 24,
                 lateToleranceMinutes: 10,
             }),
-        ).toBe(5);
+        ).toBe(6);
         expect(
             policyChanges(saved, { ...saved, lateToleranceMinutes: 0 }),
         ).toBe(1);

@@ -91,7 +91,7 @@ export default function TenantRowActions({
                     </DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => setOpen('logo')}>
                         <ImageIcon />
-                        Logo de los correos
+                        Logo y color
                     </DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => setOpen('humi')}>
                         <Bot />

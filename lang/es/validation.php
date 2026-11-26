@@ -279,6 +279,7 @@ return [
         'max_accuracy_m' => 'precisión máxima',
         'out_of_zone' => 'fuera de zona',
         'require_qr_onsite' => 'QR en el centro',
+        'require_qr_breaks' => 'QR en las comidas',
         'trusted_may_use_browser' => 'navegador de confianza',
         'raise_unit' => 'tipo de aumento',
         'procedure' => 'procedimiento',

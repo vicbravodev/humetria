@@ -16,7 +16,8 @@ export type CaseId =
     | 'inside_no_qr'
     | 'qr_inaccurate'
     | 'qr_outside'
-    | 'trusted_browser';
+    | 'trusted_browser'
+    | 'break_no_qr';
 
 export type MarkCase = { id: CaseId; text: string; outcome: MarkOutcome };
 
@@ -36,6 +37,13 @@ const outcome = (level: MarkLevel, note: string): MarkOutcome => ({
 /** Inside the zone without the QR: refused where the QR is asked; otherwise the location alone proves it. */
 function insideWithoutQr(policy: AttendancePolicy): MarkOutcome {
     return policy.requireQrOnsite
+        ? outcome('rejected', 'Pide escanear la pantalla')
+        : outcome('medium', 'Solo la ubicación');
+}
+
+/** A break inside the zone without the QR: refused where the QR is asked on breaks; otherwise the location alone proves it. */
+function breakWithoutQr(policy: AttendancePolicy): MarkOutcome {
+    return policy.requireQrBreaks
         ? outcome('rejected', 'Pide escanear la pantalla')
         : outcome('medium', 'Solo la ubicación');
 }
@@ -70,7 +78,7 @@ function trustedBrowser(policy: AttendancePolicy): MarkOutcome {
         : outcome('medium', 'Apagado: marca como el resto, con su ubicación');
 }
 
-/** The five cases of a person on site at a center with zones, under `policy`. */
+/** The six cases of a person on site at a center with zones, under `policy`. */
 export function markCases(policy: AttendancePolicy): MarkCase[] {
     return [
         {
@@ -80,7 +88,7 @@ export function markCases(policy: AttendancePolicy): MarkCase[] {
         },
         {
             id: 'inside_no_qr',
-            text: 'En el centro, sin escanear el QR',
+            text: 'Al entrar o salir, sin escanear el QR',
             outcome: insideWithoutQr(policy),
         },
         {
@@ -98,6 +106,11 @@ export function markCases(policy: AttendancePolicy): MarkCase[] {
             text: 'Personal de confianza, desde su navegador',
             outcome: trustedBrowser(policy),
         },
+        {
+            id: 'break_no_qr',
+            text: 'En la comida, sin escanear el QR',
+            outcome: breakWithoutQr(policy),
+        },
     ];
 }
 
@@ -105,6 +118,7 @@ const SETTINGS = [
     'outOfZone',
     'maxAccuracyM',
     'requireQrOnsite',
+    'requireQrBreaks',
     'trustedMayUseBrowser',
     'retentionMonths',
     'lateToleranceMinutes',

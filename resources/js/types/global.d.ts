@@ -7,7 +7,7 @@ import type { LeaveImportSummary } from '@/types/leave-policy';
 import type { EmployeeImportSummary } from '@/types/organization';
 import type { ReportLink } from '@/types/results';
 import type { PlatformNotice } from '@/types/announcements';
-import type { CurrentTenant, TenantSummary } from '@/types/tenancy';
+import type { Brand, CurrentTenant, TenantSummary } from '@/types/tenancy';
 import type { FlashToast } from '@/types/ui';
 import type { ProofStep } from '@/types/worker-access';
 
@@ -49,6 +49,8 @@ declare module '@inertiajs/core' {
             firstSteps: FirstSteps | null;
             /** Whether the company of the page is the demo: then every page, its reports above all, carries the «DEMO» mark. */
             demo: boolean;
+            /** White label: the logo, name and accent of the company of the page; null outside one, absent on the pages that share almost nothing (the public channel, the workers' page). */
+            brand?: Brand | null;
             sidebarOpen: boolean;
             [key: string]: unknown;
         };

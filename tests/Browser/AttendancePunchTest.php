@@ -43,7 +43,7 @@ function phoneAtThePunchScreen(bool $dark = false): AwaitableWebpage
 
     // The test goes on once the screen of Marcar is really there, not while the browser is still settling the navigation.
     return $page->navigate('/me/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
-        ->waitForText('Marcar su jornada');
+        ->waitForText(', Ana');
 }
 
 it('opens the screen of Marcar for a device not known yet: every step compact, «Mi semana» on top, why the position is asked and how to link, to open', function (bool $dark, bool $mobile): void {
@@ -177,7 +177,7 @@ function bobOnAnasPhone(): AwaitableWebpage
     linkThePhone($page, test()->ana->id);
     standingAt($page, 19.4327, -99.1332);
     $page->navigate('/me/acme/punch?q='.QrToken::issue(test()->tenant->id, test()->plant->id, CarbonImmutable::now()))
-        ->waitForText('Regresar de comer')
+        ->waitForText(', Ana')
         ->press('button:has-text("Entrada")')
         ->waitForText('Entrada registrada')
         ->press('Listo')
@@ -304,7 +304,7 @@ it('asks a remote person for no code nor zone, and not for the position (hallazg
 
     // From her portal: the page knows how she marks before she signs. She never lets the page read her position.
     $page->navigate('/me/acme/punch')
-        ->waitForText('Marcar su jornada')
+        ->waitForText(', Ana')
         ->assertSee('Marque desde donde esté: no se le pedirá un QR ni estar en una zona.')
         ->assertDontSee('Sobre su ubicación')
         ->assertDontSee('Si su centro tiene una pantalla QR')
@@ -327,9 +327,11 @@ it('accepts the agreement and marks the step that proceeds with one signature, w
     $enroll = accessLinkPath($this->ana->id);
     $page = visitPage('worker-access/link', $enroll, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
     // Linked, without the agreement accepted.
-    $page->press('button:has-text("Continuar")')->waitForText('cree su llave de acceso')->press('button:has-text("Crear llave")')->waitForText('Hola,');
+    $page->press('button:has-text("Continuar")')->waitForText('cree su llave de acceso')->press('button:has-text("Crear llave")')->waitForText('Pendientes');
     standingAt($page, 19.4327, -99.1332);
     $page->navigate('/me/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()))
+        ->waitForText(', Ana')
+        ->press('¿No es usted?')
         ->waitForText('Regresar de comer')
         ->script(countSignatures());
 
@@ -355,7 +357,10 @@ it('spends no signature on a step that does not proceed: «Intentar de nuevo» s
     $page = phoneAtThePunchScreen();
     standingAt($page, 19.4336, -99.1332);
 
-    $page->press('button:has-text("Salir a comer")')
+    // The four steps are offered to a phone that does not greet anyone: the person taps one that does not proceed.
+    $page->press('¿No es usted?')
+        ->waitForText('Regresar de comer')
+        ->press('button:has-text("Salir a comer")')
         ->waitForText('Está fuera de la zona')
         ->script(countSignatures());
 
@@ -376,7 +381,7 @@ it('tells an expired code apart and opens Marcar again without it, to scan the o
         ->assertNoAccessibilityIssues(1)
         ->press('Escanee de nuevo')
         // The page that remembers her for a few minutes, now without the old code: it says how to scan the new one.
-        ->waitForText('Si su centro tiene una pantalla QR')
+        ->waitForText('Al marcar, primero lea el código de la pantalla de su centro')
         ->assertScript('() => window.location.search', '')
         ->assertScript('() => document.querySelector("h1").textContent.endsWith(", Ana")', true);
 });

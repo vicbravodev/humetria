@@ -21,6 +21,9 @@ import { PUNCH_TIMEOUTS } from '@/lib/attendance/signed-request';
 import { workerSlug } from '@/lib/pwa/sw-rules';
 import type { SignedKey } from '@/lib/webauthn';
 
+/** What a mark may carry besides its type: the agreement version just accepted, the code the camera just read for it. */
+export type MarkExtra = { agreementVersion?: number; scanned?: string };
+
 /** `navigator.credentials.get()` for a signature; null when the browser gave something else. */
 export async function getKey(
     options: PublicKeyCredentialRequestOptions,
@@ -159,7 +162,8 @@ export function usePunch({
     const marking = useRef(false);
     const code = read ?? qr;
 
-    const attempt = async (type: MarkType, agreementVersion?: number) => {
+    const attempt = async (type: MarkType, extra: MarkExtra) => {
+        const { agreementVersion, scanned } = extra;
         setPhase('locating');
         setState({ ...state, feedback: null });
         const located = await locate(asksPosition);
@@ -169,7 +173,7 @@ export function usePunch({
                 optionsUrl,
                 punchUrl,
                 type,
-                qr: code,
+                qr: scanned ?? code,
                 position: located.position,
                 ...(agreementVersion === undefined ? {} : { agreementVersion }),
             },
@@ -182,7 +186,7 @@ export function usePunch({
             outcome.reason === 'offline' &&
             onOffline !== null
         ) {
-            onOffline(type, code);
+            onOffline(type, scanned ?? code);
 
             return;
         }
@@ -196,7 +200,7 @@ export function usePunch({
         }
     };
 
-    const mark = async (type: MarkType, agreementVersion?: number) => {
+    const mark = async (type: MarkType, extra: MarkExtra = {}) => {
         if (marking.current) {
             return;
         }
@@ -212,13 +216,14 @@ export function usePunch({
         marking.current = true;
 
         try {
-            await attempt(type, agreementVersion);
+            await attempt(type, extra);
         } finally {
             marking.current = false;
         }
     };
 
     const next = state.person?.next ?? [];
+    const proceeds = stepThatProceeds(tapped, next);
 
     return {
         ...state,
@@ -227,17 +232,17 @@ export function usePunch({
         /** The code the next mark carries: the one read in the app, or the one the page opened with. */
         code,
         /** The step the agreement is accepted with: the one tapped when it proceeds. */
-        step: stepThatProceeds(tapped, next),
+        step: proceeds,
         /** The code was read inside the app. */
         readInApp: read !== null,
         /** Keeps the code the app's camera read for the marks that follow. */
         readCode: setRead,
         mark,
         accept: (version: number) =>
-            void mark(stepThatProceeds(tapped, next), version),
+            void mark(proceeds, { agreementVersion: version }),
         forget: () => forgetHere(forgetUrl, () => setState(NOBODY)),
         retry: () =>
-            stepThatProceeds(tapped, next) === tapped
+            proceeds === tapped
                 ? void mark(tapped)
                 : setState({
                       ...state,

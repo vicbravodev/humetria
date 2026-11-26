@@ -43,6 +43,7 @@ const context = {
     agreementVersion: 3,
     rpId: 'humetria.test',
     offline: true,
+    qrTypes: ['start', 'end'],
 };
 
 /** The server accepting every mark it is sent, with a new ticket and the context. */

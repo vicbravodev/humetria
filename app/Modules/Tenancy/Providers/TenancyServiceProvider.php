@@ -7,6 +7,7 @@ namespace App\Modules\Tenancy\Providers;
 use App\Models\User;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\CompanyAccess;
+use App\Modules\Tenancy\Contracts\CompanyBranding;
 use App\Modules\Tenancy\Contracts\CompanyChannels;
 use App\Modules\Tenancy\Contracts\CompanyLimits;
 use App\Modules\Tenancy\Contracts\CompanyModules;
@@ -19,6 +20,7 @@ use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Contracts\Timezones;
 use App\Modules\Tenancy\Contracts\WorkCenters;
 use App\Modules\Tenancy\Support\CompanyAccessReader;
+use App\Modules\Tenancy\Support\CompanyBrandReader;
 use App\Modules\Tenancy\Support\CompanyDirectory;
 use App\Modules\Tenancy\Support\CompanyGroupMinimums;
 use App\Modules\Tenancy\Support\CompanyLimitCounters;
@@ -56,6 +58,7 @@ final class TenancyServiceProvider extends ServiceProvider
         $this->app->scoped(CompanyMembers::class);
         $this->app->scoped(Members::class, fn (Application $app): CompanyMembers => $app->make(CompanyMembers::class));
         $this->app->bind(Companies::class, CompanyDirectory::class);
+        $this->app->bind(CompanyBranding::class, CompanyBrandReader::class);
         $this->app->bind(CompanyRegistry::class, TenantRegistry::class);
         $this->app->bind(MemberLookup::class, CompanyMemberLookup::class);
         // One instance per request, so the modules of a company are read once; whoever changes them drops the memo.
