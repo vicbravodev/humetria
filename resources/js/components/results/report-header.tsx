@@ -1,3 +1,4 @@
+import CompanyMark from '@/components/company-mark';
 import Logo from '@/components/humetria/logo';
 import ReportCaption from '@/components/results/report-caption';
 import { cn } from '@/lib/utils';
@@ -29,10 +30,11 @@ export default function ReportHeader({
         <header className="flex flex-col gap-8 pt-4 motion-safe:animate-report-rise">
             <div
                 className={cn(
-                    'flex justify-end',
+                    'flex items-center justify-between gap-4',
                     !sealOnScreen && 'hidden print:flex',
                 )}
             >
+                <CompanyMark className="h-14" />
                 <Logo kind="seal" className="h-4" />
             </div>
             <div className="flex flex-col gap-2.5">

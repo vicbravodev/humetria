@@ -12,7 +12,7 @@ export default function Initials({
 }: {
     name: string;
     kind?: 'person' | 'company';
-    className?: string;
+    className?: string | undefined;
 }) {
     return (
         // `ph-mask`: the panel's recording hides the initials, worked out here and so not in the page's data.

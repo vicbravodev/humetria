@@ -18,9 +18,11 @@ final readonly class CompanySummary
 {
     /**
      * @param  string  $slug  Its address under /admin/, for links into it.
+     * @param  string|null  $brandColor  Its accent as #rrggbb, or null for Humetría's.
+     * @param  CompanyLogo|null  $darkLogo  Its logo for dark mode, when it has one.
      * @param  list<string>|null  $modules  the keys of the modules it may use; null, all of them.
      */
-    public function __construct(public string $id, public string $tradeName, public string $slug, public bool $blocked, public ?CompanyLogo $logo = null, public TenantType $type = TenantType::Company, public bool $readOnly = false, public ?array $modules = null) {}
+    public function __construct(public string $id, public string $tradeName, public string $slug, public bool $blocked, public ?CompanyLogo $logo = null, public TenantType $type = TenantType::Company, public bool $readOnly = false, public ?array $modules = null, public ?string $brandColor = null, public ?CompanyLogo $darkLogo = null) {}
 
     /** "Autopartes Demo" → "AD": the first letters of its first two words, where its emails have no logo. */
     public function initials(): string

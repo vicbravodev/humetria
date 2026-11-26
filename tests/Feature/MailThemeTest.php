@@ -103,3 +103,22 @@ it('heads the email of a company with its initials and name when it has no logo,
         ->not->toContain('Confidencial')
         ->not->toContain('<p class="legal"');
 });
+
+it('paints the email of a company with its accent, in the button, the links and the initials', function (): void {
+    $company = new App\Modules\Tenancy\Data\CompanySummary('t', 'Autopartes Demo', 'autopartes', false, brandColor: '#e91e63');
+    $html = (string) genericMail()->markdown('notifications::email', ['company' => $company])->render();
+
+    $accent = App\Modules\Tenancy\Data\BrandPalette::from('#e91e63')->light;
+
+    expect($html)
+        ->toContain("background-color: {$accent}")
+        ->toContain("border-bottom: 16px solid {$accent}")
+        ->not->toContain('background-color: #0b7a6f')
+        ->not->toContain('border-bottom: 16px solid #0b7a6f');
+});
+
+it('leaves the accent of Humetría in the email of a company that picked none', function (): void {
+    $company = new App\Modules\Tenancy\Data\CompanySummary('t', 'Autopartes Demo', 'autopartes', false);
+
+    expect((string) genericMail()->markdown('notifications::email', ['company' => $company])->render())->toContain('background-color: #0b7a6f');
+});

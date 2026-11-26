@@ -77,6 +77,15 @@ final readonly class CompanyDirectory implements Companies
             (int) $tenant->logo_height,
         );
 
-        return new CompanySummary($tenant->id, $tenant->trade_name, $tenant->slug, $tenant->status()->isBlocked(), $logo, $tenant->type, $tenant->status()->isReadOnly(), $modules);
+        return new CompanySummary($tenant->id, $tenant->trade_name, $tenant->slug, $tenant->status()->isBlocked(), $logo, $tenant->type, $tenant->status()->isReadOnly(), $modules, $tenant->brand_color, self::darkLogoOf($tenant));
+    }
+
+    private static function darkLogoOf(Tenant $tenant): ?CompanyLogo
+    {
+        return $tenant->logo_dark_path === null ? null : new CompanyLogo(
+            Storage::disk(config()->string('filesystems.tenant_logos'))->url($tenant->logo_dark_path),
+            (int) $tenant->logo_dark_width,
+            (int) $tenant->logo_dark_height,
+        );
     }
 }

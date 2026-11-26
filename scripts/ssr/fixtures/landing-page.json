@@ -6,6 +6,7 @@
             "isSuperadmin": false,
             "isStaff": false
         },
+        "brand": null,
         "demo": false,
         "errors": {},
         "firstSteps": null,
@@ -36,6 +37,7 @@
     },
     "sharedProps": [
         "auth",
+        "brand",
         "demo",
         "errors",
         "firstSteps",

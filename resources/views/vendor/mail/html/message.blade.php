@@ -12,6 +12,16 @@
 ])
 <x-mail::layout :preheader="$preheader">
 <x-slot:header>
+@if ($company?->brandColor)
+@php($accent = \App\Modules\Tenancy\Data\BrandPalette::from($company->brandColor))
+{{-- White label: the accent of the company over the theme's; each selector is more specific than the theme's, so it wins whatever the order. --}}
+<style>
+body a, body .footer a, body .confidential { color: {{ $accent->light }}; }
+body .badge { background-color: {{ $accent->lightSoft }}; color: {{ $accent->light }}; }
+body .callout-accent { background-color: {{ $accent->lightSoft }}; }
+a.button.button-primary { background-color: {{ $accent->light }}; border-bottom: 16px solid {{ $accent->light }}; border-left: 28px solid {{ $accent->light }}; border-right: 28px solid {{ $accent->light }}; border-top: 16px solid {{ $accent->light }}; color: {{ $accent->lightForeground }}; }
+</style>
+@endif
 @if ($company)
 <table class="brand" width="100%" cellpadding="0" cellspacing="0" role="presentation">
 <tr>

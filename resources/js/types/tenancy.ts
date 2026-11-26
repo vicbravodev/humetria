@@ -23,6 +23,10 @@ export type TenantRow = {
     type: 'company' | 'union';
     /** The logo its people see on their emails; null shows its name instead. */
     logo_url: string | null;
+    /** Its logo for dark mode; null while it has none. */
+    logo_dark_url: string | null;
+    /** Its accent as #rrggbb; null keeps Humetría's. */
+    brand_color: string | null;
     status:
         | 'not_started'
         | 'trial'
@@ -262,4 +266,16 @@ export type TimezoneRules = {
     /** By state code, the municipalities (lower case, no accents) whose zone is not their state's. */
     municipalities: Record<string, Record<string, string>>;
     fallback: string;
+};
+
+/** What makes the pages of the company its own (white label); null outside a company. */
+export type Brand = {
+    name: string;
+    initials: string;
+    /** Shown at this size in px (the image is twice that); null while it has none. */
+    logo: { url: string; width: number; height: number } | null;
+    /** The version for dark mode, shown instead of `logo` on a dark page; null while it has none. */
+    darkLogo: { url: string; width: number; height: number } | null;
+    /** The css of its accent, already applied to the page; null while it keeps Humetría's. */
+    css: string | null;
 };

@@ -66,6 +66,8 @@ final class TenantConsoleController extends Controller
                     'slug' => $tenant->slug,
                     'type' => $tenant->type->value,
                     'logo_url' => $tenant->logo_path === null ? null : Storage::disk(config()->string('filesystems.tenant_logos'))->url($tenant->logo_path),
+                    'logo_dark_url' => $tenant->logo_dark_path === null ? null : Storage::disk(config()->string('filesystems.tenant_logos'))->url($tenant->logo_dark_path),
+                    'brand_color' => $tenant->brand_color,
                     'status' => $status->value,
                     'status_label' => $status->label(),
                     'status_date' => $this->statusDate($tenant, $status),
