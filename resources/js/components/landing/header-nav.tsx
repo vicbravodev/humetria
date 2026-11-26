@@ -26,7 +26,7 @@ const ITEM =
     'relative flex h-9 items-center rounded-full px-4 text-sm font-medium transition-colors duration-150 ease-out before:absolute before:inset-x-0 before:-inset-y-1 before:content-[""]';
 
 /**
- * Four things in one pill: Herramientas (the tools menu), Cómo funciona, Precios and Recursos (a menu); a chip slides under
+ * Three things in one pill: Herramientas (the tools menu), Cómo funciona and Recursos (a menu); a chip slides under
  * the one being read. Screens of 1,024 px and up only: below that the menu button takes the nav's place. `sectionBase` is the
  * page the sections live on, for a page that is not the landing.
  */

@@ -1,7 +1,7 @@
 import type { NavLink } from '@/types/public-nav';
 
 /**
- * What the header of the public pages holds: four things in the bar (Herramientas, Cómo funciona, Precios and the group
+ * What the header of the public pages holds: three things in the bar (Herramientas, Cómo funciona and the group
  * Recursos) and the rest inside the group. One list for every page that wears the header.
  */
 export const PUBLIC_LINKS: readonly NavLink[] = [
@@ -18,13 +18,6 @@ export const PUBLIC_LINKS: readonly NavLink[] = [
         kind: 'section',
         section: 'seccion-como-funciona',
         test: 'header-how',
-    },
-    {
-        id: 'precios',
-        label: 'Precios',
-        kind: 'section',
-        section: 'seccion-precios',
-        test: 'header-pricing',
     },
     {
         id: 'recursos',
