@@ -1,117 +1,58 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import PageHeader from '@/components/humetria/page-header';
+import ActivityCard from '@/components/tenancy/activity-card';
 import AttentionSection from '@/components/tenancy/attention-section';
-import OverviewBreakdown from '@/components/tenancy/overview-breakdown';
-import OverviewCard from '@/components/tenancy/overview-card';
+import BilledCard from '@/components/tenancy/billed-card';
+import DemoFunnelCard from '@/components/tenancy/demo-funnel-card';
+import TodayFigures from '@/components/tenancy/today-figures';
 import { attentionItems } from '@/lib/attention';
-import { DEMO_VIEWS, demoQuery } from '@/lib/demo-requests';
-import { demosLine, pesos, quietLine, whatsAppLine } from '@/lib/overview';
-import { companiesQuery } from '@/lib/tenant-status';
-import { index as accounts } from '@/routes/billing/accounts';
-import { index as companies } from '@/routes/companies';
-import { index as demoRequests } from '@/routes/demo-requests';
-import type { PlatformOverviewData, TenantView } from '@/types';
+import { greeting } from '@/lib/overview-today';
+import type { PlatformOverviewData } from '@/types';
 
-const STATUSES: { value: TenantView; label: string }[] = [
-    { value: 'active', label: 'Activas' },
-    { value: 'trial', label: 'En prueba' },
-    { value: 'expired', label: 'Vencidas' },
-    { value: 'read_only', label: 'Solo lectura' },
-    { value: 'suspended', label: 'Suspendidas' },
-    { value: 'archived', label: 'Archivadas' },
-];
-
-/** «Resumen»: the platform in five figures, each one a way into its list. */
-export default function Overview({
-    companies: counts,
-    revenueCents,
-    demos,
-    inactive,
-    whatsApp,
-    overdue,
-    demosWaiting,
-    rejectedToday,
-}: PlatformOverviewData) {
+/** «Resumen» (tablero Hoy): what needs the superadmin today first, then how the platform is doing. */
+export default function Overview(data: PlatformOverviewData) {
+    const { auth } = usePage().props;
+    // The hour once, when the page opens: the greeting does not change under the reader.
+    const [hour] = useState(() => new Date().getHours());
+    const { companies: counts, inactive, overdue } = data;
     const attention = attentionItems({
         overdue,
         trialsEnding: counts.trial_ending,
-        demosWaiting,
-        rejectedToday,
+        demosWaiting: data.demosWaiting,
+        rejectedToday: data.rejectedToday,
         dormant: inactive,
     });
 
     return (
         <>
-            <Head title="Resumen de la empresa" />
-            <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
+            <Head title="Resumen" />
+            <div className="flex flex-col gap-6 px-4 py-6 md:px-10 md:py-8">
                 <PageHeader
-                    title="Resumen"
-                    description="Lo que necesita tu atención hoy y cómo va la plataforma: empresas, ingreso, demos y quién no ha vuelto."
+                    title={greeting(hour, auth.user.name)}
+                    description={
+                        attention.length === 0
+                            ? 'Nada espera tu atención hoy.'
+                            : 'Esto necesita tu atención hoy. Lo demás va bien.'
+                    }
                 />
-                <AttentionSection items={attention} />
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                    <OverviewCard
-                        title="Empresas"
-                        figure={String(counts.all)}
-                        caption="Dadas de alta en la plataforma."
-                        href={companies()}
-                        action="Ver empresas"
-                    >
-                        <OverviewBreakdown
-                            label="Empresas por estado"
-                            rows={STATUSES.map((status) => ({
-                                label: status.label,
-                                count: counts[status.value],
-                                href: companies.url({
-                                    query: companiesQuery({
-                                        q: '',
-                                        status: status.value,
-                                    }),
-                                }),
-                            }))}
+                <TodayFigures
+                    companies={counts}
+                    overdue={overdue}
+                    inactive={inactive}
+                />
+                <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
+                    <div className="grid min-w-0 gap-6">
+                        <AttentionSection items={attention} />
+                        <BilledCard
+                            revenueCents={data.revenueCents}
+                            billedByMonth={data.billedByMonth}
                         />
-                    </OverviewCard>
-                    <OverviewCard
-                        title="Ingreso mensual contratado"
-                        figure={pesos(revenueCents)}
-                        caption="Antes de IVA, de las suscripciones que pagan hoy."
-                        href={accounts()}
-                        action="Ver cuentas"
-                    />
-                    <OverviewCard
-                        title="WhatsApp del mes"
-                        figure={`${whatsApp.messages} mensajes`}
-                        caption={whatsAppLine(whatsApp)}
-                        href={accounts()}
-                        action="Ver cuentas"
-                    />
-                    <OverviewCard
-                        title="Solicitudes de demo"
-                        figure={String(demos.all)}
-                        caption={demosLine(demos.new)}
-                        href={demoRequests()}
-                        action="Ver solicitudes"
-                    >
-                        <OverviewBreakdown
-                            label="Solicitudes por estado"
-                            rows={DEMO_VIEWS.filter(
-                                (view) => view.value !== 'all',
-                            ).map((view) => ({
-                                label: view.label,
-                                count: demos[view.value],
-                                href: demoRequests.url({
-                                    query: demoQuery(view.value),
-                                }),
-                            }))}
-                        />
-                    </OverviewCard>
-                    <OverviewCard
-                        title="Sin entrar en 30 días"
-                        figure={String(inactive)}
-                        caption={quietLine(inactive)}
-                        href={companies()}
-                        action="Ver empresas"
-                    />
+                    </div>
+                    <div className="grid min-w-0 gap-6">
+                        <DemoFunnelCard demos={data.demos} />
+                        <ActivityCard entries={data.activity} />
+                    </div>
                 </div>
             </div>
         </>

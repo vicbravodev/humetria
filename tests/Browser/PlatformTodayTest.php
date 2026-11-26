@@ -24,3 +24,10 @@ it('says all is calm when nothing needs attention', function (): void {
     visitPage('tenancy/overview', '/admin/overview')
         ->assertSee('Todo en orden: nada espera tu atención hoy.');
 });
+
+it('says nothing was billed yet instead of drawing empty columns', function (): void {
+    signInAsSuperadmin();
+
+    visitPage('tenancy/overview', '/admin/overview')
+        ->assertSee('Todavía no hay estados de cuenta emitidos en el último año.');
+});

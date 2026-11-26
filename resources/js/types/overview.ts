@@ -1,3 +1,4 @@
+import type { AuditEntryRow } from './audit';
 import type { DemoView } from './demos';
 import type { TenantView } from './tenancy';
 
@@ -27,4 +28,8 @@ export type PlatformOverviewData = {
     overdue: { cents: number; accounts: OverdueRow[] };
     demosWaiting: { new: number; unattended: number };
     rejectedToday: number;
+    /** What was billed before VAT each of the last twelve months, oldest first. */
+    billedByMonth: { month: string; cents: number }[];
+    /** The five latest entries of the audit trail. */
+    activity: AuditEntryRow[];
 };

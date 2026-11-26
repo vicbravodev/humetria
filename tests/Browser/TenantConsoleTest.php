@@ -798,7 +798,7 @@ it('shows the superadmin the platform in four figures, each a way into its list'
         ->assertSee('Ingreso mensual contratado')
         ->assertSee('Solicitudes de demo')
         ->assertSee('Sin entrar en 30 días')
-        ->assertSee('Suspendidas')
+        ->assertSee('Empresas activas')
         ->assertSee('1 espera respuesta.');
 })->with($looks);
 
