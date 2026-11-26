@@ -21,18 +21,29 @@ export default function AuditRow({
     onChoose: () => void;
 }) {
     return (
-        <TableRow className={cn(chosen && 'bg-accent hover:bg-accent')}>
-            <TableCell className="w-px text-muted-foreground tabular-nums">
+        <TableRow
+            className={cn(
+                // On a phone each entry is a card: time and who on top, the action under them, then the company.
+                'max-md:grid max-md:grid-cols-[auto_minmax(0,1fr)] max-md:gap-x-3 max-md:gap-y-1 max-md:px-4 max-md:py-3',
+                chosen && 'bg-accent hover:bg-accent',
+            )}
+        >
+            <TableCell className="w-px text-muted-foreground tabular-nums max-md:h-auto max-md:w-auto max-md:p-0">
                 {entry.time}
             </TableCell>
-            <TableCell className="min-w-36 font-medium whitespace-normal">
+            <TableCell className="min-w-36 font-medium whitespace-normal max-md:h-auto max-md:min-w-0 max-md:p-0">
                 {entry.actor === null
                     ? 'Sistema'
                     : entry.impersonator === null
                       ? entry.actor.name
                       : `${entry.impersonator.name} como ${entry.actor.name}`}
+                {entry.actor !== null && (
+                    <span className="block text-caption font-normal text-muted-foreground md:hidden">
+                        {entry.actor.email}
+                    </span>
+                )}
             </TableCell>
-            <TableCell className="whitespace-normal">
+            <TableCell className="whitespace-normal max-md:col-span-2 max-md:h-auto max-md:p-0">
                 <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <Badge variant={tag.variant}>{tag.label}</Badge>
                     <button
@@ -46,12 +57,12 @@ export default function AuditRow({
                     </button>
                 </span>
             </TableCell>
-            <TableCell className="whitespace-normal">
+            <TableCell className="whitespace-normal max-md:col-span-2 max-md:h-auto max-md:p-0 max-md:text-muted-foreground">
                 {entry.company?.name ?? (
                     <span className="text-muted-foreground">Plataforma</span>
                 )}
             </TableCell>
-            <TableCell className="text-muted-foreground">
+            <TableCell className="text-muted-foreground max-md:hidden">
                 {entry.origin}
             </TableCell>
         </TableRow>

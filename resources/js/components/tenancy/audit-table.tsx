@@ -10,7 +10,7 @@ import {
 import { auditDays, auditTag } from '@/lib/audit-view';
 import type { AuditEntryRow, AuditFamily } from '@/types';
 
-/** The trail grouped by local day (tablero Bitácora), newest first; wider than a phone, it scrolls sideways there. */
+/** The trail grouped by local day (tablero Bitácora), newest first; on a phone each entry is a card of its own. */
 export default function AuditTable({
     entries,
     families,
@@ -24,11 +24,11 @@ export default function AuditTable({
     onChoose: (entry: AuditEntryRow) => void;
 }) {
     return (
-        <Table className="min-w-[640px] text-sm">
+        <Table className="text-sm md:min-w-[640px]">
             <TableCaption className="sr-only">
                 Bitácora por día, de lo más reciente a lo más antiguo
             </TableCaption>
-            <TableHeader>
+            <TableHeader className="max-md:hidden">
                 <TableRow>
                     <TableHead>Hora</TableHead>
                     <TableHead>Quién</TableHead>
@@ -39,7 +39,7 @@ export default function AuditTable({
             </TableHeader>
             {auditDays(entries).map(({ day, entries: rows }) => (
                 <TableBody key={day} className="[&_tr:last-child]:border-b">
-                    <tr data-slot="table-day">
+                    <tr data-slot="table-day" className="max-md:grid">
                         <th
                             scope="rowgroup"
                             colSpan={5}
