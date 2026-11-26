@@ -125,7 +125,7 @@ it('reads the whole collection page in a fixed number of queries, whatever the n
 
     $user = superadmin();
     $this->actingAs($user);
-    $this->expectsDatabaseQueryCount(15);
+    $this->expectsDatabaseQueryCount(13);
 
     $this->get(route('billing.accounts.index'))->assertOk();
 });
@@ -140,4 +140,79 @@ it('tells the account page what it owes past due and how old its oldest open sta
         ->where('receivable', ['outstanding' => '$4,000', 'open_statements' => 2, 'overdue' => '$3,000', 'aging' => ['bucket' => '31_60', 'days' => 36]]));
     $this->get(route('billing.accounts.show', $clean))->assertInertia(fn (Assert $page) => $page
         ->where('receivable', ['outstanding' => '$0', 'open_statements' => 0, 'overdue' => null, 'aging' => null]));
+});
+
+/** A credit (or charge) of this many pesos plus VAT on the statement, issued through the console's own action. */
+function creditOn(Statement $statement, int $pesos): Statement
+{
+    return resolve(App\Modules\Billing\Actions\AdjustStatement::class)->handle($statement, new App\Modules\Billing\Data\AdjustmentData('Ajuste', $pesos * 100, 'Se cobró de más'), App\Models\User::factory()->create());
+}
+
+/** A standing payment of this many pesos applied to the statement. */
+function paidOn(Statement $statement, int $pesos): Payment
+{
+    $payment = Payment::factory()->create(['billing_account_id' => $statement->billing_account_id, 'amount_cents' => $pesos * 100]);
+    PaymentAllocation::factory()->create(['payment_id' => $payment->id, 'statement_id' => $statement->id, 'amount_cents' => $pesos * 100]);
+
+    return $payment;
+}
+
+it('nets a credit into the statement it corrects, so what is past due never passes what is owed', function (): void {
+    $account = BillingAccount::factory()->create();
+    creditOn(agedStatement($account, 10_000, 50), -5_000); // -$5,800 with VAT
+    agedStatement($account, 1_000, 5);
+
+    $this->actingAs(superadmin())->get(route('billing.accounts.show', $account))->assertInertia(fn (Assert $page) => $page
+        ->where('receivable', ['outstanding' => '$5,200', 'open_statements' => 2, 'overdue' => '$4,200', 'aging' => ['bucket' => '31_60', 'days' => 36]]));
+    $this->get(route('billing.accounts.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('receivable.outstanding', '$5,200')
+        ->where('receivable.overdue', '$4,200')
+        ->where('receivable.open_statements', 2)
+        ->where('receivable.aging', [
+            ['key' => 'current', 'amount' => '$1,000', 'share' => 19],
+            ['key' => '1_30', 'amount' => '$0', 'share' => 0],
+            ['key' => '31_60', 'amount' => '$4,200', 'share' => 81],
+            ['key' => 'over_60', 'amount' => '$0', 'share' => 0],
+        ])
+        ->where('accounts.data.0.outstanding', '$5,200')
+        ->where('accounts.data.0.overdue', '$4,200'));
+});
+
+it('takes an account out of what is to collect when a credit leaves its statement at zero', function (): void {
+    $account = BillingAccount::factory()->create();
+    creditOn(agedStatement($account, 11_600, 50), -10_000); // -$11,600 with VAT
+
+    $this->actingAs(superadmin())->get(route('billing.accounts.show', $account))->assertInertia(fn (Assert $page) => $page
+        ->where('receivable', ['outstanding' => '$0', 'open_statements' => 0, 'overdue' => null, 'aging' => null]));
+    $this->get(route('billing.accounts.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('receivable.outstanding', '$0')
+        ->where('receivable.overdue_accounts', 0)
+        ->where('counts.receivable', 0)
+        ->where('counts.overdue', 0)
+        ->where('accounts.data.0.outstanding', null));
+});
+
+it('never shows a negative balance when a credit is larger than what was left to pay', function (): void {
+    $account = BillingAccount::factory()->create();
+    $statement = agedStatement($account, 10_000, 50);
+    paidOn($statement, 8_000);
+    creditOn($statement, -5_000); // -$5,800, more than the $2,000 left
+    agedStatement($account, 1_000, 5);
+
+    $this->actingAs(superadmin())->get(route('billing.accounts.show', $account))->assertInertia(fn (Assert $page) => $page
+        ->where('receivable', ['outstanding' => '$1,000', 'open_statements' => 1, 'overdue' => null, 'aging' => ['bucket' => 'current', 'days' => 10]]));
+    $this->get(route('billing.accounts.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('receivable.outstanding', '$1,000')
+        ->where('receivable.overdue', '$0'));
+});
+
+it('owes again, net of the credit, what a reversed payment had paid', function (): void {
+    $account = BillingAccount::factory()->create();
+    $statement = agedStatement($account, 10_000, 50);
+    $payment = paidOn($statement, 4_200);
+    creditOn($statement, -5_000);
+    $payment->update(['reversed_at' => now(), 'reversed_by' => superadmin()->id, 'reversal_reason' => 'Rebotó']);
+
+    $this->actingAs(superadmin())->get(route('billing.accounts.show', $account))->assertInertia(fn (Assert $page) => $page
+        ->where('receivable', ['outstanding' => '$4,200', 'open_statements' => 1, 'overdue' => '$4,200', 'aging' => ['bucket' => '31_60', 'days' => 36]]));
 });

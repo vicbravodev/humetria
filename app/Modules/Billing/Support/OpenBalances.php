@@ -8,7 +8,7 @@ use App\Modules\Billing\Models\Statement;
 use Carbon\CarbonImmutable;
 
 /**
- * The issued statements that still owe something, with what each owes and how old it is. A statement is past due on the day the
+ * The issued statements that still owe something, with what each owes (Statement::withBalance, the one balance) and how old it is. A statement is past due on the day the
  * `overdue` scope says so (issued `billing.overdue_after_days` ago): that is its first day past due, and from there it ages into
  * 1–30, 31–60 and more than 60 days. Before it, it is current.
  * ponytail: reads every open statement in memory; sum in SQL by bucket if open statements ever reach many thousands.
@@ -16,8 +16,6 @@ use Carbon\CarbonImmutable;
 final readonly class OpenBalances
 {
     public const array BUCKETS = ['current', '1_30', '31_60', 'over_60'];
-
-    public function __construct(private StatementBalances $balances) {}
 
     /**
      * @param  list<string>|null  $accountIds  only these accounts; null for all of them.
@@ -29,14 +27,13 @@ final readonly class OpenBalances
         $statements = Statement::query()->withBalance()
             ->when($accountIds !== null, fn ($query) => $query->whereIn('billing_account_id', $accountIds ?? []))
             ->orderBy('issued_at')->orderBy('id')
-            ->get(['id', 'billing_account_id', 'total_cents', 'issued_at']);
-        $paid = $this->balances->paid(array_values($statements->map(fn (Statement $statement): string => $statement->id)->all()));
+            ->get();
         $open = [];
 
         foreach ($statements as $statement) {
             $open[] = [
                 'account_id' => $statement->billing_account_id,
-                'balance' => $statement->total_cents - ($paid[$statement->id] ?? 0),
+                'balance' => $statement->balance_cents,
                 'days' => self::days($statement->issued_at ?? $now, $now),
             ];
         }

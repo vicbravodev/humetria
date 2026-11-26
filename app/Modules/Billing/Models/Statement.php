@@ -40,6 +40,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int|null $issued_by
  * @property int|null $created_by
  * @property CarbonImmutable $created_at
+ * @property-read int $balance_cents what is left to pay, only when read with the `withBalance` or `selectBalance` scope.
  */
 #[Fillable(['billing_account_id', 'tenant_id', 'adjusts_statement_id', 'period_start', 'period_end', 'status', 'currency', 'catalog_version', 'vat_percent', 'subtotal_cents', 'vat_cents', 'total_cents', 'snapshot', 'reason', 'issued_at', 'issued_by', 'created_by'])]
 #[UseFactory(StatementFactory::class)]
@@ -73,18 +74,36 @@ final class Statement extends Model
     }
 
     /**
-     * The issued statements that still have something to pay: more owed than the payments that stand have settled.
+     * The one balance of a statement that every view of what is owed reads: its total, plus the issued credits (negative
+     * adjustments) that correct it, minus the payments that stand. A charge (positive adjustment) is paid on its own statement.
+     */
+    private const string BALANCE = <<<'SQL'
+        statements.total_cents
+        + COALESCE((SELECT SUM(c.total_cents) FROM statements c WHERE c.adjusts_statement_id = statements.id AND c.status = 'issued' AND c.total_cents < 0), 0)
+        - COALESCE((
+            SELECT SUM(a.amount_cents) FROM payment_allocations a JOIN payments p ON p.id = a.payment_id
+            WHERE a.statement_id = statements.id AND p.reversed_at IS NULL
+        ), 0)
+    SQL;
+
+    /**
+     * Every column plus `balance_cents`, what is left to pay of it (see BALANCE); it can be zero or less.
+     *
+     * @param  Builder<self>  $query
+     */
+    public function scopeSelectBalance(Builder $query): void
+    {
+        $query->select('statements.*')->selectRaw(self::BALANCE.' AS balance_cents');
+    }
+
+    /**
+     * The issued statements that still have something to pay, each with its `balance_cents`.
      *
      * @param  Builder<self>  $query
      */
     public function scopeWithBalance(Builder $query): void
     {
-        $query->where('status', StatementStatus::Issued)->whereRaw(<<<'SQL'
-            total_cents > COALESCE((
-                SELECT SUM(a.amount_cents) FROM payment_allocations a JOIN payments p ON p.id = a.payment_id
-                WHERE a.statement_id = statements.id AND p.reversed_at IS NULL
-            ), 0)
-        SQL);
+        $query->selectBalance()->where('status', StatementStatus::Issued)->whereRaw('('.self::BALANCE.') > 0');
     }
 
     /**
@@ -108,6 +127,7 @@ final class Statement extends Model
             'status' => StatementStatus::class,
             'snapshot' => 'array',
             'issued_at' => 'immutable_datetime',
+            'balance_cents' => 'integer',
         ];
     }
 }

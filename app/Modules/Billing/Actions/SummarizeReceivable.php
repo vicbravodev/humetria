@@ -10,12 +10,11 @@ use App\Modules\Billing\Models\Payment;
 use App\Modules\Billing\Models\Statement;
 use App\Modules\Billing\Support\Money;
 use App\Modules\Billing\Support\OpenBalances;
-use App\Modules\Billing\Support\StatementBalances;
 use Carbon\CarbonImmutable;
 
 final readonly class SummarizeReceivable
 {
-    public function __construct(private StatementBalances $balances, private OpenBalances $open, private Receivables $receivables) {}
+    public function __construct(private OpenBalances $open, private Receivables $receivables) {}
 
     /**
      * What the account owes across its issued statements, how many still have a balance, what of it is past due and how old its
@@ -30,7 +29,7 @@ final readonly class SummarizeReceivable
         $oldest = $open[0]['days'] ?? null;
 
         return [
-            'outstanding' => Money::format($this->balances->outstanding($account)),
+            'outstanding' => Money::format(array_sum(array_map(fn (array $statement): int => $statement['balance'], $open))),
             'open_statements' => count($open),
             'overdue' => $overdue === 0 ? null : Money::format($overdue),
             'aging' => $oldest === null ? null : ['bucket' => OpenBalances::bucket($oldest), 'days' => abs($oldest)],
