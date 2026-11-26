@@ -13,7 +13,6 @@ use App\Modules\Billing\Models\Statement;
 use App\Modules\Billing\Models\Subscription;
 use App\Modules\Billing\Support\CsvCell;
 use App\Modules\Billing\Support\Eligibility;
-use App\Modules\Billing\Support\StatementBalances;
 use App\Modules\Billing\Support\SubscriptionQuoter;
 use App\Modules\Tenancy\Contracts\CompanyRegistry;
 use Carbon\CarbonImmutable;
@@ -36,7 +35,6 @@ final readonly class ExportReport
         private Eligibility $eligibility,
         private SubscriptionQuoter $quoter,
         private BuildStatement $build,
-        private StatementBalances $balances,
     ) {}
 
     public function handle(string $report): string
@@ -92,8 +90,7 @@ final readonly class ExportReport
     private function balances(): array
     {
         $rows = [['Cuenta', 'RFC', 'Estados con saldo', 'Saldo por cobrar', 'Saldo vencido', 'Emitido el más antiguo']];
-        $open = Statement::query()->withBalance()->orderBy('issued_at')->orderBy('id')->get(['id', 'billing_account_id', 'total_cents', 'issued_at']);
-        $paid = $this->balances->paid(array_values($open->map(fn (Statement $statement): string => $statement->id)->all()));
+        $open = Statement::query()->withBalance()->orderBy('issued_at')->orderBy('id')->get();
         $accounts = BillingAccount::query()->whereIn('id', $open->pluck('billing_account_id'))->orderBy('legal_name')->orderBy('id')->get();
         $cutoff = CarbonImmutable::now()->subDays(config()->integer('billing.overdue_after_days'));
 
@@ -102,8 +99,8 @@ final readonly class ExportReport
             $oldest = $mine->first();
 
             $rows[] = [
-                $account->legal_name, $account->rfc, (string) $mine->count(), $this->pesos($this->owed($mine, $paid)),
-                $this->pesos($this->owed($mine->filter(fn (Statement $statement): bool => $statement->issued_at !== null && $statement->issued_at->lessThanOrEqualTo($cutoff)), $paid)),
+                $account->legal_name, $account->rfc, (string) $mine->count(), $this->pesos($this->owed($mine)),
+                $this->pesos($this->owed($mine->filter(fn (Statement $statement): bool => $statement->issued_at !== null && $statement->issued_at->lessThanOrEqualTo($cutoff)))),
                 $oldest?->issued_at?->setTimezone(config()->string('app.display_timezone'))->toDateString() ?? '',
             ];
         }
@@ -136,11 +133,10 @@ final readonly class ExportReport
 
     /**
      * @param  Collection<int, Statement>  $statements
-     * @param  array<string, int>  $paid
      */
-    private function owed(Collection $statements, array $paid): int
+    private function owed(Collection $statements): int
     {
-        return array_sum(array_map(fn (Statement $statement): int => $statement->total_cents - ($paid[$statement->id] ?? 0), $statements->all()));
+        return array_sum(array_map(fn (Statement $statement): int => $statement->balance_cents, $statements->all()));
     }
 
     /** 568400 cents as "5684.00": a plain number a spreadsheet adds up. */
