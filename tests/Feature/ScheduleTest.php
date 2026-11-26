@@ -44,6 +44,8 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
         'messaging:replay-orphans' => '* * * * *',
         'messaging:watch-failures' => '*/5 * * * *',
         'messaging:purge' => '25 3 * * *',
+        // The panels read the live notices from the cache only: rebuilt every minute, a flushed cache never hides a maintenance.
+        'announcements:refresh' => '* * * * *',
         'horizon:snapshot' => '*/5 * * * *',
         'schedule:heartbeat' => '*/5 * * * *',
         'geoip:update' => '0 6 5 * *',

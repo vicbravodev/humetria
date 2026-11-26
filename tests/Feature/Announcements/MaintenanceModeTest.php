@@ -8,6 +8,7 @@ use App\Modules\Announcements\Contracts\PlatformNotices;
 use App\Modules\Announcements\Models\MaintenancePeriod;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -123,4 +124,15 @@ it('stops only the panel of the companies: no route outside /admin/{tenant} is h
         ->reject(fn (Illuminate\Routing\Route $route): bool => str_starts_with($route->uri(), 'admin/{tenant}'));
 
     expect($guarded->map->uri()->values()->all())->toBe([]);
+});
+
+it('comes back from the table within a minute when the cache was flushed', function (): void {
+    startMaintenance();
+    Cache::flush();
+
+    expect(app(PlatformNotices::class)->inMaintenance())->toBeFalse();
+
+    $this->artisan('announcements:refresh')->assertSuccessful();
+
+    expect(app(PlatformNotices::class)->inMaintenance())->toBeTrue();
 });

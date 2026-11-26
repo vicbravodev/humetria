@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Announcements\Support\LiveNotices;
 use App\Modules\Attendance\Actions\CloseDays;
 use App\Modules\Attendance\Actions\DispatchCloseDays;
 use App\Modules\Billing\Actions\ExpireUsageReservations;
@@ -154,6 +155,10 @@ Artisan::command('engagement:announce-pulses', function (AnnounceUpcomingPulses 
     $this->info('Avisos enviados: '.$announce->handle());
 })->purpose('Tell owner and hr, three days before, that the scheduled pulse goes out, with the commitments still open');
 
+Artisan::command('announcements:refresh', function (LiveNotices $notices): void {
+    $notices->refresh();
+})->purpose('Rebuild from their tables the notices and the maintenance the panels read from the cache, so a flushed cache is back within a minute');
+
 Artisan::command('demos:forget-ad-clicks', function (ForgetAdClicks $forget): void {
     $this->info('Identificadores de clic olvidados: '.$forget->handle());
 })->purpose('Forget the Google Ads click id of every demo request older than 90 days, as the privacy notice promises');
@@ -277,6 +282,7 @@ Artisan::command('messaging:purge', function (PurgeMessaging $purge): void {
 
 // After the day's mail and the nightly holds, in the quiet of the display time.
 Schedule::command('messaging:purge')->dailyAt('03:25')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+Schedule::command('announcements:refresh')->everyMinute()->onOneServer()->withoutOverlapping();
 
 // A data request of a person (ARCO): by hand, with the phone asked for on a hidden prompt so it stays out of the terminal history.
 Artisan::command('messaging:forget', function (ForgetRecipient $forget): int {
