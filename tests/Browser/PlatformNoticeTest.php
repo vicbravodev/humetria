@@ -13,11 +13,12 @@ it('shows the platform announcement in the frame of the panel, and a person can 
     Announcement::factory()->create(['kind' => $kind, 'message' => 'Esta noche haremos mantenimiento de 10:00 p. m. a 1:00 a. m.']);
     resolve(LiveNotices::class)->refresh();
 
-    visitPage('dashboard', '/admin/acme', $dark, $mobile)
+    $page = visitPage('dashboard', '/admin/acme', $dark, $mobile)
         ->assertSeeIn('[data-slot="platform-notice"]', 'Esta noche haremos mantenimiento')
         ->click('[aria-label="Cerrar aviso"]')
-        ->assertMissing('[data-slot="platform-notice"]')
-        ->refresh()
+        ->assertMissing('[data-slot="platform-notice"]');
+
+    reloadPage($page)
         ->assertSee('Hola')
         ->assertMissing('[data-slot="platform-notice"]');
 })->with([
