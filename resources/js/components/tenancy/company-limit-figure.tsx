@@ -13,7 +13,7 @@ export default function CompanyLimitFigure({
         figure.of === 0 ? 0 : Math.min(100, (figure.used / figure.of) * 100);
 
     return (
-        <div data-limit={figure.key} className="grid gap-2 card px-6 py-5">
+        <div data-limit={figure.key} className="grid gap-2 card p-6">
             <span className="text-caption font-medium tracking-[0.02em] text-muted-foreground uppercase">
                 {figure.label}
             </span>

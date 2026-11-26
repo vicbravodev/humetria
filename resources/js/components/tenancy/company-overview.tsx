@@ -11,7 +11,7 @@ export default function CompanyOverview({ page }: { page: CompanyPage }) {
     return (
         <div className="grid min-w-0 gap-6">
             {figures.length > 0 && (
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="flex flex-col gap-4 md:flex-row md:[&>*]:min-w-0 md:[&>*]:flex-1">
                     {figures.map((figure) => (
                         <CompanyLimitFigure key={figure.key} figure={figure} />
                     ))}

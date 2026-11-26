@@ -65,3 +65,13 @@ it('passes the accessibility and CSP checks with the risk dialog open', function
         ->click('Archivar empresa…')
         ->assertSee('Escribe «Textiles del Norte» para confirmar'));
 })->with($looks);
+
+it('spreads the limit figures it has over the whole row, never leaving an empty column', function (): void {
+    signInAsSuperadmin();
+    $tenant = Tenant::factory()->create(['trade_name' => 'Dos límites']);
+    App\Modules\Tenancy\Models\TenantLimit::factory()->create(['tenant_id' => $tenant->id, 'resource' => 'seats', 'amount' => 150, 'used' => 96]);
+
+    visit("/admin/companies/{$tenant->id}")
+        ->assertSee('Personas')
+        ->assertScript('() => { const cards = [...document.querySelectorAll("[data-limit]")]; const row = cards[0].parentElement.getBoundingClientRect(); const used = cards.reduce((sum, card) => sum + card.getBoundingClientRect().width, 0); return cards.length >= 2 && row.width - used < 40; }', true);
+});
