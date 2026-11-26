@@ -801,3 +801,18 @@ it('shows when each company and each user last came in', function (): void {
 
     visitPage('tenancy/index', '/admin/companies')->assertSee('Último acceso')->assertSee('10 nov 2026');
 });
+
+it('finds a company by name from the ⌘K palette of the console and opens its page', function (): void {
+    signInAsSuperadmin();
+    $tenant = Tenant::factory()->create(['trade_name' => 'Textiles del Norte']);
+
+    visit('/admin/companies')
+        ->assertVisible('@command-palette')
+        ->assertScript('() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true })); return true; }')
+        ->type('#command-search', 'textiles')
+        ->assertSeeIn('[role="listbox"] [role="group"]', 'Empresas')
+        ->assertSee('Textiles del Norte')
+        ->keys('#command-search', 'Enter')
+        ->assertScript(pathBecomes("/admin/companies/{$tenant->id}"), true)
+        ->assertNoJavaScriptErrors();
+});

@@ -44,6 +44,11 @@ Route::get('admin/companies', [TenantConsoleController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('companies.index');
 
+// The companies ⌘K finds by name in the console, for all of Humetría's staff.
+Route::get('admin/companies/options', [TenantConsoleController::class, 'options'])
+    ->middleware(['auth', 'verified', 'throttle:60,1'])
+    ->name('companies.options');
+
 Route::post('admin/companies', [TenantConsoleController::class, 'store'])
     ->middleware(['auth', 'verified'])
     ->name('companies.store');

@@ -23,6 +23,7 @@ use App\Modules\Tenancy\Http\Requests\RestrictTenantRequest;
 use App\Modules\Tenancy\Http\Requests\StoreTenantRequest;
 use App\Modules\Tenancy\Http\Requests\UpdateTenantRequest;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Support\AuditPages;
 use App\Modules\Tenancy\Support\DisplayDate;
 use App\Modules\Tenancy\Support\StaffDirectory;
 use Carbon\CarbonInterface;
@@ -35,6 +36,18 @@ use Inertia\Response;
 
 final class TenantConsoleController extends Controller
 {
+    /**
+     * The companies whose name has what was typed in ⌘K, as options: Humetría's staff jump to one from anywhere.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    public function options(Request $request, AuditPages $pages): array
+    {
+        Gate::authorize('view-console');
+
+        return $pages->companies($request->string('q')->trim()->limit(100, '')->toString());
+    }
+
     public function index(Request $request, ListTenants $listTenants, AttendanceUsage $attendance, DemoLeads $demoLeads, StaffDirectory $staff): Response
     {
         Gate::authorize('view-console');
