@@ -158,6 +158,21 @@ it('is forbidden while impersonating', function (): void {
         ->and(ForbidWhileImpersonating::guards('operations.messaging'))->toBeTrue();
 });
 
+it('counts the mail and WhatsApp of each of the last 24 hours, this one included, with the share that pauses WhatsApp', function (): void {
+    Delivery::factory()->mail()->create(['status' => DeliveryStatus::Bounced, 'created_at' => '2026-11-25 18:00:00']);
+    Delivery::factory()->create(['status' => DeliveryStatus::Delivered, 'created_at' => '2026-11-25 17:59:59']);
+    Delivery::factory()->create(['status' => DeliveryStatus::Failed, 'created_at' => '2026-11-24 19:00:00']);
+    // 24 hours ago, out of the window.
+    Delivery::factory()->create(['status' => DeliveryStatus::Failed, 'created_at' => '2026-11-24 18:59:59']);
+
+    health()->assertInertia(fn (Assert $page) => $page
+        ->where('rejectionLimit', 5)
+        ->has('hours', 24)
+        ->where('hours.0', ['startsAt' => '2026-11-24T19:00:00+00:00', 'mail' => ['total' => 0, 'rejected' => 0], 'whatsapp' => ['total' => 1, 'rejected' => 1]])
+        ->where('hours.22', ['startsAt' => '2026-11-25T17:00:00+00:00', 'mail' => ['total' => 0, 'rejected' => 0], 'whatsapp' => ['total' => 1, 'rejected' => 0]])
+        ->where('hours.23', ['startsAt' => '2026-11-25T18:00:00+00:00', 'mail' => ['total' => 1, 'rejected' => 1], 'whatsapp' => ['total' => 0, 'rejected' => 0]]));
+});
+
 it('says the scheduler is late only after 15 whole minutes', function (): void {
     app(SchedulerHeartbeat::class)->beat();
     $this->travel(15)->minutes();
