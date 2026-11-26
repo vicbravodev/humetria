@@ -6,7 +6,7 @@ function caption(traffic: ChannelTraffic | undefined): string {
     return `${deliveredShare(traffic)} entregados · ${count(traffic?.rejected ?? 0)} rechazados`;
 }
 
-/** The day in four figures: what waits in the queues, what failed, and the mail and WhatsApp that went out. */
+/** The day in three figures (the design system allows three a screen): what failed, and the mail and WhatsApp that went out. What waits in the queues is in «Servicios». */
 export default function HealthFigures({
     health,
 }: {
@@ -16,12 +16,7 @@ export default function HealthFigures({
     const whatsApp = trafficOf(health.today, 'whatsapp');
 
     return (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <FigureCard
-                title="Cola"
-                figure={count(health.queue.waiting)}
-                caption={`trabajos esperando · ${Math.max(0, ...health.queue.queues.map((queue) => queue.wait))} s de espera`}
-            />
+        <div className="grid gap-4 sm:grid-cols-3">
             <FigureCard
                 title="Fallidos hoy"
                 figure={count(health.failedJobs.today)}

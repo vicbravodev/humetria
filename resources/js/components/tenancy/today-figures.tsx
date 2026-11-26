@@ -2,12 +2,11 @@ import { pesos } from '@/lib/overview';
 import { countOf } from '@/lib/plural';
 import type { PlatformOverviewData } from '@/types';
 
-/** The four figures on top of «Resumen» (tablero Hoy): what is running, what ends soon, what is owed and who went quiet. */
+/** The three figures on top of «Resumen» (tablero Hoy; the design system allows three a screen): what is running, what ends soon and what is owed. Who went quiet is in «Atiende primero». */
 export default function TodayFigures({
     companies,
     overdue,
-    inactive,
-}: Pick<PlatformOverviewData, 'companies' | 'overdue' | 'inactive'>) {
+}: Pick<PlatformOverviewData, 'companies' | 'overdue'>) {
     const figures = [
         {
             label: 'Empresas activas',
@@ -24,21 +23,19 @@ export default function TodayFigures({
             value: pesos(overdue.cents),
             caption: countOf(overdue.accounts.length, 'cuenta', 'cuentas'),
         },
-        {
-            label: 'Sin entrar en 30 días',
-            value: String(inactive),
-            caption: 'empresas en riesgo de baja',
-        },
     ];
 
     return (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-3">
             {figures.map((figure) => (
-                <section key={figure.label} className="grid gap-1 card p-5">
+                <section
+                    key={figure.label}
+                    className="grid content-start gap-1 card p-6"
+                >
                     <h2 className="text-caption font-medium tracking-[0.02em] text-muted-foreground uppercase">
                         {figure.label}
                     </h2>
-                    <p className="text-3xl font-semibold tracking-[-0.01em] tabular-nums">
+                    <p className="text-[32px] leading-10 font-semibold tracking-[-0.01em] tabular-nums">
                         {figure.value}
                     </p>
                     <p className="text-sm text-muted-foreground">

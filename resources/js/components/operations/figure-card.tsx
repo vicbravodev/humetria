@@ -9,11 +9,11 @@ export default function FigureCard({
     caption: string;
 }) {
     return (
-        <section className="grid content-start gap-2 card p-5">
-            <h2 className="text-meta font-medium text-muted-foreground">
+        <section className="grid content-start gap-1 card p-6">
+            <h2 className="text-caption font-medium tracking-[0.02em] text-muted-foreground uppercase">
                 {title}
             </h2>
-            <p className="text-3xl font-semibold tracking-[-0.01em] tabular-nums">
+            <p className="text-[32px] leading-10 font-semibold tracking-[-0.01em] tabular-nums">
                 {figure}
             </p>
             <p className="text-sm text-muted-foreground">{caption}</p>

@@ -839,7 +839,7 @@ it('shows the superadmin the platform in four figures, each a way into its list'
         ->assertSee('Resumen')
         ->assertSee('Ingreso mensual contratado')
         ->assertSee('Solicitudes de demo')
-        ->assertSee('Sin entrar en 30 días')
+        ->assertSee('Prueba por vencer')
         ->assertSee('Empresas activas')
         ->assertSee('1 espera respuesta.');
 })->with($looks);

@@ -109,12 +109,11 @@ describe('the figures of the console', () => {
 });
 
 describe('demoMetricTiles', () => {
-    it('holds the four tiles while the figures arrive', () => {
+    it('holds the three tiles while the figures arrive: the design system allows three figures a screen', () => {
         expect(demoMetricTiles(undefined).map((tile) => tile.title)).toEqual([
             'Nuevas',
             'Tiempo de primera respuesta',
             'Conversión a empresa',
-            'Fuente principal',
         ]);
         expect(demoMetricTiles(undefined)[0]?.figure).toBeNull();
     });
@@ -131,8 +130,7 @@ describe('demoMetricTiles', () => {
         expect(tiles.map((tile) => [tile.figure, tile.caption])).toEqual([
             ['3', '1 con más de 48 h'],
             ['9 h', 'Mediana, últimos 90 días'],
-            ['31 %', 'Últimos 90 días'],
-            ['google', '58 % de las solicitudes, 90 días'],
+            ['31 %', 'Últimos 90 días · la mayoría llega de google (58 %)'],
         ]);
 
         const empty = demoMetricTiles({
@@ -143,8 +141,8 @@ describe('demoMetricTiles', () => {
             source: null,
         });
 
-        expect(empty.map((tile) => tile.figure)).toEqual(['0', '—', '—', '—']);
-        expect(empty[3]?.caption).toBe('Ninguna dijo de dónde llegó');
+        expect(empty.map((tile) => tile.figure)).toEqual(['0', '—', '—']);
+        expect(empty[2]?.caption).toBe('Últimos 90 días');
     });
 });
 

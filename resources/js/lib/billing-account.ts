@@ -20,6 +20,19 @@ export function accountFacts(
 }
 
 /** «Promedio de pago»: how many days after (or before) it was due the account pays, on average. */
+/** The line under «Pagado en el año»: how many payments, and how late the account pays on average when it paid any statement. */
+export function paidHint(payments: number, averageDays: number | null): string {
+    const count = countOf(payments, 'pago', 'pagos');
+
+    if (averageDays === null) {
+        return count;
+    }
+
+    const { value, hint } = averagePaid(averageDays);
+
+    return `${count} · en promedio ${value} ${hint}`;
+}
+
 export function averagePaid(days: number | null): {
     value: string;
     hint: string;

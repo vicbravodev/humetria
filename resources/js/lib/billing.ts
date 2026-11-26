@@ -37,6 +37,11 @@ export function accountsQuery(
 }
 
 /** The note under what came in: how it compares with the month before («+9 % contra octubre»), when there is one. */
+/** The line under the aging strip: the plans that renew within 30 days and what they bring a year. */
+export function renewingLine(count: number, yearly: string): string {
+    return `${count} ${count === 1 ? 'plan renueva' : 'planes renuevan'} en los próximos 30 días · ${yearly} al año`;
+}
+
 export function collectedHint(change: number | null, previous: string): string {
     if (change === null) {
         return 'Pagos registrados';

@@ -7,7 +7,7 @@ import { count, deliveredShare, trafficOf } from '@/lib/operations';
 import { rejected } from '@/lib/operations-messaging';
 import type { MessagingConsoleData } from '@/types';
 
-/** «Resumen» (tablero Mensajería): four figures, the templates and the companies, and beside them the day and Meta. */
+/** «Resumen» (tablero Mensajería): three figures (as the design system allows), the templates and the companies, and beside them the day and Meta. */
 export default function MessagingSummary({
     month,
     today,
@@ -20,16 +20,11 @@ export default function MessagingSummary({
 
     return (
         <>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-3">
                 <FigureCard
                     title="WhatsApp del mes"
                     figure={count(whatsApp?.total ?? 0)}
-                    caption="mensajes de toda la plataforma"
-                />
-                <FigureCard
-                    title="Entregados"
-                    figure={deliveredShare(whatsApp)}
-                    caption="del WhatsApp del mes"
+                    caption={`${deliveredShare(whatsApp)} entregados, de toda la plataforma`}
                 />
                 <FigureCard
                     title="Rechazos hoy"

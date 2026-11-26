@@ -1,10 +1,10 @@
 import AccountFigure from '@/components/billing/account-figure';
-import { averagePaid } from '@/lib/billing-account';
+import { paidHint } from '@/lib/billing-account';
 import { agingLabel } from '@/lib/billing-aging';
 import { countOf } from '@/lib/plural';
 import type { AccountYear, Receivable } from '@/types';
 
-/** The four figures of an account (tablero Cuenta de facturación): what it owes, what it billed and paid this year, and how late it pays. */
+/** The three figures of an account (tablero Cuenta de facturación; the design system allows three a screen): what it owes, and what it billed and paid this year, with how late it pays. */
 export default function AccountYearFigures({
     receivable,
     year,
@@ -12,12 +12,10 @@ export default function AccountYearFigures({
     receivable: Receivable;
     year: AccountYear;
 }) {
-    const average = averagePaid(year.average_days);
-
     return (
         <dl
             aria-label="Cifras de la cuenta"
-            className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+            className="grid gap-4 sm:grid-cols-3"
         >
             <AccountFigure
                 className="card p-6"
@@ -39,13 +37,7 @@ export default function AccountYearFigures({
                 className="card p-6"
                 label={`Pagado en ${year.year}`}
                 value={year.paid}
-                hint={countOf(year.payments, 'pago', 'pagos')}
-            />
-            <AccountFigure
-                className="card p-6"
-                label="Promedio de pago"
-                value={average.value}
-                hint={average.hint}
+                hint={paidHint(year.payments, year.average_days)}
             />
         </dl>
     );

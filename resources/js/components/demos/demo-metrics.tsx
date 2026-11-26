@@ -3,8 +3,8 @@ import { demoMetricTiles } from '@/lib/demo-requests';
 import type { DemoMetrics as Metrics } from '@/types';
 
 /**
- * The four figures of the funnel (tablero Demos): what waits, how soon the team answers, how many became a company and
- * where most came from. They arrive after the page shows; until then each tile keeps its size, so nothing below moves.
+ * The three figures of the funnel (tablero Demos; the design system allows three a screen): what waits, how soon the team
+ * answers and how many became a company, with where most came from. They arrive after the page shows; until then each tile keeps its size, so nothing below moves.
  */
 export default function DemoMetrics({
     metrics,
@@ -16,7 +16,7 @@ export default function DemoMetrics({
             {demoMetricTiles(metrics).map((tile) => (
                 <section
                     key={tile.title}
-                    className="grid content-start gap-1 card px-6 py-5"
+                    className="grid content-start gap-1 card p-6"
                 >
                     <h2 className="text-caption font-medium tracking-[0.02em] text-muted-foreground uppercase">
                         {tile.title}

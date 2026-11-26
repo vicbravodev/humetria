@@ -20,7 +20,7 @@ export default function BilledCard({
                     Antes de IVA
                 </span>
             </div>
-            <p className="text-3xl font-semibold tracking-[-0.01em] tabular-nums">
+            <p className="text-[32px] leading-10 font-semibold tracking-[-0.01em] tabular-nums">
                 {pesos(revenueCents)}
             </p>
             {billedByMonth.every(({ cents }) => cents === 0) ? (

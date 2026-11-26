@@ -36,11 +36,7 @@ export default function Overview(data: PlatformOverviewData) {
                             : 'Esto necesita tu atención hoy. Lo demás va bien.'
                     }
                 />
-                <TodayFigures
-                    companies={counts}
-                    overdue={overdue}
-                    inactive={inactive}
-                />
+                <TodayFigures companies={counts} overdue={overdue} />
                 <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_380px]">
                     <div className="grid min-w-0 gap-6">
                         <AttentionSection items={attention} />

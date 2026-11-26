@@ -7,6 +7,7 @@ import {
     collectedHint,
     figureHints,
     kindOf,
+    renewingLine,
 } from '@/lib/billing';
 import type { AccountChargeRow, AccountFilters, AccountSummary } from '@/types';
 
@@ -161,5 +162,16 @@ describe('chargeAction', () => {
         expect(chargeAction(once)?.kind).toBe('remove');
         expect(chargeAction(once)?.submit).toBe('Quitar cargo');
         expect(chargeAction({ ...once, billed: true })).toBeNull();
+    });
+});
+
+describe('renewingLine', () => {
+    it('says how many plans renew in 30 days and what they are worth a year', () => {
+        expect(renewingLine(11, '$532,200')).toBe(
+            '11 planes renuevan en los próximos 30 días · $532,200 al año',
+        );
+        expect(renewingLine(1, '$48,000')).toBe(
+            '1 plan renueva en los próximos 30 días · $48,000 al año',
+        );
     });
 });

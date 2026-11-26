@@ -1,10 +1,10 @@
 import AccountFigure from '@/components/billing/account-figure';
 import AgingStrip from '@/components/billing/aging-strip';
-import { collectedHint } from '@/lib/billing';
+import { collectedHint, renewingLine } from '@/lib/billing';
 import { countOf } from '@/lib/plural';
 import type { ReceivablePortfolio } from '@/types';
 
-/** Where collection stands across all the accounts: what is owed and past due, what came in this month, what renews soon, and how old the balance is. */
+/** Where collection stands across all the accounts (three figures, as the design system allows): what is owed and past due, what came in this month, how old the balance is and what renews soon. */
 export default function ReceivableOverview({
     receivable,
 }: {
@@ -15,7 +15,7 @@ export default function ReceivableOverview({
             aria-label="Resumen de cobranza"
             className="grid gap-6 card p-6"
         >
-            <dl className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <dl className="grid gap-6 sm:grid-cols-3">
                 <AccountFigure
                     label="Por cobrar"
                     value={receivable.outstanding}
@@ -42,13 +42,16 @@ export default function ReceivableOverview({
                         receivable.previous_month,
                     )}
                 />
-                <AccountFigure
-                    label="Renuevan en 30 días"
-                    value={String(receivable.renewing)}
-                    hint={`${receivable.renewing_yearly} al año`}
-                />
             </dl>
             <AgingStrip aging={receivable.aging} />
+            {receivable.renewing > 0 && (
+                <p className="text-sm text-muted-foreground">
+                    {renewingLine(
+                        receivable.renewing,
+                        receivable.renewing_yearly,
+                    )}
+                </p>
+            )}
         </section>
     );
 }

@@ -158,7 +158,7 @@ export type DemoMetricTile = {
     caption: string;
 };
 
-/** The four figures at the top of the console, in order; while they arrive, their titles alone. */
+/** The three figures at the top of the console, in order; while they arrive, their titles alone. */
 export function demoMetricTiles(
     metrics: DemoMetrics | undefined,
 ): DemoMetricTile[] {
@@ -185,24 +185,16 @@ export function demoMetricTiles(
                     : metrics.conversion === null
                       ? NOTHING_YET
                       : `${metrics.conversion} %`,
-            caption: 'Últimos 90 días',
+            caption: conversionCaption(metrics),
         },
-        sourceTile(metrics),
     ];
 }
 
-function sourceTile(metrics: DemoMetrics | undefined): DemoMetricTile {
-    const title = 'Fuente principal';
+/** The window of the conversion, and where most requests come from when the requests say so. */
+function conversionCaption(metrics: DemoMetrics | undefined): string {
+    const source = metrics?.source ?? null;
 
-    if (metrics === undefined) {
-        return { title, figure: null, caption: '' };
-    }
-
-    return metrics.source === null
-        ? { title, figure: NOTHING_YET, caption: 'Ninguna dijo de dónde llegó' }
-        : {
-              title,
-              figure: metrics.source.label,
-              caption: `${metrics.source.share} % de las solicitudes, 90 días`,
-          };
+    return source === null
+        ? 'Últimos 90 días'
+        : `Últimos 90 días · la mayoría llega de ${source.label} (${source.share} %)`;
 }

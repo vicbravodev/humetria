@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
     accountFacts,
     averagePaid,
+    paidHint,
     companyLine,
     nextMonth,
     paymentNote,
@@ -37,6 +38,21 @@ describe('accountFacts', () => {
         expect(accountFacts(account, 0)).toBe(
             'CEQ180601KD4 · Régimen 601 · Uso de CFDI G03 · cobranza@equilibra.mx · aún no paga ninguna empresa',
         );
+    });
+});
+
+describe('paidHint', () => {
+    it('counts the payments of the year and says how late the account pays on average', () => {
+        expect(paidHint(10, 12)).toBe(
+            '10 pagos · en promedio 12 días después de vencer',
+        );
+        expect(paidHint(1, -3)).toBe(
+            '1 pago · en promedio 3 días antes de vencer',
+        );
+    });
+
+    it('only counts the payments while no statement was paid this year', () => {
+        expect(paidHint(0, null)).toBe('0 pagos');
     });
 });
 

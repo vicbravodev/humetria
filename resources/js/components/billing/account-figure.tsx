@@ -14,12 +14,14 @@ export default function AccountFigure({
 }) {
     return (
         <div className={cn('flex flex-col gap-1', className)}>
-            <dt className="text-meta text-muted-foreground">{label}</dt>
-            <dd className="text-2xl font-semibold tracking-[-0.01em] tabular-nums">
+            <dt className="text-caption font-medium tracking-[0.02em] text-muted-foreground uppercase">
+                {label}
+            </dt>
+            <dd className="text-[32px] leading-10 font-semibold tracking-[-0.01em] tabular-nums">
                 {value}
             </dd>
             {hint !== undefined && (
-                <dd className="text-caption text-muted-foreground">{hint}</dd>
+                <dd className="text-sm text-muted-foreground">{hint}</dd>
             )}
         </div>
     );
