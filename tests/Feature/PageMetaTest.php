@@ -210,6 +210,20 @@ it('links the manifest of its company only in the person\'s pages', function ():
     expect($this->actingAs(User::factory()->create())->get('/admin/login')->getContent())->not->toContain('rel="manifest"');
 });
 
+it('colors the phone\'s status bar like the page, light and dark, only in the person\'s pages', function (): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme', 'slug' => 'acme']);
+    resolve(CompanyModules::class)->syncPlan($tenant->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
+
+    $xpath = xpathOf($this->get('/me/acme/punch')->assertOk()->getContent());
+
+    expect(headValue($xpath, '//head/meta[@name="theme-color"][@media="(prefers-color-scheme: light)"]'))->toBe('#fbfdfc')
+        ->and(headValue($xpath, '//head/meta[@name="theme-color"][@media="(prefers-color-scheme: dark)"]'))->toBe('#0f1716');
+
+    foreach (['/', '/privacy-notice', '/me/no-existe'] as $url) {
+        expect($this->get($url)->getContent())->not->toContain('name="theme-color"');
+    }
+});
+
 it('tells the person\'s pages the worker is switched off', function (): void {
     $tenant = Tenant::factory()->create(['trade_name' => 'Acme', 'slug' => 'acme']);
     resolve(CompanyModules::class)->syncPlan($tenant->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));

@@ -7,12 +7,16 @@ namespace App\Modules\Attendance\Support;
 use App\Modules\Attendance\Data\MarkContext;
 use App\Modules\Attendance\Data\Position;
 use App\Modules\Attendance\Enums\MarkMethod;
+use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Enums\OutOfZoneRule;
 use App\Modules\Attendance\Enums\WorkMode;
 use App\Modules\Attendance\Exceptions\MarkRejected;
+use App\Modules\Attendance\Models\AttendanceCenterMode;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\AttendanceZone;
+use App\Modules\Organization\Data\RosterEntry;
+use Carbon\CarbonImmutable;
 
 /**
  * How a mark is taken under the company's policy (criterios 4.2 to 4.4 and 5.3), or why not. Pure: the QR is verified and
@@ -25,7 +29,7 @@ use App\Modules\Attendance\Models\AttendanceZone;
  *   the inaccurate position if one came.
  * - Trusted staff, when the policy lets them use the browser, with no QR: `TrustedBrowser`, no position kept. With a QR
  *   (they are at the center) the on-site rules give stronger evidence.
- * - On site, in this order: a QR that does not verify is `qr_invalid`; no QR where it is required (or where the center has
+ * - On site, in this order: a QR that does not verify is `qr_invalid`; no QR where it is required for that type of mark (or where the center has
  *   no zones, as then nothing else proves where) is `qr_required`, except a center with neither a zone nor an active screen: nothing
  *   can mark there yet, so `center_not_ready` (RH must set it up; the person is not told to scan a screen that does not exist); a center without zones marks with the QR alone. With
  *   zones: no location is `no_location` (unless the policy allows out of zone and the QR is valid: `Qr`, no zone); under
@@ -41,10 +45,11 @@ final class MarkPolicyCheck
      * @param  ?Position  $position  null when the device gave no location
      * @param  int  $screens  the center's QR screens in use
      * @param  bool  $field  whether the center marks in the field
+     * @param  MarkType  $type  what is being marked: the QR is required by type (criterios 4.2.1)
      *
      * @throws MarkRejected
      */
-    public static function decide(?AttendanceSchedule $schedule, AttendancePolicy $policy, bool $trusted, ?bool $qrValid, array $zones, ?Position $position, string $credentialId, int $screens, bool $field = false): MarkContext
+    public static function decide(?AttendanceSchedule $schedule, AttendancePolicy $policy, bool $trusted, ?bool $qrValid, array $zones, ?Position $position, string $credentialId, int $screens, bool $field = false, MarkType $type = MarkType::Start): MarkContext
     {
         if ($schedule?->work_mode === WorkMode::Remote) {
             return new MarkContext(MarkMethod::Remote, null, null, null, null, null, $credentialId);
@@ -66,7 +71,7 @@ final class MarkPolicyCheck
             throw new MarkRejected('center_not_ready');
         }
 
-        if ($qrValid === null && ($policy->require_qr_onsite || $zones === [])) {
+        if ($qrValid === null && (self::requiresQr($policy, $type) || $zones === [])) {
             throw new MarkRejected('qr_required');
         }
 
@@ -119,6 +124,66 @@ final class MarkPolicyCheck
         }
 
         return new MarkContext(MarkMethod::Qr, null, $position?->latitude, $position?->longitude, $position?->accuracyM, null, $credentialId, $centerId);
+    }
+
+    /**
+     * The types of mark that ask a known person for the QR today, at their center's clock: the page of Marcar offers the reader
+     * for them, and the phone keeps them to do the same without a connection.
+     *
+     * @return list<MarkType>
+     */
+    public static function qrTypesOf(RosterEntry $person, string $timezone): array
+    {
+        return self::qrTypes(
+            ScheduleTimeline::of([$person->id])->on($person->id, CarbonImmutable::now($timezone)),
+            CompanyPolicy::current(),
+            $person->trusted,
+            AttendanceZone::query()->where('work_center_id', $person->workCenterId)->get()->all(),
+            AttendanceCenterMode::isField($person->workCenterId),
+        );
+    }
+
+    /**
+     * The types of mark that ask for the QR of a person on site, in the order of a day (criterios 4.2.1), so the page offers
+     * the reader only where it is needed. A center without zones asks it for all of them; remote work, a field center and
+     * trusted staff using the browser ask for none.
+     *
+     * @param  array<array-key, AttendanceZone>  $zones
+     * @return list<MarkType>
+     */
+    public static function qrTypes(?AttendanceSchedule $schedule, AttendancePolicy $policy, bool $trusted, array $zones, bool $field): array
+    {
+        if ($schedule?->work_mode === WorkMode::Remote || $field || ($trusted && $policy->trusted_may_use_browser)) {
+            return [];
+        }
+
+        return $zones === [] ? self::allTypes() : self::policyTypes($policy);
+    }
+
+    /**
+     * The types of mark the company's policy asks the QR for, taking that the center has zones: all there is to say of a person who
+     * is not known yet (a center without zones asks for every type, which the server says when marking).
+     *
+     * @return list<MarkType>
+     */
+    public static function policyTypes(AttendancePolicy $policy): array
+    {
+        return array_values(array_filter(self::allTypes(), fn (MarkType $type): bool => self::requiresQr($policy, $type)));
+    }
+
+    /** @return list<MarkType> the marks of a day, in order */
+    private static function allTypes(): array
+    {
+        return [MarkType::Start, MarkType::BreakStart, MarkType::BreakEnd, MarkType::End];
+    }
+
+    /** Whether the policy makes the QR obligatory for this type of mark: the start and the end, or a break (criterios 4.2.1). */
+    private static function requiresQr(AttendancePolicy $policy, MarkType $type): bool
+    {
+        return match ($type) {
+            MarkType::Start, MarkType::End => $policy->require_qr_onsite,
+            MarkType::BreakStart, MarkType::BreakEnd => $policy->require_qr_breaks,
+        };
     }
 
     /** @throws MarkRejected */

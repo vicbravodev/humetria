@@ -3,6 +3,9 @@ import type { LucideIcon } from 'lucide-react';
 import { ChevronLeft } from 'lucide-react';
 import type { ReactNode } from 'react';
 import Logo from '@/components/humetria/logo';
+import NewVersionBanner from '@/components/humetria/new-version-banner';
+import { useNewVersion } from '@/hooks/use-new-version';
+import { useRefreshOnResume } from '@/hooks/use-refresh-on-resume';
 import { cn } from '@/lib/utils';
 
 /**
@@ -36,6 +39,9 @@ export default function PersonFrame({
     bar?: ReactNode;
     children: ReactNode;
 }) {
+    useRefreshOnResume();
+    const version = useNewVersion();
+
     return (
         <div
             className={cn(
@@ -43,7 +49,7 @@ export default function PersonFrame({
                 bar !== undefined && 'pb-(--tab-bar-clearance)',
             )}
         >
-            <header className="flex h-[60px] shrink-0 items-center justify-between gap-3 border-b bg-card px-4">
+            <header className="flex h-[calc(60px+env(safe-area-inset-top))] shrink-0 items-center justify-between gap-3 border-b bg-card pt-[env(safe-area-inset-top)] pr-[max(1rem,env(safe-area-inset-right))] pl-[max(1rem,env(safe-area-inset-left))]">
                 {back !== undefined && (
                     <Link
                         href={back}
@@ -72,16 +78,17 @@ export default function PersonFrame({
                 {children}
             </main>
             {actions !== undefined && (
-                <div className="sticky bottom-0 z-10 border-t bg-background px-4 pt-3 pb-4 md:px-6">
+                <div className="sticky bottom-0 z-10 border-t bg-background px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] md:px-6">
                     <div className="mx-auto flex w-full max-w-md flex-col gap-2.5">
                         {actions}
                     </div>
                 </div>
             )}
-            <footer className="flex justify-center px-4 py-3.5">
+            <footer className="flex justify-center px-4 pt-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))]">
                 <Logo kind="seal" className="h-4" />
             </footer>
             {bar}
+            {version.ready && <NewVersionBanner onUpdate={version.update} />}
         </div>
     );
 }

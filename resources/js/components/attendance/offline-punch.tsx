@@ -4,15 +4,17 @@ import OfflineFrame from '@/components/attendance/offline-frame';
 import PunchEveryStep from '@/components/attendance/punch-every-step';
 import PunchOfflineNotes from '@/components/attendance/punch-offline-notes';
 import PunchOfflineScreen from '@/components/attendance/punch-offline-screen';
-import PunchScanButton from '@/components/attendance/punch-scan-button';
+import PunchScanFirst from '@/components/attendance/punch-scan-first';
 import PersonHeading from '@/components/humetria/person-heading';
 import { Button } from '@/components/ui/button';
 import { useOfflineFlow } from '@/hooks/use-offline-flow';
+import type { MarkType } from '@/lib/attendance/next-step';
+import { needsScanFirst } from '@/lib/attendance/punch-view';
 
 /**
  * Marcar in the shell of the installed app, what the phone opens with no network (the icon opens it): the four steps (the
- * server's `next` is not known here, so all are offered), the code of the screen of the center when the camera can read it, the
- * marks that wait and the way to try again with internet. No person is named: nothing of anyone is in the shell's page.
+ * server's `next` is not known here, so all are offered; a mark the policy asks the code of the screen for opens the reader
+ * first, as Marcar does with a connection), the marks that wait and the way to try again with internet. No person is named: nothing of anyone is in the shell's page.
  */
 export default function OfflinePunch({
     company,
@@ -28,7 +30,13 @@ export default function OfflinePunch({
     };
 }) {
     const flow = useOfflineFlow(queue);
-    const [code, setCode] = useState<string | null>(null);
+    const [scanning, setScanning] = useState<MarkType | null>(null);
+    // The marks that ask for the code are the policy's, kept in the phone with the tickets: none known, none asked.
+    const qrTypes = flow.tickets.context?.qrTypes ?? [];
+    const start = (type: MarkType) =>
+        needsScanFirst(qrTypes, type, false)
+            ? setScanning(type)
+            : flow.start(type, null);
 
     if (flow.view !== null) {
         return (
@@ -44,9 +52,7 @@ export default function OfflinePunch({
     return (
         <OfflineFrame
             company={company}
-            actions={
-                <PunchEveryStep onMark={(type) => flow.start(type, code)} />
-            }
+            actions={<PunchEveryStep onMark={start} />}
         >
             <div className="flex w-full max-w-md flex-col gap-4">
                 <PersonHeading title="Marcar sin internet">
@@ -54,7 +60,6 @@ export default function OfflinePunch({
                     envía sola cuando vuelva la señal.
                 </PersonHeading>
                 <PunchOfflineNotes flow={flow} correction={null} />
-                <PunchScanButton read={code !== null} onCode={setCode} />
                 <Button
                     asChild
                     variant="outline"
@@ -66,6 +71,17 @@ export default function OfflinePunch({
                     </a>
                 </Button>
             </div>
+            {scanning !== null && (
+                <PunchScanFirst
+                    type={scanning}
+                    slug={queue.slug}
+                    onRead={(code, type) => {
+                        setScanning(null);
+                        flow.start(type, code);
+                    }}
+                    onClose={() => setScanning(null)}
+                />
+            )}
         </OfflineFrame>
     );
 }

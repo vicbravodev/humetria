@@ -42,11 +42,20 @@ export default function PolicyFields({
             >
                 <PolicySwitch
                     name="require_qr_onsite"
-                    label="Pedir el QR a quien marca en el centro"
-                    hint="Escanea el código de la pantalla de la entrada además de su ubicación."
+                    label="Pedir el QR al entrar y al salir"
+                    hint="Escanea el código de la pantalla del centro además de su ubicación."
                     checked={draft.requireQrOnsite}
                     onChange={(requireQrOnsite) =>
                         onChange({ requireQrOnsite })
+                    }
+                />
+                <PolicySwitch
+                    name="require_qr_breaks"
+                    label="Pedir el QR también en la comida"
+                    hint="Apagado, la salida a comer y el regreso se marcan con la ubicación. En un centro sin zonas el QR siempre se pide."
+                    checked={draft.requireQrBreaks}
+                    onChange={(requireQrBreaks) =>
+                        onChange({ requireQrBreaks })
                     }
                 />
                 <PolicySwitch

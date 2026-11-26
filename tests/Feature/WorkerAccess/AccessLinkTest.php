@@ -50,6 +50,18 @@ it('shows «Continuar» for a link that works, and opening the page spends nothi
     expect($link->refresh()->used_at)->toBeNull();
 });
 
+it('tells the page whether the link is the one RH issued, the first use, or one the person asked for', function (string $kind, bool $first): void {
+    linkOf($this->ana, 'kind-token', fn ($factory) => $kind === 'requested' ? $factory->requested() : $factory);
+
+    $this->get(route('worker.link.show', ['acme', 'kind-token']))->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->where('opens', true)->where('firstUse', $first)->etc());
+})->with([['issued', true], ['requested', false]]);
+
+it('never says it is a first use for a link that does not work', function (): void {
+    $this->get(route('worker.link.show', ['acme', 'unknown']))
+        ->assertInertia(fn (Assert $page) => $page->where('opens', false)->where('firstUse', false)->etc());
+});
+
 it('spends the link and opens the session of its person: RH\'s goes to register a key, the person\'s to their start', function (string $kind, string $via, string $to): void {
     linkOf($this->ana, 'good-token', fn ($factory) => $kind === 'requested' ? $factory->requested() : $factory);
     Log::spy();

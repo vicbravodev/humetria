@@ -6,8 +6,10 @@ use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Attendance\Enums\WeekStatus;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceSchedule;
+use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\CorrectionRequest;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
+use App\Modules\Attendance\Support\QrToken;
 use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Leave\Models\LeaveRequest;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -115,6 +117,7 @@ it('shows Ana her week with its hours and notices, and confirms it with her fing
         ->assertSee('09:00 a 19:00')
         ->assertSee('h extra')
         ->assertSee('Un día pasó de 12 horas de trabajo.')
+        ->assertSee('Al confirmar, RH ve que usted revisó sus marcas.')
         ->assertPresent('[aria-label="Semana anterior"]')
         ->assertDontSee('Evidencia')
         ->assertDontSee('Salida a comer')
@@ -129,6 +132,8 @@ it('shows Ana her week with its hours and notices, and confirms it with her fing
     $page->press('Confirmar mi semana')
         ->waitForText('La confirmó el')
         ->assertSee('Confirmada')
+        ->assertSee('RH ya puede ver su confirmación. Si algo cambia, pida una corrección y, si activó los avisos, le avisamos cuando respondan.')
+        ->assertDontSee('Al confirmar, RH ve')
         ->assertDontSee('Confirmar mi semana')
         ->assertSee('No estoy de acuerdo')
         ->assertNoJavaScriptErrors()
@@ -282,9 +287,11 @@ it('lets a person whose mark was refused ask RH from Marcar to add it', function
     $page = visitPage('worker-access/link', $enroll, mobile: true, reach: fn (AwaitableWebpage $page) => withFingerprintReader($page));
     linkThePhone($page, $this->ana->id);
 
-    // On site, with no code of the center's screen: the mark is refused.
-    $page->navigate('/me/acme/punch')
-        ->waitForText('Regresar de comer')
+    // On site, outside the zone of the center (a code read, so the key comes straight after): the mark is refused.
+    AttendanceZone::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
+    standingAt($page, 19.4336, -99.1332);
+    $page->navigate('/me/acme/punch?q='.QrToken::issue($this->tenant->id, $this->plant->id, CarbonImmutable::now()))
+        ->waitForText(', Ana')
         ->press('button:has-text("Entrada")')
         ->waitForText('Pedir una corrección')
         ->press('Pedir una corrección')

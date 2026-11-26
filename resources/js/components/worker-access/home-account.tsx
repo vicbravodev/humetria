@@ -1,8 +1,7 @@
-import { Link } from '@inertiajs/react';
-import { ChevronRight, KeyRound } from 'lucide-react';
+import { CalendarDays, KeyRound } from 'lucide-react';
+import AccountLink from '@/components/worker-access/account-link';
 import DeviceKeyCard from '@/components/worker-access/device-key-card';
 import LeaveButton from '@/components/worker-access/leave-button';
-import IconTile from '@/components/humetria/icon-tile';
 import PersonHeading from '@/components/humetria/person-heading';
 import { initials } from '@/lib/worker-access/portal';
 import type { ProofStep } from '@/types';
@@ -21,6 +20,7 @@ export default function HomeAccount({
     keyUrl,
     hasKey,
     deviceKey,
+    weekUrl,
     leaveUrl,
 }: {
     company: string;
@@ -33,6 +33,8 @@ export default function HomeAccount({
         storeUrl: string;
         proof: ProofStep;
     } | null;
+    /** Where the person's weeks are read (with their key); null where the company has no attendance. */
+    weekUrl: string | null;
     leaveUrl: string;
 }) {
     return (
@@ -52,29 +54,30 @@ export default function HomeAccount({
                     </span>
                 </span>
             </div>
+            {weekUrl !== null && (
+                <section className="flex flex-col gap-2">
+                    <h2 className={CAPTION}>Su asistencia</h2>
+                    <AccountLink
+                        href={weekUrl}
+                        icon={CalendarDays}
+                        title="Mis marcas"
+                        detail="Semana por semana, con su huella"
+                    />
+                </section>
+            )}
             {keyUrl !== null && (
                 <section className="flex flex-col gap-2">
                     <h2 className={CAPTION}>Entrar más rápido</h2>
-                    <Link
+                    <AccountLink
                         href={keyUrl}
-                        className="flex min-h-16 items-center gap-3.5 card p-4 transition-[background-color,scale] duration-150 ease-out hover:bg-accent/50 active:scale-[0.99]"
-                    >
-                        <IconTile icon={KeyRound} />
-                        <span className="flex min-w-0 flex-1 flex-col">
-                            <span className="text-base font-semibold">
-                                {hasKey
-                                    ? 'Agregar una llave aquí'
-                                    : 'Crear una llave aquí'}
-                            </span>
-                            <span className="text-base text-muted-foreground">
-                                Entre con su huella, sin esperar un correo
-                            </span>
-                        </span>
-                        <ChevronRight
-                            aria-hidden="true"
-                            className="size-5 shrink-0 text-muted-foreground"
-                        />
-                    </Link>
+                        icon={KeyRound}
+                        title={
+                            hasKey
+                                ? 'Agregar una llave aquí'
+                                : 'Crear una llave aquí'
+                        }
+                        detail="Entre con su huella, sin esperar un correo"
+                    />
                 </section>
             )}
             {deviceKey !== null && (

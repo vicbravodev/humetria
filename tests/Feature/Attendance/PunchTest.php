@@ -166,7 +166,7 @@ describe('the page', function (): void {
     });
 
     it('brings tickets and context with a mark and with a refusal, and none with a signature that does not verify', function (): void {
-        $shape = ['tickets' => [['ticket', 'issuedAt']], 'context' => ['tenantId', 'employeeId', 'centerId', 'agreementVersion', 'rpId', 'offline']];
+        $shape = ['tickets' => [['ticket', 'issuedAt']], 'context' => ['tenantId', 'employeeId', 'centerId', 'agreementVersion', 'rpId', 'offline', 'qrTypes']];
 
         $marked = anaPunches()->assertOk()->assertJsonStructure($shape);
         $refused = anaPunches(PUNCH_OUTSIDE)->assertUnprocessable()->assertJsonStructure($shape);
@@ -239,13 +239,59 @@ describe('the page', function (): void {
             ->assertInertia(fn (AssertableInertia $page) => $page->where('mode', 'remote'));
     });
 
+    it('says which marks ask for the code, so the page offers the reader only where it is needed (criterios 4.2.1)', function (): void {
+        $show = fn (string $session) => $this->withCookie(config()->string('session.cookie'), $session)->get(route('attendance.device.punch.show', 'acme'));
+        // Nobody known: the company's policy, taking that its center has zones (a center without them asks the server's `qr_required`).
+        $this->get(route('attendance.device.punch.show', 'acme'))->assertInertia(fn (AssertableInertia $page) => $page->where('qrTypes', ['start', 'end']));
+
+        $session = punchSession();
+        anaPunches([], $session)->assertOk();
+        $show($session)->assertInertia(fn (AssertableInertia $page) => $page->where('qrTypes', ['start', 'end']));
+
+        AttendancePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'require_qr_breaks' => true]);
+        $show($session)->assertInertia(fn (AssertableInertia $page) => $page->where('qrTypes', ['start', 'break_start', 'break_end', 'end']));
+
+        AttendancePolicy::query()->update(['require_qr_breaks' => false, 'require_qr_onsite' => false]);
+        $show($session)->assertInertia(fn (AssertableInertia $page) => $page->where('qrTypes', []));
+
+        $this->ana->update(['work_center_id' => WorkCenter::factory()->for($this->tenant)->create()->id]);
+        $show($session)->assertInertia(fn (AssertableInertia $page) => $page->where('qrTypes', ['start', 'break_start', 'break_end', 'end']));
+
+        AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_mode' => WorkMode::Remote]);
+        $show($session)->assertInertia(fn (AssertableInertia $page) => $page->where('qrTypes', []));
+    });
+
     it('says how the person works from their portal\'s session when nobody marked here yet, in their center\'s zone', function (): void {
         $this->plant->update(['timezone' => 'America/Tijuana']);
         AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_mode' => WorkMode::Remote]);
         enteredAs($this->ana->id);
 
         $this->get(route('attendance.device.punch.show', 'acme'))
-            ->assertInertia(fn (AssertableInertia $page) => $page->where('mode', 'remote')->where('timezone', 'America/Tijuana')->where('person', null));
+            ->assertInertia(fn (AssertableInertia $page) => $page->where('mode', 'remote')->where('timezone', 'America/Tijuana')->where('person', ['name' => 'Ana López', 'next' => ['start']]));
+    });
+
+    it('greets the person of the portal\'s session with their next step, so an installed app opens on what they do now (never their marks)', function (): void {
+        AttendanceMark::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'employee_id' => $this->ana->id, 'type' => MarkType::Start]);
+        enteredAs($this->ana->id);
+
+        $this->get(route('attendance.device.punch.show', 'acme'))
+            ->assertInertia(fn (AssertableInertia $page) => $page
+                ->where('person', ['name' => 'Ana López', 'next' => ['break_start', 'end']])
+                ->missing('person.marks'));
+    });
+
+    it('stops greeting the person of the portal\'s session when they say it is not them, until someone marks in this browser', function (): void {
+        enteredAs($this->ana->id);
+        $session = punchSession();
+        $show = fn () => $this->withCookie(config()->string('session.cookie'), $session)->get(route('attendance.device.punch.show', 'acme'));
+
+        $show()->assertInertia(fn (AssertableInertia $page) => $page->where('person.name', 'Ana López'));
+
+        $this->withCookie(config()->string('session.cookie'), $session)->post(route('attendance.device.punch.forget', 'acme'))->assertRedirect();
+        $show()->assertInertia(fn (AssertableInertia $page) => $page->where('person', null));
+
+        anaPunches([], $session)->assertOk();
+        $show()->assertInertia(fn (AssertableInertia $page) => $page->where('person.name', 'Ana López'));
     });
 
     it('gives the server\'s time, for the clock of the page to follow it and not the phone\'s', function (): void {
@@ -399,6 +445,28 @@ describe('on site', function (): void {
 
     it('asks for the code of the center\'s screen', function (): void {
         anaPunches(['q' => null])->assertUnprocessable()->assertJsonPath('reason', 'qr_required');
+    });
+
+    it('takes a break with no code by default, by the geofence, but not the start or the end (criterios 4.2.1)', function (): void {
+        // A minute apart, as real marks are: the order of the day is by the time of the marks, and a tie has none.
+        anaPunches(['mark_type' => 'start'])->assertOk();
+        $this->travel(1)->minutes();
+        anaPunches(['mark_type' => 'break_start', 'q' => null])->assertOk();
+        $this->travel(1)->minutes();
+        anaPunches(['mark_type' => 'break_end', 'q' => null])->assertOk();
+        $this->travel(1)->minutes();
+        anaPunches(['mark_type' => 'end', 'q' => null])->assertUnprocessable()->assertJsonPath('reason', 'qr_required');
+
+        expect(AttendanceMark::query()->where('type', MarkType::BreakStart)->sole())->method->toBe(MarkMethod::Geofence);
+    });
+
+    it('asks for the code on a break when the policy requires it there', function (): void {
+        AttendancePolicy::factory()->create(['tenant_id' => $this->tenant->id, 'require_qr_breaks' => true]);
+        anaPunches(['mark_type' => 'start'])->assertOk();
+        $this->travel(1)->minutes();
+
+        anaPunches(['mark_type' => 'break_start', 'q' => null])->assertUnprocessable()->assertJsonPath('reason', 'qr_required');
+        anaPunches(['mark_type' => 'break_start'])->assertOk();
     });
 
     it('rejects a code that is not the center\'s, or a photo of it a minute later', function (): void {

@@ -13,6 +13,7 @@ export const context = {
     agreementVersion: 3,
     rpId: 'humetria.test',
     offline: true,
+    qrTypes: ['start', 'end'],
 };
 
 export const NOW = Date.parse('2026-11-25T09:00:30Z');

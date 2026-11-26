@@ -17,6 +17,7 @@ export default function Punch({
     person,
     mode,
     scannedAt,
+    qrTypes,
     now,
     optionsUrl,
     punchUrl,
@@ -36,6 +37,8 @@ export default function Punch({
     person: Signer | null;
     mode: PunchMode;
     scannedAt: string | null;
+    /** The marks that ask for the code; null when nobody is known (the reader is offered). */
+    qrTypes: string[] | null;
     /** The server's time when the page was made, in milliseconds. */
     now: number;
     optionsUrl: string;
@@ -74,6 +77,7 @@ export default function Punch({
                     slug,
                     mode,
                     scannedAt,
+                    qrTypes,
                     weekUrl,
                     enterUrl,
                     correctionOptionsUrl,

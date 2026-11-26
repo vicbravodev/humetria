@@ -2,8 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\WorkerAccess\Contracts\WorkerSection;
 use App\Modules\WorkerAccess\Data\WorkerIdentity;
 use App\Modules\WorkerAccess\Data\WorkerSectionLink;
@@ -11,6 +13,7 @@ use App\Modules\WorkerAccess\Enums\EntryVia;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
 use App\Modules\WorkerAccess\Support\WorkerSections;
 use Carbon\CarbonImmutable;
+use Database\Factories\Attendance\AttendanceMarkFactory;
 use Database\Factories\Organization\EmployeeFactory;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -165,5 +168,76 @@ describe('the device key of the app (plan B)', function (): void {
         resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
 
         $this->get(route('worker.home', 'acme'))->assertInertia(fn (Assert $page) => $page->component('worker-access/enter')->missing('deviceKey')->missing('slug')->etc());
+    });
+});
+
+describe('the Marcar tab', function (): void {
+    it('gives the start where Marcar is when the company has attendance', function (): void {
+        resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations', 'attendance'], CarbonImmutable::now(config('app.display_timezone')));
+        enteredAs($this->ana->id);
+
+        $this->get(route('worker.home', 'acme'))->assertOk()->assertInertia(fn (Assert $page) => $page->where('punchUrl', route('attendance.device.punch.show', 'acme'))->etc());
+    });
+
+    it('gives it nothing for a company without attendance: the tab does not exist there', function (): void {
+        enteredAs($this->ana->id);
+
+        $this->get(route('worker.home', 'acme'))->assertInertia(fn (Assert $page) => $page->where('punchUrl', null)->etc());
+    });
+});
+
+describe('the day on the start', function (): void {
+    beforeEach(function (): void {
+        resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations', 'attendance'], CarbonImmutable::now(config('app.display_timezone')));
+    });
+
+    /** The day the start tells the session open now. */
+    function homeDay(): mixed
+    {
+        $day = null;
+        test()->get(route('worker.home', 'acme'))->assertOk()->assertInertia(function (Assert $page) use (&$day): void {
+            $day = $page->toArray()['props']['day'];
+        });
+
+        return $day;
+    }
+
+    it('says nothing of a day for a company without attendance', function (): void {
+        resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], CarbonImmutable::now(config('app.display_timezone')));
+        enteredAs($this->ana->id);
+
+        expect(homeDay())->toBeNull();
+    });
+
+    it('tells a person who has not marked their center and that the start is next', function (): void {
+        enteredAs($this->ana->id);
+
+        expect(homeDay())->toBe(['center' => WorkCenter::query()->findOrFail($this->ana->work_center_id)->name, 'marks' => [], 'next' => ['start']]);
+    });
+
+    it('tells their own marks of the day, with the instant of each, and what may come next', function (): void {
+        $this->travelTo(CarbonImmutable::parse('2026-11-25 15:00:00', 'UTC'));
+        $start = AttendanceMarkFactory::new()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_center_id' => $this->ana->work_center_id, 'type' => MarkType::Start, 'marked_at' => now()->subHours(3)]);
+        AttendanceMarkFactory::new()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->beto->id, 'work_center_id' => $this->beto->work_center_id, 'type' => MarkType::End, 'marked_at' => now()->subHour()]);
+        enteredAs($this->ana->id);
+
+        expect(homeDay())->toBe(['center' => WorkCenter::query()->findOrFail($this->ana->work_center_id)->name, 'marks' => [['type' => 'start', 'time' => '06:00', 'at' => $start->marked_at->getTimestampMs()]], 'next' => ['break_start', 'end']]);
+    });
+
+    it('gives the start the server clock and where the week is seen, so the hours count with the server\'s time', function (): void {
+        $this->travelTo(CarbonImmutable::parse('2026-11-25 15:00:00', 'UTC'));
+        enteredAs($this->ana->id);
+
+        $this->get(route('worker.home', 'acme'))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->where('now', CarbonImmutable::parse('2026-11-25 15:00:00', 'UTC')->getTimestampMs())
+            ->where('weekUrl', route('attendance.device.week.show', 'acme'))
+            ->etc());
+    });
+
+    it('gives no week without attendance', function (): void {
+        resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], CarbonImmutable::now(config('app.display_timezone')));
+        enteredAs($this->ana->id);
+
+        $this->get(route('worker.home', 'acme'))->assertInertia(fn (Assert $page) => $page->where('weekUrl', null)->etc());
     });
 });

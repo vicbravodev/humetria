@@ -118,7 +118,7 @@ it('tells the phone who it is, where it works, which version of the agreement it
     config(['attendance.offline.enabled' => false]);
     $off = $this->tickets->context($person);
 
-    expect($without)->toBe(['tenantId' => $this->tenant->id, 'employeeId' => $this->ana->id, 'centerId' => $this->plant->id, 'agreementVersion' => null, 'rpId' => 'localhost', 'offline' => true])
+    expect($without)->toBe(['tenantId' => $this->tenant->id, 'employeeId' => $this->ana->id, 'centerId' => $this->plant->id, 'agreementVersion' => null, 'rpId' => 'localhost', 'offline' => true, 'qrTypes' => ['start', 'break_start', 'break_end', 'end']])
         ->and($accepted['agreementVersion'])->toBe(resolve(CurrentAgreement::class)->get()->version)
         ->and($off['offline'])->toBeFalse();
 });

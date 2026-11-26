@@ -43,9 +43,22 @@ export async function redirectOf(response: Response): Promise<string | null> {
         : null;
 }
 
-/** Why the device did not sign or create a key: the person closed the prompt (or did not verify), or something else. */
-export function promptFailure(error: unknown): 'cancelled' | 'failed' {
-    return error instanceof DOMException && error.name === 'NotAllowedError'
-        ? 'cancelled'
+/**
+ * Why the device did not sign or create a key: the person closed the prompt (or did not verify), the device cannot do it here
+ * (a domain it refuses, no way to keep keys), or something else.
+ */
+export function promptFailure(
+    error: unknown,
+): 'cancelled' | 'unsupported' | 'failed' {
+    if (!(error instanceof DOMException)) {
+        return 'failed';
+    }
+
+    if (error.name === 'NotAllowedError') {
+        return 'cancelled';
+    }
+
+    return error.name === 'SecurityError' || error.name === 'NotSupportedError'
+        ? 'unsupported'
         : 'failed';
 }

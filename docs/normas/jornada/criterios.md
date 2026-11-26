@@ -176,6 +176,13 @@ más débil (criterio 5.3). **Por defecto se bloquea marcar fuera de toda zona**
 «permitir y señalar» (la marca queda como evidencia media y señalada). Aun bloqueando, la persona puede pedir una corrección. Sin conexión **no se bloquea** fuera de zona: la marca se señala
 (3.3.1; en un centro sin zonas, como «sin zonas configuradas»), porque la persona no puede saber si la zona la aceptaría.
 
+**4.2.1 QR por tipo de marca** · Humetría · la política dice en qué marcas el QR es obligatorio estando en el centro: en la
+**entrada y la salida** (`require_qr_onsite`, por omisión sí) y en la **salida a comer y el regreso** (`require_qr_breaks`,
+por omisión no). Donde el QR es opcional la marca se toma por geocerca; si la persona escanea uno, vale como siempre (uno que
+no verifica se rechaza). En un centro **sin zonas** el QR sigue siendo obligatorio en toda marca, porque nada más prueba dónde
+está la persona. En campo, en teletrabajo y para personal de confianza no cambia nada (4.3, 4.4 y 4.5). Sin conexión no cambia
+(3.3.1): la marca se señala, no se bloquea.
+
 **4.3 Teletrabajo (NOM-037)** · sin geocerca; marca desde su dispositivo con la confirmación del dispositivo vinculado.
 
 **4.4 Personal de confianza** · son empleados (`Employee`) como todos; **no necesitan cuenta de usuario**. Registran desde
@@ -331,3 +338,5 @@ guardada sin enviar, por verificar, verificada, incorrecta (con la nota de Recur
     nuevo: **⚠ pendiente del usuario.**
   - **5.2**: el bloqueo por días sin cubrir vale para las empresas con Vacaciones y permisos (decisión del dueño, 2026-11-24). Una marca sin conexión que
     llega a una semana objetada la deja objetada. **⚠ pendiente del usuario.**
+- 2026-11-25 · v0.6 · **4.2.1** el QR se exige por tipo de marca: entrada y salida por omisión; salida a comer y regreso, opcional
+  (decisión del dueño, 2026-11-25).

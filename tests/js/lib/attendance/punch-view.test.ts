@@ -7,6 +7,9 @@ import {
     greeting,
     markClock,
     markHow,
+    needsQr,
+    needsScanFirst,
+    nextAsksQr,
 } from '@/lib/attendance/punch-view';
 
 describe('greeting', () => {
@@ -198,5 +201,52 @@ describe('clockOffset', () => {
         // The phone is 2 hours behind, or a day ahead.
         expect(clockOffset(10_000_000, 2_800_000)).toBe(7_200_000);
         expect(clockOffset(0, 86_400_000)).toBe(-86_400_000);
+    });
+});
+
+describe('needsQr', () => {
+    it('offers the reader when nobody is known or the policy was not told', () => {
+        expect(needsQr(null, ['start'])).toBe(true);
+        expect(needsQr(['start', 'end'], null)).toBe(true);
+    });
+
+    it('offers it only when one of the marks that may come next asks for the code', () => {
+        const qrTypes = ['start', 'end'];
+
+        expect(needsQr(qrTypes, ['start'])).toBe(true);
+        expect(needsQr(qrTypes, ['break_start', 'end'])).toBe(true);
+        expect(needsQr(qrTypes, ['break_start'])).toBe(false);
+        expect(needsQr(qrTypes, ['break_end'])).toBe(false);
+        expect(needsQr(qrTypes, [])).toBe(false);
+        expect(needsQr([], ['start'])).toBe(false);
+    });
+});
+
+describe('needsScanFirst', () => {
+    const qrTypes = ['start', 'end'];
+
+    it('reads the code before the key on the marks the policy asks it for: entry and exit', () => {
+        expect(needsScanFirst(qrTypes, 'start', false)).toBe(true);
+        expect(needsScanFirst(qrTypes, 'end', false)).toBe(true);
+    });
+
+    it('goes straight to the key on the marks that do not ask for it: the meal', () => {
+        expect(needsScanFirst(qrTypes, 'break_start', false)).toBe(false);
+        expect(needsScanFirst(qrTypes, 'break_end', false)).toBe(false);
+    });
+
+    it('does not read again when a code is already in hand, and leaves it to the server when the policy is not known', () => {
+        expect(needsScanFirst(qrTypes, 'start', true)).toBe(false);
+        expect(needsScanFirst(null, 'start', false)).toBe(false);
+        expect(needsScanFirst([], 'start', false)).toBe(false);
+    });
+});
+
+describe('nextAsksQr', () => {
+    it('says whether the next steps ask for the code, and nothing while the policy or the person is not known', () => {
+        expect(nextAsksQr(['start', 'end'], ['break_start'])).toBe(false);
+        expect(nextAsksQr(['start', 'end'], ['break_start', 'end'])).toBe(true);
+        expect(nextAsksQr(null, ['start'])).toBeNull();
+        expect(nextAsksQr(['start'], null)).toBeNull();
     });
 });

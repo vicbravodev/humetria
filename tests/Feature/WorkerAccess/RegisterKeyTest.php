@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\AuditEntry;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Actions\RegisterKey;
+use App\Modules\WorkerAccess\Actions\ReissueAccess;
 use App\Modules\WorkerAccess\Enums\EntryVia;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
 use App\Modules\WorkerAccess\Notifications\KeyRegistered;
@@ -74,7 +75,27 @@ it('keeps the saved key and answers 200 when the email to the person cannot be q
     Exceptions::assertReported(fn (RuntimeException $e): bool => $e->getMessage() === 'queue down');
 });
 
+it('takes one key per person by default and refuses a second', function (): void {
+    WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+    enteredAs($this->ana->id, EntryVia::IssuedLink);
+
+    $this->postJson(route('worker.key.options', 'acme'))->assertStatus(409);
+    $this->get(route('worker.key.show', 'acme'))->assertInertia(fn (Assert $page) => $page->where('blocked', 'full')->etc());
+});
+
+it('lets a person who changes phone register their one key again once RH reissues their access', function (): void {
+    WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
+    resolve(ReissueAccess::class)->handle($this->ana->id, ownerOf($this->tenant)->id);
+    $this->travel(1)->seconds();
+    enteredAs($this->ana->id, EntryVia::IssuedLink);
+
+    registerWith($this->phone, 'iPhone nuevo')->assertOk();
+
+    expect(WorkerCredential::query()->whereNull('revoked_at')->sole()->label)->toBe('iPhone nuevo');
+});
+
 it('lets a session opened with a key add another one, registered via the session', function (): void {
+    config(['worker_access.max_keys' => 3]);
     $first = WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
     enteredAs($this->ana->id, EntryVia::Key, $first->id);
 
@@ -94,6 +115,7 @@ it('never lets a session opened with a link the person asked for register a key'
 });
 
 it('takes up to 3 keys in use and refuses the fourth', function (): void {
+    config(['worker_access.max_keys' => 3]);
     WorkerCredential::factory()->count(2)->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
     WorkerCredential::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'revoked_at' => now(), 'revoked_reason' => 'revoked_by_hr']);
     enteredAs($this->ana->id, EntryVia::IssuedLink);
@@ -106,6 +128,7 @@ it('takes up to 3 keys in use and refuses the fourth', function (): void {
 });
 
 it('refuses the fourth key even when it was asked for while there were fewer', function (): void {
+    config(['worker_access.max_keys' => 3]);
     WorkerCredential::factory()->count(2)->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id]);
     enteredAs($this->ana->id, EntryVia::IssuedLink);
     $options = $this->postJson(route('worker.key.options', 'acme'))->assertOk()->json();

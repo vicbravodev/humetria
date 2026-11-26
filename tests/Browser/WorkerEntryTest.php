@@ -2,9 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Modules\Attendance\Enums\MarkType;
 use App\Modules\Notifications\Models\PushSubscription;
+use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Models\WorkerAccessLink;
+use Carbon\CarbonImmutable;
+use Database\Factories\Attendance\AttendanceMarkFactory;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Notification;
 use Minishlink\WebPush\VAPID;
@@ -79,16 +83,36 @@ it('opens a link with «Continuar», and its start names the person', function (
         ->assertScript(stateCentered(), ['balanced' => true, 'icon' => 80, 'align' => 'center'])
         ->assertNoAccessibilityIssues(1);
 
-    $page->press('Continuar')->waitForText('Hola, Ana López')->assertSee('Cuenta');
+    $page->press('Continuar')->waitForText('Todavía sin marcas')->assertSee('Cuenta');
 })->with([
     'light desktop' => [false, false],
+    'dark mobile' => [true, true],
+]);
+
+it('welcomes a person with the link RH issued by the three steps that follow, naming nobody', function (bool $dark, bool $mobile): void {
+    anaLink('first-token');
+
+    $page = visitPage('worker-access/link', '/me/acme/link/first-token', $dark, $mobile)
+        ->assertSee('Le damos la bienvenida')
+        ->assertSee('Cree su llave')
+        ->assertSee('Póngala en su inicio')
+        ->assertSee('Marque su primera entrada')
+        ->assertSee('Su huella nunca sale del teléfono')
+        ->assertDontSee('Su enlace está listo')
+        ->assertDontSee('Ana')
+        ->assertScript(spilledOut(), '')
+        ->assertNoAccessibilityIssues(1);
+
+    $page->press('Continuar')->waitForText('cree su llave de acceso');
+})->with([
+    'light mobile' => [false, true],
     'dark mobile' => [true, true],
 ]);
 
 it('shows the start with the session open, its three tabs, and «Salir» in Cuenta leaves no name behind', function (bool $dark, bool $mobile): void {
     anaLink('home-token', requested: true);
 
-    $page = visitPage('worker-access/home', '/me/acme/link/home-token', $dark, $mobile, fn ($page) => $page->press('Continuar')->waitForText('Hola, Ana López'))
+    $page = visitPage('worker-access/home', '/me/acme/link/home-token', $dark, $mobile, fn ($page) => $page->press('Continuar')->waitForText('Todavía sin marcas'))
         ->assertSeeIn('nav[aria-label="Secciones del portal"]', 'Inicio')
         ->assertSeeIn('nav[aria-label="Secciones del portal"]', 'Pendientes')
         ->assertDontSee('Salir')
@@ -103,6 +127,66 @@ it('shows the start with the session open, its three tabs, and «Salir» in Cuen
     'dark desktop' => [true, false],
     'light mobile' => [false, true],
 ]);
+
+it('has Marcar as a tab where the company has attendance, and it takes the person to mark', function (): void {
+    resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
+    anaLink('marcar-token', requested: true);
+
+    $page = visitPage('worker-access/home', '/me/acme/link/marcar-token', mobile: true, reach: fn ($page) => $page->press('Continuar')->waitForText('Todavía sin marcas'))
+        ->assertSeeIn('nav[aria-label="Secciones del portal"]', 'Marcar')
+        ->assertScript('() => document.querySelectorAll(\'nav[aria-label="Secciones del portal"] > div\').length', 4);
+
+    $page->click('nav[aria-label="Secciones del portal"] a')->assertPathIs('/me/acme/punch');
+});
+
+it('opens the start on the moment of the person\'s day, with what they did and the step that follows', function (array $marks, string $title, string $step, bool $dark, bool $mobile): void {
+    // Midday in Mexico City: the marks, minutes before now, never fall on the day before.
+    $this->travelTo(CarbonImmutable::parse('2026-11-25 18:00:00', 'UTC'));
+    resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
+
+    foreach ($marks as $index => $type) {
+        AttendanceMarkFactory::new()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_center_id' => $this->ana->work_center_id, 'type' => $type, 'marked_at' => now()->subMinutes((count($marks) - $index) * 20)]);
+    }
+    anaLink('moment-token', requested: true);
+
+    visitPage('worker-access/home', '/me/acme/link/moment-token', $dark, $mobile, fn ($page) => $page->press('Continuar')->waitForText($title))
+        ->assertSee($step)
+        ->assertSeeIn('[aria-label="Su jornada"]', $title);
+})->with([
+    'not marked' => [[], 'Listo para su entrada', 'Marcar entrada'],
+    'working' => [[MarkType::Start], 'Está trabajando', 'Salir a comer'],
+    'on a break' => [[MarkType::Start, MarkType::BreakStart], 'Está en su comida', 'Regresar de comer'],
+    'back' => [[MarkType::Start, MarkType::BreakStart, MarkType::BreakEnd], 'Está trabajando', 'Marcar salida'],
+    'done' => [[MarkType::Start, MarkType::End], 'Jornada terminada', 'Ver mi semana'],
+])->with([
+    'light mobile' => [false, true],
+    'dark mobile' => [true, true],
+]);
+
+it('offers «Mis marcas» in Cuenta where the company has attendance, and it leads to the weeks; nowhere else', function (bool $attendance): void {
+    resolve(CompanyModules::class)->syncPlan($this->tenant->id, [$attendance ? 'attendance' : 'vacations'], CarbonImmutable::now(config('app.display_timezone')));
+    anaLink('history-token', requested: true);
+
+    $page = visitPage('worker-access/home', '/me/acme/link/history-token', mobile: true, reach: fn ($page) => $page->press('Continuar')->waitForText('Pendientes'))
+        ->click('Cuenta');
+
+    if (! $attendance) {
+        $page->assertDontSee('Mis marcas');
+
+        return;
+    }
+
+    $page->assertSee('Mis marcas')->click('Mis marcas')->assertPathIs('/me/acme/week');
+})->with(['with attendance' => [true], 'without attendance' => [false]]);
+
+it('greets by the hour of the day in a company without attendance too, by first name', function (): void {
+    $this->travelTo(CarbonImmutable::parse('2026-11-25 14:00:00', 'UTC'));
+    resolve(CompanyModules::class)->syncPlan($this->tenant->id, ['vacations'], CarbonImmutable::now(config('app.display_timezone')));
+    anaLink('greeting-token', requested: true);
+
+    visitPage('worker-access/home', '/me/acme/link/greeting-token', mobile: true, reach: fn ($page) => $page->press('Continuar')->waitForText('Pendientes'))
+        ->assertScript('() => /^Buen(os días|as tardes|as noches), Ana$/.test(document.querySelector("h1").textContent)', true);
+});
 
 it('shows one screen for a link that does not work', function (): void {
     visitPage('worker-access/link', '/me/acme/link/unknown', mobile: true)
@@ -148,7 +232,7 @@ function anaStartOn(On|PendingAwaitablePage $pending): AwaitableWebpage
     anaLink('install-token', requested: true);
 
     $page = $pending->assertNoJavaScriptErrors();
-    $page->press('Continuar')->waitForText('Hola, Ana López');
+    $page->press('Continuar')->waitForText('Todavía sin marcas');
 
     return $page;
 }
@@ -242,7 +326,7 @@ function pushPhone(AwaitableWebpage $page, bool $marked = true, string $permissi
 /** Leaves the start and comes back, so it reads the phone again. */
 function reopenStart(AwaitableWebpage $page): AwaitableWebpage
 {
-    return $page->press('Cuenta')->waitForText('Su cuenta')->press('Inicio')->waitForText('Hola, Ana López');
+    return $page->press('Cuenta')->waitForText('Su cuenta')->press('Inicio')->waitForText('Todavía sin marcas');
 }
 
 /** Waits until the page's request to the notices is over (the server then has what it will keep), and says how many phones Ana has. */

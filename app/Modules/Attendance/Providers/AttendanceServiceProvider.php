@@ -17,8 +17,10 @@ use App\Modules\Attendance\Listeners\ReopenOnOfflineMark;
 use App\Modules\Attendance\Support\CompanyAttendanceStanding;
 use App\Modules\Attendance\Support\CompanyAttendanceUsage;
 use App\Modules\Attendance\Support\NominatimPlaceSearch;
+use App\Modules\Attendance\Support\PunchWorkerDay;
 use App\Modules\Attendance\Support\PunchWorkerSection;
 use App\Modules\Leave\Events\AbsenceChanged;
+use App\Modules\WorkerAccess\Contracts\WorkerDays;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -37,6 +39,7 @@ final class AttendanceServiceProvider extends ServiceProvider
         $this->app->bind(AttendanceStanding::class, CompanyAttendanceStanding::class);
         $this->app->bind(AttendanceUsage::class, CompanyAttendanceUsage::class);
         $this->app->bind(PlaceSearch::class, NominatimPlaceSearch::class);
+        $this->app->bind(WorkerDays::class, PunchWorkerDay::class);
         // «Marcar» in the person's start.
         $this->app->tag([PunchWorkerSection::class], 'worker.sections');
     }

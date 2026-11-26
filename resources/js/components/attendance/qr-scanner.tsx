@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import QrDenied from '@/components/attendance/qr-denied';
 import QrStatusLine from '@/components/attendance/qr-status-line';
 import QrViewfinder from '@/components/attendance/qr-viewfinder';
 import { Button } from '@/components/ui/button';
@@ -62,30 +63,39 @@ export default function QrScanner({
                     !view.seeing && 'hidden',
                 )}
             />
-            <div className="relative flex flex-1 items-center justify-center">
-                {(view.seeing || read) && <QrViewfinder state={view.state} />}
-            </div>
-            <div className="relative mx-auto flex w-full max-w-md flex-col gap-3 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-                <QrStatusLine
-                    text={view.text}
-                    opening={status === 'opening' && !read}
-                    problem={view.problem}
-                    shown={view.seeing || read}
-                />
-                <Button
-                    variant="outline"
-                    size="lg"
-                    className="w-full bg-background"
-                    onClick={() => {
-                        clearTimeout(pending.current);
-                        stop();
-                        onClose();
-                    }}
-                >
-                    <X aria-hidden />
-                    Cerrar cámara
-                </Button>
-            </div>
+            {status === 'denied' && (
+                <QrDenied onRetry={() => void start()} onClose={onClose} />
+            )}
+            {status !== 'denied' && (
+                <>
+                    <div className="relative flex flex-1 items-center justify-center">
+                        {(view.seeing || read) && (
+                            <QrViewfinder state={view.state} />
+                        )}
+                    </div>
+                    <div className="relative mx-auto flex w-full max-w-md flex-col gap-3 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                        <QrStatusLine
+                            text={view.text}
+                            opening={status === 'opening' && !read}
+                            problem={view.problem}
+                            shown={view.seeing || read}
+                        />
+                        <Button
+                            variant="outline"
+                            size="lg"
+                            className="w-full bg-background"
+                            onClick={() => {
+                                clearTimeout(pending.current);
+                                stop();
+                                onClose();
+                            }}
+                        >
+                            <X aria-hidden />
+                            Cerrar cámara
+                        </Button>
+                    </div>
+                </>
+            )}
         </div>
     );
 }

@@ -44,9 +44,9 @@ return [
     ],
 
     /*
-    | Keys in use a person may have at once (a phone and a computer, say).
+    | Keys in use a person may have at once: one phone per person (RH reissues the link when they change phone).
     */
-    'max_keys' => (int) env('WORKER_ACCESS_MAX_KEYS', 3),
+    'max_keys' => (int) env('WORKER_ACCESS_MAX_KEYS', 1),
 
     /*
     | Switches the installed app's service worker off in every phone (/me/{slug}/sw.js then answers a worker that deletes its

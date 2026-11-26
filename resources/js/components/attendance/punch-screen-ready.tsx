@@ -18,6 +18,7 @@ export default function PunchScreenReady({
     page: {
         mode: PunchMode;
         scannedAt: string | null;
+        qrTypes: string[] | null;
         weekUrl: string;
         enterUrl: string;
         correctionOptionsUrl: string;
@@ -35,6 +36,7 @@ export default function PunchScreenReady({
             feedback={punch.feedback}
             mode={page.mode}
             scannedAt={page.scannedAt}
+            qrTypes={page.qrTypes}
             weekUrl={page.weekUrl}
             enterUrl={page.enterUrl}
             timezone={page.timezone}

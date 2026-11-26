@@ -52,6 +52,9 @@
         @if (request()->is('me/*') && ($page['component'] ?? '') !== 'error' && is_string($appSlug = request()->route('tenant')))
             {{-- The installable app of the company of the person's pages (WorkerAccess): only under /me/{slug}. --}}
             <link rel="manifest" href="{{ route('worker.app.manifest', $appSlug) }}">
+            {{-- The phone's status bar takes the page's own background, light and dark (the tokens of resources/css/app.css). --}}
+            <meta name="theme-color" content="#fbfdfc" media="(prefers-color-scheme: light)">
+            <meta name="theme-color" content="#0f1716" media="(prefers-color-scheme: dark)">
             @if (config('worker_access.pwa_sw_kill'))
                 {{-- The service worker is switched off (PWA_SW_KILL): the page neither registers it nor keeps the one that is there. --}}
                 <meta name="pwa-sw-kill" content="1">

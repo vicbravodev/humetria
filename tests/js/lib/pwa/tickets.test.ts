@@ -24,6 +24,7 @@ const context = {
     agreementVersion: 3,
     rpId: 'humetria.test',
     offline: true,
+    qrTypes: ['start', 'end'],
 };
 
 describe('ticketsIn', () => {
@@ -63,6 +64,21 @@ describe('contextIn', () => {
             contextIn({ context: { ...context, agreementVersion: null } })
                 ?.agreementVersion,
         ).toBeNull();
+    });
+
+    it('reads a context kept before the marks that ask for the QR were known as one that asks for none', () => {
+        const old = Object.fromEntries(
+            Object.entries(context).filter(([key]) => key !== 'qrTypes'),
+        );
+
+        expect(contextIn({ context: old })?.qrTypes).toEqual([]);
+    });
+
+    it('keeps only the names of marks in the list that asks for the QR', () => {
+        expect(
+            contextIn({ context: { ...context, qrTypes: ['start', 7, 'end'] } })
+                ?.qrTypes,
+        ).toEqual(['start', 'end']);
     });
 
     it('gives nothing for a context that is missing or damaged', () => {
