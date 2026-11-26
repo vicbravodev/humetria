@@ -17,8 +17,6 @@ use Illuminate\Support\Str;
  */
 final readonly class PaymentAllocator
 {
-    public function __construct(private StatementBalances $balances) {}
-
     /**
      * @param  array<string, int>  $allocations  cents, by statement id.
      *
@@ -37,7 +35,6 @@ final readonly class PaymentAllocator
         }
 
         $statements = $this->lockStatements($payment, array_keys($allocations));
-        $paid = $this->balances->paid(array_keys($statements));
         $already = PaymentAllocation::query()->where('payment_id', $payment->id)->whereIn('statement_id', array_keys($allocations))->exists();
 
         if ($already) {
@@ -47,7 +44,7 @@ final readonly class PaymentAllocator
         foreach ($allocations as $statementId => $cents) {
             $statement = $statements[$statementId] ?? throw new InvalidPayment('allocations', 'Elige estados de cuenta emitidos de esta cuenta.');
 
-            if ($cents > $statement->total_cents - ($paid[$statementId] ?? 0)) {
+            if ($cents > $statement->balance_cents) {
                 throw new InvalidPayment('allocations', 'No se puede aplicar más que el saldo de un estado de cuenta.');
             }
         }
@@ -68,7 +65,7 @@ final readonly class PaymentAllocator
         $uuids = array_values(array_filter(array_map(strval(...), $ids), Str::isUuid(...)));
         $found = [];
 
-        foreach (Statement::query()->where('billing_account_id', $payment->billing_account_id)->where('status', StatementStatus::Issued)->whereIn('id', $uuids)->lockForUpdate()->get() as $statement) {
+        foreach (Statement::query()->where('billing_account_id', $payment->billing_account_id)->where('status', StatementStatus::Issued)->whereIn('id', $uuids)->selectBalance()->lockForUpdate()->get() as $statement) {
             $found[$statement->id] = $statement;
         }
 

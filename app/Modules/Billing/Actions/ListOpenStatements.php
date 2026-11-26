@@ -8,14 +8,13 @@ use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Models\Statement;
 use App\Modules\Billing\Support\Money;
 use App\Modules\Billing\Support\ShortDate;
-use App\Modules\Billing\Support\StatementBalances;
 use App\Modules\Tenancy\Contracts\CompanyRegistry;
 
 final readonly class ListOpenStatements
 {
     private const int LIMIT = 50;
 
-    public function __construct(private CompanyRegistry $companies, private StatementBalances $balances) {}
+    public function __construct(private CompanyRegistry $companies) {}
 
     /**
      * The issued statements of the account that still have a balance, the oldest month first, fifty at most: the options a
@@ -35,10 +34,9 @@ final readonly class ListOpenStatements
             ->get();
 
         $briefs = $this->companies->many(array_values(array_unique(array_map(fn (Statement $statement): string => $statement->tenant_id, $statements->all()))));
-        $paid = $this->balances->paid(array_values(array_map(fn (Statement $statement): string => $statement->id, $statements->all())));
 
-        return array_values($statements->map(function (Statement $statement) use ($briefs, $paid): array {
-            $balance = $statement->total_cents - ($paid[$statement->id] ?? 0);
+        return array_values($statements->map(function (Statement $statement) use ($briefs): array {
+            $balance = $statement->balance_cents;
 
             return [
                 'id' => $statement->id,
