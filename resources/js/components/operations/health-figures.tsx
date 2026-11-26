@@ -18,9 +18,9 @@ export default function HealthFigures({
     return (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <FigureCard
-                title="En cola"
+                title="Cola"
                 figure={count(health.queue.waiting)}
-                caption="Trabajos esperando en todas las colas."
+                caption={`trabajos esperando · ${Math.max(0, ...health.queue.queues.map((queue) => queue.wait))} s de espera`}
             />
             <FigureCard
                 title="Fallidos hoy"

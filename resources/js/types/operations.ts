@@ -66,6 +66,16 @@ export type MessagingConsoleData = {
     optOuts: OptOutTally;
 };
 
+/** The mail and WhatsApp created in one hour (`startsAt`, UTC): how many and how many were rejected. */
+export type HourTraffic = {
+    startsAt: string;
+    mail: { total: number; rejected: number };
+    whatsapp: { total: number; rejected: number };
+};
+
+/** The last 24 hours, the current one last, and the share of rejections that pauses WhatsApp on its own. */
+export type HealthHours = { hours: HourTraffic[]; rejectionLimit: number };
+
 export type SystemHealthData = {
     queue: { status: HorizonStatus; waiting: number; queues: QueueLoad[] };
     failedJobs: { today: number; week: FailedJobKind[] };

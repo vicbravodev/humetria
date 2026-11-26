@@ -33,6 +33,20 @@ it('shows the superadmin how the platform is running', function (bool $dark, boo
         ->assertSee('Ningún trabajo falló en los últimos 7 días.');
 })->with($looks);
 
+it('lays out health as its board: the hours of mail and WhatsApp, the scheduler and the active alerts beside', function (): void {
+    signInAsSuperadmin();
+    Delivery::factory()->count(2)->create(['status' => DeliveryStatus::Failed]);
+
+    visitPage('operations/health', '/admin/operations/health')
+        ->assertSee('Abrir PostHog')
+        ->assertSee('Últimas 24 horas · una barra por hora')
+        ->assertPresent('[role="img"][aria-label="Últimas 24 horas: ninguna hora pasó del 5 % de rechazos."]')
+        ->assertPresent('[role="img"][aria-label="Últimas 24 horas: 1 hora pasó del 5 % de rechazos."]')
+        ->assertSee('Latido del programador')
+        ->assertSee('Alertas activas')
+        ->assertSee('Programador de tareas: sin latido');
+});
+
 it('shows the superadmin the messaging of the whole platform, never a message', function (bool $dark, bool $mobile): void {
     signInAsSuperadmin();
     $tenant = Tenant::factory()->create(['trade_name' => 'Textiles del Norte']);
