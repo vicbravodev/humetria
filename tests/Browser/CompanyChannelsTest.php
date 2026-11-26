@@ -40,7 +40,7 @@ it('tells the staff working as the owner that only the owner saves the channels,
     [, $account] = paidCompany();
     $tenant = planFor($account, tenant: Tenant::factory()->create(['slug' => 'acme', 'trade_name' => 'Acme']));
     ownerOf($tenant);
-    test()->actingAs(superadmin())->post(route('companies.impersonate', $tenant));
+    test()->actingAs(superadmin())->post(route('companies.impersonate', $tenant), supportEntry());
 
     visit('/admin/acme/channels')
         ->assertSee('Solo el dueño de la empresa puede cambiar los canales')
