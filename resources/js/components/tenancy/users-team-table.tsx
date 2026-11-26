@@ -16,7 +16,7 @@ export default function UsersTeamTable({
     users: PlatformUserRow[];
 }) {
     return (
-        <Table className="min-w-[820px]">
+        <Table className="min-w-[640px] text-sm [&_td]:px-3 [&_th]:px-3">
             <TableCaption className="sr-only">
                 Equipo de Humetría, del más reciente al más antiguo
             </TableCaption>
@@ -26,7 +26,9 @@ export default function UsersTeamTable({
                     <TableHead>Rol</TableHead>
                     <TableHead>2FA</TableHead>
                     <TableHead>Último acceso</TableHead>
-                    <TableHead>Entró como soporte (30 d)</TableHead>
+                    <TableHead className="whitespace-normal">
+                        Entró como soporte (30 d)
+                    </TableHead>
                     <TableHead>
                         <span className="sr-only">Acciones</span>
                     </TableHead>

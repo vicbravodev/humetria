@@ -21,8 +21,8 @@ export default function PermissionsCard({
                         <th className="py-3 pl-6 text-left font-medium">
                             Acción
                         </th>
-                        <th className="w-24 py-3 font-medium">Soporte</th>
-                        <th className="w-28 py-3 pr-6 font-medium">
+                        <th className="w-[72px] py-3 font-medium">Soporte</th>
+                        <th className="w-[92px] py-3 pr-4 font-medium">
                             Superadmin
                         </th>
                     </tr>
@@ -30,14 +30,16 @@ export default function PermissionsCard({
                 <tbody>
                     {permissions.map((permission) => (
                         <tr key={permission.ability} className="border-t">
-                            <td className="py-3 pl-6">{permission.label}</td>
-                            <td className="py-3">
+                            <td className="py-2.5 pr-2 pl-6">
+                                {permission.label}
+                            </td>
+                            <td className="py-2.5">
                                 <PermissionHeld
                                     held={permission.support}
                                     compact
                                 />
                             </td>
-                            <td className="py-3 pr-6">
+                            <td className="py-2.5 pr-4">
                                 <PermissionHeld
                                     held={permission.superadmin}
                                     compact

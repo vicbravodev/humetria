@@ -10,12 +10,12 @@ import type { PlatformUserRow } from '@/types';
 export default function UsersTeamRow({ user }: { user: PlatformUserRow }) {
     return (
         <TableRow>
-            <TableCell className="whitespace-normal md:min-w-56">
+            <TableCell className="whitespace-normal">
                 <div className="flex items-center gap-3">
                     <Initials name={user.name} />
                     <div className="flex min-w-0 flex-col">
                         <span className="font-medium">{user.name}</span>
-                        <span className="text-caption break-all text-muted-foreground">
+                        <span className="text-caption break-words text-muted-foreground">
                             {user.email}
                         </span>
                     </div>

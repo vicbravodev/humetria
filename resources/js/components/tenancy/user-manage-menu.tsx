@@ -40,7 +40,7 @@ export default function UserManageMenu({
                     variant="ghost"
                     size="sm"
                     aria-label={`Gestionar a ${name}`}
-                    className="text-primary data-[state=open]:bg-accent"
+                    className="px-2 text-primary data-[state=open]:bg-accent"
                 >
                     Gestionar
                 </Button>
