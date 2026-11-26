@@ -149,7 +149,7 @@ it('shows each user in the platform list with the day they last signed in', func
     $person = User::factory()->create(['last_login_at' => '2026-11-10 18:00:00']);
     User::factory()->create(['name' => 'Nunca Entró']);
 
-    $this->actingAs(superadmin())->get(route('platform-users.index'))
+    $this->actingAs(superadmin())->get(route('platform-users.index', ['tab' => 'people']))
         ->assertInertia(fn (Assert $page) => $page->where('users.data', fn ($rows) => collect($rows)->firstWhere('id', $person->id)['lastLogin'] === '10 nov 2026'
             && collect($rows)->firstWhere('name', 'Nunca Entró')['lastLogin'] === null));
 });
