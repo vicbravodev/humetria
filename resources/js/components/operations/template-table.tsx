@@ -41,7 +41,7 @@ export default function TemplateTable({
     );
 
     return (
-        <section className="card p-0">
+        <section className="overflow-hidden card [&_[data-slot=table-container]]:rounded-none [&_[data-slot=table-container]]:border-0">
             <header className="flex flex-wrap items-center gap-3 border-b px-6 py-4">
                 <h2 className="flex-1 text-base font-semibold">
                     Plantillas de WhatsApp
