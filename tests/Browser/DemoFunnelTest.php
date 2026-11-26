@@ -47,3 +47,18 @@ it('discards a request with its reason from the funnel', function (): void {
 
     expect($request->fresh()->status)->toBe(DemoStatus::Discarded);
 });
+
+it('schedules a demo with the day and hour pickers of the design system', function (): void {
+    signInAsSuperadmin();
+    $request = DemoRequest::factory()->create(['name' => 'Lucía Vega', 'company' => 'Clínica Santa Fe', 'status' => DemoStatus::Contacted]);
+    $day = now('America/Mexico_City')->addDays(3);
+
+    visit('/admin/demo-requests?view=board')
+        ->click('Agendar demo')
+        ->fill("#scheduled-on-{$request->id}", $day->format('d/m/Y'))
+        ->fill("#scheduled-time-{$request->id}", '11:00')
+        ->click('[role="dialog"] button[type="submit"]')
+        ->assertNoJavaScriptErrors();
+
+    expect($request->fresh())->status->toBe(DemoStatus::Scheduled);
+});

@@ -497,6 +497,7 @@ return [
         'centers.*.sector' => 'sector',
         'note' => 'nota',
         'next_step' => 'siguiente paso',
+        'scheduled_at' => 'día y hora de la demo',
         'corrected_at' => 'hora correcta',
         'ids' => 'marcas',
         'notes' => 'notas',

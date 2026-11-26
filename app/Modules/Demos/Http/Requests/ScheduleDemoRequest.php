@@ -24,6 +24,14 @@ final class ScheduleDemoRequest extends FormRequest
         return true;
     }
 
+    /** The dialog sends the day and the hour apart (its pickers); they make one moment here. */
+    protected function prepareForValidation(): void
+    {
+        if (! $this->has('scheduled_at') && $this->filled(['scheduled_on', 'scheduled_time'])) {
+            $this->merge(['scheduled_at' => $this->string('scheduled_on')->toString().'T'.$this->string('scheduled_time')->toString()]);
+        }
+    }
+
     /**
      * @return array<string, list<mixed>>
      */

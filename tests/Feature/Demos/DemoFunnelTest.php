@@ -159,6 +159,17 @@ it('schedules the demo of a request on a day in Mexico City time, and logs and a
     expect(AuditEntry::query()->where('event', 'demo.scheduled')->sole()->subject_id)->toBe($request->id);
 });
 
+it('schedules from the day and the hour the dialog sends apart', function (): void {
+    $this->travelTo('2026-12-01 18:00 UTC');
+    $request = DemoRequest::factory()->create(['status' => DemoStatus::Contacted]);
+
+    $this->actingAs(superadmin())
+        ->post(route('demo-requests.schedule', $request), ['scheduled_on' => '2026-12-03', 'scheduled_time' => '11:00'])
+        ->assertRedirect()->assertSessionHasNoErrors();
+
+    expect($request->fresh()->scheduled_at)->toEqual(Carbon::parse('2026-12-03 17:00 UTC'));
+});
+
 it('shows the day of a scheduled demo', function (): void {
     DemoRequest::factory()->create(['status' => DemoStatus::Scheduled, 'scheduled_at' => '2026-12-03 17:00 UTC']);
 
