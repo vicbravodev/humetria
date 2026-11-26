@@ -3,8 +3,8 @@ import { CertificateSheet } from 'humetria';
 const apodaca = {
     name: 'Planta Apodaca',
     legalName: 'Aceros del Norte, S.A. de C.V.',
-    rfc: 'ANO950612KZ3',
-    address: 'Av. Industrial 1450, Parque Industrial Apodaca, 66600 Apodaca, N.L.',
+    rfc: 'XAXX010101000',
+    address: 'Av. Ejemplo 100, Parque Industrial, 66600 Apodaca, N.L.',
 };
 
 export const Nom037 = () => (
@@ -21,8 +21,8 @@ export const LeySillaFormerUser = () => (
         center={{
             name: 'Oficinas Monterrey',
             legalName: 'Aceros del Norte, S.A. de C.V.',
-            rfc: 'ANO950612KZ3',
-            address: 'Av. Constitución 2050 Pte., Col. Obispado, 64060 Monterrey, N.L.',
+            rfc: 'XAXX010101000',
+            address: 'Calle Ejemplo 200, Col. Centro, 64000 Monterrey, N.L.',
         }}
         declaredOn="18 de agosto de 2025"
         declaredBy={null}
