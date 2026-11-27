@@ -55,6 +55,7 @@ function mutationExemptClasses(): array
             'App\Modules\Engagement\Support\Results\RecommendationResult',
             'App\Modules\Engagement\Support\Results\ResponseRow',
             'App\Modules\Engagement\Support\Results\Wave',
+            'App\Modules\Instruments\Support\Nom035\ScoringTable',
         ],
         'Catálogos fijos del SAT (régimen fiscal y uso del CFDI): validar el código lo fijan los tests de AccountRules, que sí se muta, y mutar cada renglón del catálogo no mide ninguna decisión.' => [
             'App\Modules\Billing\Support\SatCatalogs',
@@ -68,11 +69,11 @@ function mutationExemptClasses(): array
         'Dibuja con una librería instalada (el QR con bacon/bacon-qr-code), sin decidir nada: la página que lo muestra fija que llega la imagen.' => [
             'App\Modules\Demos\Support\QrCode',
         ],
-        'Pendiente de clasificar (26 nov 2026): entra a la mutación o pasa arriba con su razón. Esta lista solo se achica.' => [
+        'Transcripción fija de la norma (la edición del DOF, las cinco opciones de respuesta): la fijan los tests contra el texto de referencia, y no hay decisión que mutar.' => [
             'App\Modules\Instruments\Support\Nom035\Likert',
-            'App\Modules\Instruments\Support\Nom035\Nom035',
-            'App\Modules\Instruments\Support\Nom035\ScoringTable',
             'App\Modules\Instruments\Support\Nom037\Nom037',
+        ],
+        'Pendiente de clasificar (26 nov 2026): entra a la mutación o pasa arriba con su razón. Esta lista solo se achica.' => [
             'App\Modules\Interventions\Support\ProgramClock',
             'App\Modules\Leave\Actions\SaveWorkWeek',
             'App\Modules\Leave\Support\CompanyPendingRequests',

@@ -6,8 +6,9 @@ use App\Modules\Instruments\Contracts\Instruments;
 use App\Modules\Instruments\Data\InstrumentDefinition;
 use App\Modules\Instruments\Data\SectionDefinition;
 use App\Modules\Instruments\Support\InstrumentCatalog;
+use App\Modules\Instruments\Support\Nom035\Nom035;
 
-mutates(InstrumentCatalog::class);
+mutates(InstrumentCatalog::class, Nom035::class);
 
 /**
  * The part of the annex (docs/normas/nom-035/texto-de-referencia.md) that transcribes one guide, literal from the DOF.
