@@ -156,7 +156,7 @@ it('puts the logic of every module under the weekly mutation, or says why not', 
     $exempt = array_merge(...array_values(mutationExemptClasses()));
     $missing = array_values(array_filter(mutationLogicClasses(), fn (string $class): bool => ! mutationReaches($class, $mutated) && ! mutationExemptBySuffix($class) && ! in_array($class, $exempt, true)));
 
-    expect($missing)->toBe([], "Ningún test declara mutates() de estas clases. Declara mutates(Clase::class) en el test que las prueba (docs/testing.md, «Convención») o agrega su razón en mutationExemptClasses():\n".implode("\n", $missing));
+    expect($missing)->toBe([], "Ningún test declara mutates() de estas clases. Declara mutates(Clase::class) en el test que las prueba (la convención de la mutación, arriba) o agrega su razón en mutationExemptClasses():\n".implode("\n", $missing));
 });
 
 it('exempts only classes that exist and that no test mutates already', function (): void {
