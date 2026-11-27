@@ -40,6 +40,7 @@ function mutationExemptClasses(): array
             'App\Modules\Complaints\Support\ComplaintInput',
             'App\Modules\Complaints\Support\OpenedChannel',
             'App\Modules\Complaints\Support\Receipt',
+            'App\Modules\Demos\Support\AdmissionResult',
             'App\Modules\Billing\Support\UnitCost',
         ],
         'Catálogos fijos del SAT (régimen fiscal y uso del CFDI): validar el código lo fijan los tests de AccountRules, que sí se muta, y mutar cada renglón del catálogo no mide ninguna decisión.' => [
@@ -51,16 +52,10 @@ function mutationExemptClasses(): array
         'Texto fijo de un documento (como los que terminan en Template): lo fijan los tests del documento, no hay decisión que mutar.' => [
             'App\Modules\Complaints\Support\ProcedureModel',
         ],
-        'Pendiente de clasificar (26 nov 2026): entra a la mutación o pasa arriba con su razón. Esta lista solo se achica.' => [
-            'App\Modules\Demos\Actions\ListDemoRequests',
-            'App\Modules\Demos\Actions\StartDemoRun',
-            'App\Modules\Demos\Jobs\PrepareDemo',
-            'App\Modules\Demos\Jobs\ResetDemo',
-            'App\Modules\Demos\Support\AdmissionResult',
-            'App\Modules\Demos\Support\DemoDoor',
-            'App\Modules\Demos\Support\DemoLeadRegistry',
-            'App\Modules\Demos\Support\DoorKeeper',
+        'Dibuja con una librería instalada (el QR con bacon/bacon-qr-code), sin decidir nada: la página que lo muestra fija que llega la imagen.' => [
             'App\Modules\Demos\Support\QrCode',
+        ],
+        'Pendiente de clasificar (26 nov 2026): entra a la mutación o pasa arriba con su razón. Esta lista solo se achica.' => [
             'App\Modules\Disclosure\Support\Days',
             'App\Modules\Disclosure\Support\DeliveryStanding',
             'App\Modules\Disclosure\Support\DocumentTemplates',

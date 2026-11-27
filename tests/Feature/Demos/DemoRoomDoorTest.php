@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Modules\Demos\Contracts\DemoDoorPool;
 use App\Modules\Demos\Contracts\DoorControl;
+use App\Modules\Demos\Support\DemoDoor;
 use App\Modules\Demos\Support\DoorKeeper;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\PermissionRegistrar;
+
+mutates(DoorKeeper::class, DemoDoor::class);
 
 /*
  * The room drives the real door: «Abrir sala» hands out a code that lets the audience in, «Cerrar sala» shuts it.

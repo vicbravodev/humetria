@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Demos\Actions\StartDemoRun;
 use App\Modules\Demos\Contracts\DemoWorkspace;
 use App\Modules\Demos\Jobs\PrepareDemo;
 use App\Modules\Demos\Jobs\ResetDemo;
@@ -10,6 +11,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Queue\TimeoutExceededException;
 use Illuminate\Support\Facades\Event;
+
+mutates(PrepareDemo::class, ResetDemo::class, StartDemoRun::class);
 
 /*
  * The console prepares or resets the demo through a job that carries only its run: the run shows each step, and how it
@@ -135,6 +138,16 @@ it('records a job the worker gave up on as failed', function (): void {
     $run = startedRun('prepare');
 
     (new PrepareDemo($run->id))->failed(new TimeoutExceededException('PrepareDemo has timed out.'));
+
+    expect($run->fresh()?->status)->toBe('failed')
+        ->and($run->fresh()?->error_class)->toBe(TimeoutExceededException::class);
+});
+
+it('records a reset the worker gave up on as failed, and minds no run that is gone', function (): void {
+    $run = startedRun('reset');
+
+    (new ResetDemo($run->id))->failed(new TimeoutExceededException('ResetDemo has timed out.'));
+    (new ResetDemo((string) Illuminate\Support\Str::uuid()))->failed(new TimeoutExceededException('ResetDemo has timed out.'));
 
     expect($run->fresh()?->status)->toBe('failed')
         ->and($run->fresh()?->error_class)->toBe(TimeoutExceededException::class);
