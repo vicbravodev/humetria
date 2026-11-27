@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\WorkerAccess\Providers;
 
+use App\Modules\Messaging\Contracts\InvitationLinks;
+use App\Modules\Messaging\Events\WhatsAppMessageFailed;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\WorkerAccess\Contracts\DeviceKeySignatures;
 use App\Modules\WorkerAccess\Contracts\WorkerCredentials;
@@ -13,6 +15,7 @@ use App\Modules\WorkerAccess\Contracts\WorkerLinks;
 use App\Modules\WorkerAccess\Contracts\WorkerSession;
 use App\Modules\WorkerAccess\Contracts\WorkerSignatures;
 use App\Modules\WorkerAccess\Http\Middleware\RequireRecentProof;
+use App\Modules\WorkerAccess\Listeners\FallBackToMail;
 use App\Modules\WorkerAccess\Listeners\RevokeOnDeactivation;
 use App\Modules\WorkerAccess\Support\CeremonyKeys;
 use App\Modules\WorkerAccess\Support\CeremonySignatures;
@@ -21,6 +24,7 @@ use App\Modules\WorkerAccess\Support\CompanyWorkerCredentials;
 use App\Modules\WorkerAccess\Support\LinkInvitations;
 use App\Modules\WorkerAccess\Support\RequestWorkerSession;
 use App\Modules\WorkerAccess\Support\RouteWorkerLinks;
+use App\Modules\WorkerAccess\Support\WorkerInvitationLinks;
 use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Illuminate\Auth\GenericUser;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -45,6 +49,7 @@ final class WorkerAccessServiceProvider extends ServiceProvider
         $this->app->bind(WorkerSession::class, RequestWorkerSession::class);
         $this->app->bind(WorkerLinks::class, RouteWorkerLinks::class);
         $this->app->bind(WorkerInvitations::class, LinkInvitations::class);
+        $this->app->tag([WorkerInvitationLinks::class], InvitationLinks::TAG);
     }
 
     public function boot(Router $router): void
@@ -54,6 +59,9 @@ final class WorkerAccessServiceProvider extends ServiceProvider
 
         // Someone who left the company has no access: their keys, links and sessions stop with the departure.
         Event::listen(EmployeeDeactivated::class, RevokeOnDeactivation::class);
+
+        // A portal invitation whose WhatsApp failed for good goes by mail (rule 9 of the WhatsApp design).
+        Event::listen(WhatsAppMessageFailed::class, FallBackToMail::class);
 
         // The `worker` guard (config/auth.php): the person of the session that holds in this request, or nobody.
         Auth::viaRequest('worker-session', function (): ?GenericUser {

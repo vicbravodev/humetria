@@ -5,24 +5,35 @@ declare(strict_types=1);
 namespace App\Modules\WorkerAccess\Notifications;
 
 use App\Modules\Billing\Contracts\MailBag;
+use App\Modules\Messaging\Contracts\TracksDelivery;
+use App\Modules\Messaging\Data\InvitationReference;
 use App\Modules\Tenancy\Data\CompanySummary;
+use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
  * RH's invitation to a person's portal, with the link to create their key, from their company and in «usted». Sent as the link
- * is issued, never queued: the plain token must not reach the queue.
+ * is issued, never queued: the plain token must not reach the queue. By mail, or by WhatsApp (`worker_invite_v1`, whose job
+ * rebuilds the token from the link: InvitationLinks), on the routes IssueAccessLink picked.
  */
-final class WorkerInvitation extends Notification implements MailBag
+final class WorkerInvitation extends Notification implements MailBag, TracksDelivery
 {
-    public function __construct(private readonly string $url, private readonly string $name, private readonly CompanySummary $company) {}
+    public function __construct(private readonly string $url, private readonly string $name, private readonly CompanySummary $company, private readonly ?InvitationReference $reference = null) {}
 
     /**
+     * Every channel the person was routed on.
+     *
      * @return list<string>
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return $notifiable instanceof AnonymousNotifiable ? array_values(array_filter(array_keys($notifiable->routes), is_string(...))) : [];
+    }
+
+    public function deliveryReference(): ?InvitationReference
+    {
+        return $this->reference;
     }
 
     public function toMail(object $notifiable): MailMessage

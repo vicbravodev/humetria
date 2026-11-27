@@ -13,7 +13,7 @@ mensaje. El módulo que manda un aviso (Campaigns, Engagement…) sigue eligiend
 | `ChannelConsent`   | `canSend(tenantId, channel, phone)`: canal activo con opt-in vigente y sin baja                                                |
 | `ChannelPicker`    | un solo canal por persona (el de menor preferencia entre los activos con dato de contacto); en la demo, todos los que sirven   |
 | `TracksDelivery`   | la notificación dice a qué invitación pertenece, para seguir su entrega                                                        |
-| `InvitationLinks`  | cada módulo entrega el enlace y los parámetros de su plantilla                                                                 |
+| `InvitationLinks`  | cada módulo entrega el enlace y los parámetros de su plantilla (Campaigns, Engagement, WorkerAccess)                           |
 | `DeliverySummary`  | agregados por canal de una campaña o encuesta (mínimo de 5)                                                                    |
 | `DeliveryOutcomes` | cuáles mensajes no se entregaron, para la conciliación de Billing                                                              |
 

@@ -59,8 +59,24 @@ it('has a template for each invitation type the modules register', function (): 
     $types = collect(app()->tagged(App\Modules\Messaging\Contracts\InvitationLinks::TAG))->map(fn (App\Modules\Messaging\Contracts\InvitationLinks $links): string => $links->type())->sort()->values()->all();
     $registry = new TemplateRegistry;
 
-    expect($types)->toBe(['campaign_participant', 'engagement_invitation'])
-        ->and(array_map(fn (string $type): string => $registry->forInvitation($type)->key, $types))->toBe(['survey_invite_v1', 'engagement_invite_v1']);
+    expect($types)->toBe(['campaign_participant', 'engagement_invitation', 'worker_access_link'])
+        ->and(array_map(fn (string $type): string => $registry->forInvitation($type)->key, $types))->toBe(['survey_invite_v1', 'engagement_invite_v1', 'worker_invite_v1']);
+});
+
+it('builds worker_invite_v1 with the access button and the accented footer', function (): void {
+    // As submitted to Meta on 2026-11-26: the button opens the short route of the one-use link.
+    URL::forceRootUrl('https://humetria.com.mx');
+    URL::forceScheme('https');
+    $template = (new TemplateRegistry)->get('worker_invite_v1');
+
+    expect($template)->toBeInstanceOf(TemplateDefinition::class)
+        ->and($template->footer)->toBe('Humetría')
+        ->and($template->bodyVariables())->toBe(['empresa'])
+        ->and($template->isPending())->toBeFalse()
+        ->and($template->buttons)->toHaveCount(1)
+        ->and($template->buttons[0]->type)->toBe(TemplateButtonType::Url)
+        ->and($template->buttons[0]->text)->toBe('Crear mi acceso')
+        ->and($template->buttons[0]->url)->toBe('https://humetria.com.mx/access/{{1}}');
 });
 
 /**
@@ -107,7 +123,7 @@ it('writes each text of the catalog word for word, with its footer and its butto
     expect($template)->toBeInstanceOf(TemplateDefinition::class)
         ->and($template->header)->toBe($header)
         ->and($template->body)->toBe($body)
-        ->and($template->footer)->toBe('Humetria')
+        ->and($template->footer)->toBe($key === 'worker_invite_v1' ? 'Humetría' : 'Humetria')
         ->and($template->language)->toBe('es_MX')
         ->and($template->category)->toBe(TemplateCategory::Utility)
         ->and(array_map(fn (TemplateButton $button): string => $button->text, $template->buttons))->toBe($buttons);
@@ -132,7 +148,7 @@ it('has the opt-out in every template that is not a code or a security notice', 
 
 it('leaves the buttons whose route does not end in the variable as pending, and the invitations as real links', function (): void {
     $registry = new TemplateRegistry;
-    $real = ['survey_invite_v1', 'seating_invite_v1', 'engagement_invite_v1', 'survey_reminder_v1', 'engagement_reminder_v1'];
+    $real = ['survey_invite_v1', 'seating_invite_v1', 'engagement_invite_v1', 'survey_reminder_v1', 'engagement_reminder_v1', 'worker_invite_v1'];
 
     foreach (catalog() as $key => $_) {
         expect($registry->get($key)->isPending())->toBe(! in_array($key, $real, true), $key);
@@ -157,9 +173,11 @@ it('models the proof code as the authentication template of Meta: fixed text, a 
 it('feeds the invitation templates the variables the modules fill, in the order they fill them', function (): void {
     $registry = new TemplateRegistry;
 
-    // Campaigns and Engagement pass [company trade name, last day]; the definition names them by order.
+    // Campaigns and Engagement pass [company trade name, last day], WorkerAccess [company trade name]; the definition names them by order.
+    $filled = ['campaign_participant' => ['empresa', 'fecha_limite'], 'engagement_invitation' => ['empresa', 'fecha_limite'], 'worker_access_link' => ['empresa']];
+
     foreach (collect(app()->tagged(App\Modules\Messaging\Contracts\InvitationLinks::TAG)) as $links) {
-        expect($registry->forInvitation($links->type())->bodyVariables())->toBe(['empresa', 'fecha_limite']);
+        expect($registry->forInvitation($links->type())->bodyVariables())->toBe($filled[$links->type()]);
     }
 });
 
