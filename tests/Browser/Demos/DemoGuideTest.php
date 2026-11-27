@@ -198,6 +198,16 @@ it('rings a control that appears after the page', function (): void {
         ->assertScript('() => new Promise((resolve) => { const start = performance.now(); const check = () => { const lit = document.querySelector(\'#late-control\')?.hasAttribute(\'data-guide-spotlight\') === true; lit || performance.now() - start > 3000 ? resolve(lit) : setTimeout(check, 50); }; check(); })', true);
 });
 
+it('closes the sheet on a phone when the veil around it is tapped', function (): void {
+    $campaign = presentedEvaluation();
+
+    visit("/admin/alba-demo/campaigns/{$campaign->id}")->on()->mobile()
+        ->assertSeeIn(GUIDE_DOCK, 'Lanza la evaluación')
+        ->assertScript('() => { document.querySelector(\'[data-slot="guide-veil"]\').click(); return true; }', true)
+        ->assertNotPresent(GUIDE_DOCK)
+        ->assertPresent('[aria-controls="demo-guide"]');
+});
+
 it('keeps the guide when a skip is refused, and asks for it again', function (): void {
     $campaign = presentedEvaluation();
 

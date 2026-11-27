@@ -30,9 +30,11 @@ export default function GuideDock() {
         <>
             {open && (
                 <>
-                    {/* On a phone the guide is a bottom sheet over a veil. */}
+                    {/* On a phone the guide is a bottom sheet over a veil; a tap on the veil folds it («Minimizar la guía» for a keyboard). */}
                     <div
                         aria-hidden
+                        data-slot="guide-veil"
+                        onClick={() => setOpen(false)}
                         className="fixed inset-0 z-40 bg-black/48 md:hidden print:hidden"
                     />
                     <GuideStepCard
