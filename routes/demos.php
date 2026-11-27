@@ -47,5 +47,7 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     // The guide of the session, polled by its dock from inside the impersonated demo (DemoGuideRequest).
     Route::get('admin/demo/session/guide', [DemoGuideController::class, 'show'])->name('demo-room.session.guide');
     Route::post('admin/demo/session/steps/{step}/skip', [DemoGuideController::class, 'skip'])->where('step', '[a-z0-9]+\.[a-z0-9]+')->name('demo-room.session.skip');
+    Route::get('admin/demo/session/people/options', [DemoGuideController::class, 'people'])->name('demo-room.session.people.options');
+    Route::post('admin/demo/session/portal/{employee}', [DemoGuideController::class, 'portal'])->whereUuid('employee')->name('demo-room.session.portal');
     Route::post('admin/demo/session/steps/{step}/rewind', [DemoGuideController::class, 'rewind'])->where('step', '[a-z0-9]+\.[a-z0-9]+')->name('demo-room.session.rewind');
 });
