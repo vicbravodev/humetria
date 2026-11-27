@@ -187,3 +187,25 @@ it('opens the portal of a person of the session on this computer, for the Vacaci
         ->assertScript('() => new Promise((resolve) => { const start = performance.now(); const check = () => location.pathname.startsWith("/me/alba-demo/") || performance.now() - start > 8000 ? resolve(location.pathname.startsWith("/me/alba-demo/")) : setTimeout(check, 100); check(); })', true)
         ->assertNoJavaScriptErrors();
 });
+
+it('says when the session is over and takes the presenter back to the room', function (): void {
+    $demo = Tenant::factory()->demo()->create(['slug' => 'alba-demo']);
+    memberOf($demo, TenantRole::Owner);
+    DemoSession::query()->forceCreate([
+        'tours' => [],
+        'status' => DemoSessionStatus::Active,
+        'work_center_id' => WorkCenter::factory()->create(['tenant_id' => $demo->id])->id,
+        'skipped_steps' => ['base.center', 'base.people'],
+        'started_at' => now()->subMinute(),
+        'ready_at' => now()->subMinute(),
+    ]);
+    test()->actingAs(superadmin())->post(route('companies.impersonate', $demo), ['as' => 'owner']);
+
+    visit('/admin/alba-demo')
+        ->assertSeeIn(GUIDE_DOCK, 'Terminaste el recorrido de esta sesión.')
+        ->assertSee('Guía · 2 de 2')
+        ->click('Volver a la sala')
+        ->assertPathIs('/admin/demo')
+        ->assertSee('Sala de demostración')
+        ->assertNoJavaScriptErrors();
+});

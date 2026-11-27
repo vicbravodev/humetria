@@ -7,6 +7,7 @@ use App\Http\Impersonation;
 use App\Http\Middleware\EndRevokedImpersonation;
 use App\Models\AuditEntry;
 use App\Models\User;
+use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
 use Illuminate\Log\Events\MessageLogged;
@@ -378,4 +379,15 @@ it('sends a revoked change back to login with 303, so Inertia follows it with a 
         ->assertRedirect(route('login'));
 
     $this->assertGuest();
+});
+
+it('brings the superadmin back to the demo room on leaving the demo company, and support to the console', function (): void {
+    $demo = Tenant::factory()->demo()->create();
+    memberOf($demo, TenantRole::Owner);
+
+    $this->actingAs(superadmin())->post(route('companies.impersonate', $demo), ['as' => 'owner']);
+    $this->post(route('impersonation.stop'))->assertRedirect(route('demo-room.show'));
+
+    $this->actingAs(support())->post(route('companies.impersonate', $demo));
+    $this->post(route('impersonation.stop'))->assertRedirect(route('companies.index'));
 });
