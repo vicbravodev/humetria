@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Attendance\Providers;
 
+use App\Modules\Attendance\Contracts\AttendanceActivity;
 use App\Modules\Attendance\Contracts\AttendanceStanding;
 use App\Modules\Attendance\Contracts\AttendanceUsage;
 use App\Modules\Attendance\Contracts\PlaceSearch;
@@ -14,6 +15,7 @@ use App\Modules\Attendance\Listeners\AlertDispute;
 use App\Modules\Attendance\Listeners\ReopenOnAbsence;
 use App\Modules\Attendance\Listeners\ReopenOnCorrection;
 use App\Modules\Attendance\Listeners\ReopenOnOfflineMark;
+use App\Modules\Attendance\Support\CompanyAttendanceActivity;
 use App\Modules\Attendance\Support\CompanyAttendanceStanding;
 use App\Modules\Attendance\Support\CompanyAttendanceUsage;
 use App\Modules\Attendance\Support\NominatimPlaceSearch;
@@ -37,6 +39,7 @@ final class AttendanceServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(AttendanceStanding::class, CompanyAttendanceStanding::class);
+        $this->app->bind(AttendanceActivity::class, CompanyAttendanceActivity::class);
         $this->app->bind(AttendanceUsage::class, CompanyAttendanceUsage::class);
         $this->app->bind(PlaceSearch::class, NominatimPlaceSearch::class);
         $this->app->bind(WorkerDays::class, PunchWorkerDay::class);

@@ -106,3 +106,56 @@ describe('CampaignActivity', function (): void {
         expect(resolve(CampaignActivity::class)->atCenter($theirs->id))->toEqual(new CenterCampaignActivity(0, false, 0, 0, false, null));
     });
 });
+
+describe('AttendanceActivity', function (): void {
+    beforeEach(function (): void {
+        $this->center = WorkCenter::factory()->create(['tenant_id' => $this->a->id]);
+    });
+
+    /** A zone, a kiosk and a mark at `$centerId` of `$tenantId`, now. */
+    function attendanceAt(string $tenantId, string $centerId): void
+    {
+        AttendanceZone::factory()->create(['tenant_id' => $tenantId, 'work_center_id' => $centerId]);
+        KioskDevice::factory()->create(['tenant_id' => $tenantId, 'work_center_id' => $centerId]);
+        AttendanceMark::factory()->create(['tenant_id' => $tenantId, 'work_center_id' => $centerId]);
+    }
+
+    it('counts only what happened after the session started', function (): void {
+        $mode = AttendanceCenterMode::factory()->create(['tenant_id' => $this->a->id, 'work_center_id' => $this->center->id]);
+        attendanceAt($this->a->id, $this->center->id);
+        $this->travelTo($this->since);
+        attendanceAt($this->a->id, $this->center->id);
+        KioskDevice::factory()->create(['tenant_id' => $this->a->id, 'work_center_id' => $this->center->id, 'revoked_at' => now()]);
+        $mark = AttendanceMark::factory()->create(['tenant_id' => $this->a->id, 'work_center_id' => $this->center->id]);
+        AttendanceMark::factory()->correcting($mark)->create();
+        workIn($this->a);
+        $activity = resolve(AttendanceActivity::class);
+
+        expect($activity->atCenter($this->center->id, $this->since))->toEqual(new CenterAttendanceActivity(false, 1, 1, 2));
+
+        $mode->update(['mode' => App\Modules\Attendance\Enums\CenterMode::Company]);
+
+        expect($activity->atCenter($this->center->id, $this->since)->modeSet)->toBeTrue()
+            ->and($activity->atCenter($this->center->id, $this->since->setTimezone('America/Mexico_City'))->marks)->toBe(2);
+    });
+
+    it('counts only the session center', function (): void {
+        $this->travelTo($this->since);
+        $other = WorkCenter::factory()->create(['tenant_id' => $this->a->id]);
+        AttendanceCenterMode::factory()->create(['tenant_id' => $this->a->id, 'work_center_id' => $other->id]);
+        attendanceAt($this->a->id, $other->id);
+        workIn($this->a);
+
+        expect(resolve(AttendanceActivity::class)->atCenter($this->center->id, $this->since))->toEqual(new CenterAttendanceActivity(false, 0, 0, 0));
+    });
+
+    it('does not read another company', function (): void {
+        $this->travelTo($this->since);
+        $theirs = WorkCenter::factory()->create(['tenant_id' => $this->b->id]);
+        AttendanceCenterMode::factory()->create(['tenant_id' => $this->b->id, 'work_center_id' => $theirs->id]);
+        attendanceAt($this->b->id, $theirs->id);
+        workIn($this->a);
+
+        expect(resolve(AttendanceActivity::class)->atCenter($theirs->id, $this->since))->toEqual(new CenterAttendanceActivity(false, 0, 0, 0));
+    });
+});
