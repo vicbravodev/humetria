@@ -172,7 +172,7 @@ final class WorkCenterController extends Controller
             'address' => $workCenter->address(),
             'archived_on' => $workCenter->archived_at === null ? null : DisplayDate::day($workCenter->archived_at),
             'employees' => $employees,
-            'guides' => $this->guides->for($employees),
+            'guides' => $this->guides->for($employees, $workCenter->id),
         ];
     }
 }

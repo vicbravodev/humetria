@@ -8,11 +8,13 @@ use App\Models\User;
 use App\Modules\Demos\Contracts\DemoDoorPool;
 use App\Modules\Demos\Contracts\DemoEntrance;
 use App\Modules\Demos\Contracts\DemoLeads;
+use App\Modules\Demos\Contracts\DemoSessionCenter;
 use App\Modules\Demos\Contracts\DemoShowcase;
 use App\Modules\Demos\Contracts\DemoWorkspace;
 use App\Modules\Demos\Contracts\DoorControl;
 use App\Modules\Demos\Support\DemoLeadRegistry;
 use App\Modules\Demos\Support\DoorKeeper;
+use App\Modules\Demos\Support\SessionCenter;
 use Database\Seeders\Demo\DemoShowcaseLinks;
 use Database\Seeders\Demo\DemoWorkspaceRunner;
 use Database\Seeders\Demo\RosterDoorPool;
@@ -36,6 +38,7 @@ final class DemosServiceProvider extends ServiceProvider
         $this->app->bind(DemoEntrance::class, WorkerAccessEntrance::class);
         $this->app->bind(DemoShowcase::class, DemoShowcaseLinks::class);
         $this->app->bind(DoorControl::class, DoorKeeper::class);
+        $this->app->bind(DemoSessionCenter::class, SessionCenter::class);
     }
 
     public function boot(): void

@@ -48,7 +48,7 @@ final readonly class CreateEvaluationDraft
                     throw ValidationException::withMessages(['work_center_id' => 'Este centro no tiene personas activas. Da de alta a su personal primero.']);
                 }
 
-                $instruments = $this->guides->instruments($workers);
+                $instruments = $this->guides->instruments($workers, $workCenterId);
 
                 if ($population === Population::Sample && ! in_array('nom035.guide-iii', $instruments, true)) {
                     throw ValidationException::withMessages(['population' => 'Solo la Guía III se puede aplicar a una muestra; este centro tiene 50 personas o menos.']);

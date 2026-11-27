@@ -10,14 +10,17 @@ namespace App\Modules\Instruments\Contracts;
 interface Nom035Guides
 {
     /**
+     * `$workCenterId`, when the caller knows it: in the demo session's center, Guías I and II apply with any number of
+     * people up to 50 (the demo is no company); everywhere else it changes nothing.
+     *
      * @return list<'I'|'II'|'III'> Guía I always (with anyone at all), plus II from 16 workers or III above 50.
      */
-    public function for(int $workers): array;
+    public function for(int $workers, ?string $workCenterId = null): array;
 
     /**
      * The same, as instrument keys (nom035.guide-i, nom035.guide-ii, nom035.guide-iii).
      *
      * @return list<string>
      */
-    public function instruments(int $workers): array;
+    public function instruments(int $workers, ?string $workCenterId = null): array;
 }
