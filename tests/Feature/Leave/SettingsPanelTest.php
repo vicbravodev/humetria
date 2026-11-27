@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Leave\Actions\SaveWorkWeek;
 use App\Modules\Leave\Enums\WorkWeek;
 use App\Modules\Leave\Http\Controllers\SettingsController;
 use App\Modules\Leave\Models\LeaveHoliday;
@@ -12,7 +13,7 @@ use App\Modules\Leave\Support\SettingsPages;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 
-mutates(SettingsController::class, SettingsPages::class);
+mutates(SettingsController::class, SettingsPages::class, SaveWorkWeek::class);
 
 beforeEach(function (): void {
     workIn($this->tenant = Tenant::factory()->create(['slug' => 'acme']));

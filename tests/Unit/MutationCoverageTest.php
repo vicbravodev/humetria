@@ -73,10 +73,10 @@ function mutationExemptClasses(): array
             'App\Modules\Instruments\Support\Nom035\Likert',
             'App\Modules\Instruments\Support\Nom037\Nom037',
         ],
-        'Pendiente de clasificar (26 nov 2026): entra a la mutación o pasa arriba con su razón. Esta lista solo se achica.' => [
-            'App\Modules\Leave\Actions\SaveWorkWeek',
-            'App\Modules\Leave\Support\CompanyPendingRequests',
+        'Candado de Postgres (pg_advisory_xact_lock) que solo se nota con dos transacciones a la vez: un test de un solo proceso no puede medir si se quita, y no decide nada.' => [
             'App\Modules\Leave\Support\EmployeeLock',
+        ],
+        'Pendiente de clasificar (26 nov 2026): entra a la mutación o pasa arriba con su razón. Esta lista solo se achica.' => [
             'App\Modules\Messaging\Listeners\MarkMailSent',
             'App\Modules\Messaging\Support\DeliveryFailures',
             'App\Modules\Messaging\Support\MailDeliveryStash',
