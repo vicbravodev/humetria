@@ -43,6 +43,19 @@ jobs:
         with:
           persist-credentials: false
 
+      # migrate:fresh drops every table in one statement, in each parallel database at once: with the default lock table
+      # (64 per connection) Postgres runs "out of shared memory". The setting is read only at start, so a reload is not
+      # enough: restart the service, before the setup migrates. 256, as in the local Postgres (docs/testing.md).
+      - name: Raise the lock table of Postgres
+        env:
+          POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME" -d "$DB_DATABASE" -v ON_ERROR_STOP=1 \
+            -c 'ALTER SYSTEM SET max_locks_per_transaction = 256'
+          docker restart "$POSTGRES_CONTAINER"
+          until docker exec "$POSTGRES_CONTAINER" pg_isready -U "$DB_USERNAME"; do sleep 1; done
+          PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USERNAME" -d "$DB_DATABASE" -Atc 'SHOW max_locks_per_transaction' | grep -qx 256
+
       # Mutation needs coverage to know which tests cover each line: PCOV.
       - uses: ./.github/actions/setup
         with:

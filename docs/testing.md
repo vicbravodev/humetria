@@ -53,6 +53,21 @@ declaran `mutates()` de ellas. Eso fija el tamaño del filtro al de un módulo, 
 
 Si la corrida semanal falla, el workflow queda en rojo y GitHub avisa al correo de quien editó el cron; no toca ningún PR.
 
+### Postgres con `max_locks_per_transaction = 256`
+
+`migrate:fresh` borra todas las tablas (más de 600 relaciones con índices y secuencias) en una sola sentencia, y la mutación
+lo hace en cada base paralela (`testing_test_N`) a la vez. Con el valor por omisión (64 por conexión) Postgres se queda sin
+tabla de candados: `SQLSTATE[53200] out of shared memory` y la pista `increase max_locks_per_transaction`. Así pasó cuatro
+domingos seguidos hasta el 23 nov 2026: 12 de 22 módulos no llegaron a tener score. El valor solo se lee al arrancar (un `pg_reload_conf()` no
+basta), así que `mutation.yml` lo sube con `ALTER SYSTEM` y **reinicia** el servicio antes de migrar
+(`tests/Unit/CiPipelineTest.php` lo exige). El Postgres local de Sail ya tiene 256; en una base nueva:
+
+```bash
+docker exec humetria-pgsql-1 psql -U sail -d testing -c 'ALTER SYSTEM SET max_locks_per_transaction = 256'
+```
+
+y reinicia el contenedor (`./vendor/bin/sail restart pgsql`).
+
 ### Si la corrida falla
 
 - Se reproduce con `composer mutate -- --class='App\Modules\X\Actions\Y'` y se agrega el test que mata al mutante.
