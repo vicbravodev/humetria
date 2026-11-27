@@ -70,6 +70,12 @@ final class DemoSession extends Model
         return self::query()->whereIn('status', self::OPEN)->first();
     }
 
+    /** The session to end: the open one, or else the last one when its preparation failed (its demo may be half made). */
+    public static function toEnd(): ?self
+    {
+        return self::current() ?? self::query()->latest('started_at')->first()?->failedOrNull();
+    }
+
     /** The session under way: open, and ready for the audience. */
     public static function active(): ?self
     {
@@ -86,11 +92,20 @@ final class DemoSession extends Model
 
     /**
      * Its end starts: from the status it was read with to «ending». False when it already was ending or another request
-     * moved it first, so only the request that moved it may give it back (undoEnding).
+     * moved it first, so only the request that moved it may give it back (undoEnding); false too for a failed session when
+     * another one opened meanwhile (the lock refuses a second open one).
      */
     public function markEnding(): bool
     {
-        if ($this->status === DemoSessionStatus::Ending || ! $this->moveFrom($this->status, ['status' => DemoSessionStatus::Ending])) {
+        try {
+            // A savepoint: the refused update must not spoil a transaction around it.
+            $moved = $this->status !== DemoSessionStatus::Ending
+                && DB::transaction(fn (): bool => $this->moveFrom($this->status, ['status' => DemoSessionStatus::Ending]));
+        } catch (UniqueConstraintViolationException) {
+            return false;
+        }
+
+        if (! $moved) {
             return false;
         }
 
@@ -169,6 +184,11 @@ final class DemoSession extends Model
         Log::info('demo.session_guide_moved', ['session_id' => $this->id, 'from' => $previous, 'to' => $key]);
 
         return $previous;
+    }
+
+    private function failedOrNull(): ?self
+    {
+        return $this->status === DemoSessionStatus::Failed ? $this : null;
     }
 
     /**

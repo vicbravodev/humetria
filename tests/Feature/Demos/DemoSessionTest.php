@@ -275,6 +275,45 @@ it('says so when there is no session to end', function (): void {
     Queue::assertNothingPushed();
 });
 
+it('ends a session whose preparation failed: the demo resets clean and the room forgets it', function (): void {
+    Queue::fake();
+    $session = openSession(DemoSessionStatus::Failed);
+    sessionWorkspace();
+
+    $this->actingAs(superadmin())
+        ->delete(route('demo-room.session.end'))
+        ->assertSessionHas('inertia.flash_data.toast.type', 'success');
+
+    expect($session->refresh()->status)->toBe(DemoSessionStatus::Ending);
+    resolve(ResetDemo::class, ['runId' => DemoRun::query()->sole()->id])->handle(resolve(DemoWorkspace::class));
+
+    expect($session->refresh()->status)->toBe(DemoSessionStatus::Ended);
+});
+
+it('ends only the last session when it failed, never an older failed one', function (): void {
+    Queue::fake();
+    $failed = openSession(DemoSessionStatus::Failed);
+    $failed->forceFill(['started_at' => now()->subHour()])->save();
+    openSession(DemoSessionStatus::Ended);
+
+    $this->actingAs(superadmin())
+        ->delete(route('demo-room.session.end'))
+        ->assertSessionHas('inertia.flash_data.toast', ['type' => 'error', 'message' => 'No hay una sesión en curso.']);
+
+    expect($failed->refresh()->status)->toBe(DemoSessionStatus::Failed);
+    Queue::assertNothingPushed();
+});
+
+it('leaves a failed session failed when a new session opened before its end', function (): void {
+    $failed = openSession(DemoSessionStatus::Failed);
+
+    // Another request opens a session between this one reading the failed session and moving it to ending.
+    DemoSession::query()->forceCreate(['tours' => ['nom035'], 'status' => DemoSessionStatus::Preparing, 'started_at' => now()->subHour()]);
+
+    expect($failed->markEnding())->toBeFalse()
+        ->and($failed->refresh()->status)->toBe(DemoSessionStatus::Failed);
+});
+
 it('keeps the session as it was when the demo is busy and cannot reset', function (): void {
     Queue::fake();
     $session = openSession(DemoSessionStatus::Preparing);

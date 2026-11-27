@@ -10,8 +10,8 @@ use App\Modules\Demos\Models\DemoSession;
 use App\Modules\Tenancy\Contracts\DemoCompanies;
 
 /**
- * Ends the open session: it goes to «ending» and the demo resets, wiping whatever the audience left; ResetDemo marks it
- * ended when the reset finishes. A session already ending may be ended again (its reset failed). When the reset cannot
+ * Ends the open session, or the last one when its preparation failed: it goes to «ending» and the demo resets, wiping
+ * whatever the audience left (or the half-made demo); ResetDemo marks it ended when the reset finishes. A session already ending may be ended again (its reset failed). When the reset cannot
  * start («busy», «unqueued») the session stays as it was; «none» when no session is open.
  */
 final readonly class EndDemoSession
@@ -21,7 +21,7 @@ final readonly class EndDemoSession
     /** @return 'started'|'busy'|'unqueued'|'none' */
     public function handle(): string
     {
-        $session = DemoSession::current();
+        $session = DemoSession::toEnd();
 
         if ($session === null) {
             return 'none';
