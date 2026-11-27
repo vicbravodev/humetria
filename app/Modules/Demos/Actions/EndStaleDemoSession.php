@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Log;
 /**
  * The backstop of «Terminar sesión», every hour: a session open for more than EXPIRES_AFTER_HOURS ends (its reset wipes
  * what the audience left: «expired»). A younger one whose run died frees the lock: preparing, it fails, since no audience
- * reached it («failed»); ending, its reset starts again («retried»). Anything else is left alone («none»).
+ * reached it («failed»); ending, its reset starts again («retried»). A reset that cannot start now («deferred») is tried the next hour. Anything
+ * else is left alone («none»).
  */
 final readonly class EndStaleDemoSession
 {
@@ -20,7 +21,7 @@ final readonly class EndStaleDemoSession
 
     public function __construct(private EndDemoSession $end) {}
 
-    /** @return 'expired'|'failed'|'retried'|'none' */
+    /** @return 'expired'|'failed'|'retried'|'deferred'|'none' */
     public function handle(): string
     {
         $session = DemoSession::current();
@@ -31,9 +32,8 @@ final readonly class EndStaleDemoSession
 
         if ($session->started_at->lt(now()->subHours(self::EXPIRES_AFTER_HOURS))) {
             Log::info('demo.session_expired', ['session_id' => $session->id]);
-            $this->end->handle();
 
-            return 'expired';
+            return $this->end->handle() === 'started' ? 'expired' : 'deferred';
         }
 
         $stale = now()->subMinutes(DemoRun::STALE_AFTER_MINUTES);
@@ -58,9 +58,7 @@ final readonly class EndStaleDemoSession
             return 'none';
         }
 
-        $this->end->handle();
-
-        return 'retried';
+        return $this->end->handle() === 'started' ? 'retried' : 'deferred';
     }
 
     /** It failed, or a worker died running it: it no longer holds the lock. */

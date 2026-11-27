@@ -160,6 +160,7 @@ Artisan::command('demo:end-stale-session', function (EndStaleDemoSession $end): 
         'expired' => 'Sesión vencida: terminando.',
         'failed' => 'Sesión atorada preparándose: marcada fallida.',
         'retried' => 'Sesión atorada terminándose: reinicio de nuevo.',
+        'deferred' => 'La demo está ocupada: se intenta de nuevo en una hora.',
         'none' => 'Sin cambios.',
     });
 })->purpose('End the demo session open for more than 24 hours (its reset wipes what the audience left), and free the lock of one stuck because its run died');

@@ -80,7 +80,7 @@ it('tries again later when the reset of an expired session cannot start', functi
     $session = sessionOpenedAgo(new DateInterval('P2D'));
     runStartedAgo('running', 5, 'prepare');
 
-    $this->artisan('demo:end-stale-session')->assertSuccessful();
+    $this->artisan('demo:end-stale-session')->expectsOutput('La demo está ocupada: se intenta de nuevo en una hora.')->assertSuccessful();
 
     expect($session->refresh()->status)->toBe(DemoSessionStatus::Active);
 });
