@@ -84,3 +84,16 @@ it('writes no company data in the copy', function (): void {
             ->and($step->todo)->not->toBe('');
     }
 });
+
+it('promises no hiding the demo cannot keep: its group minimum is 1', function (): void {
+    foreach (everyStep() as $step) {
+        expect(mb_strtolower($step->title.' '.$step->todo.' '.$step->why))->not->toContain('sin exponer')
+            ->not->toContain('nunca quién')
+            ->not->toContain('nadie puede');
+    }
+
+    $results = array_filter(everyStep(), fn (TourStep $step): bool => in_array($step->key, ['nom035.results', 'engagement.results'], true));
+
+    expect($results)->toHaveCount(2)
+        ->each(fn ($step) => $step->why->toContain('En la demo el mínimo por grupo es 1'));
+});

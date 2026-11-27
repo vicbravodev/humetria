@@ -32,13 +32,13 @@ final readonly class LeaveTour implements Tour
             new TourStep(
                 'leave.request', TourKey::Leave, 'Pide días',
                 'Desde el portal, pide unos días de vacaciones.',
-                'La solicitud se confirma con la llave, así que nadie la pide por otra persona.',
+                'La solicitud se confirma con la llave de la persona, como una firma.',
                 'do', 'tenant.vacations.requests.index', null,
             ),
             new TourStep(
                 'leave.approve', TourKey::Leave, 'Aprueba como RH',
                 'Vuelve al panel y aprueba la solicitud.',
-                'La persona se entera al momento y su saldo se ajusta solo.',
+                'La persona recibe el aviso por correo y su saldo lo refleja.',
                 'do', 'tenant.vacations.requests.index', 'approve-leave-request',
             ),
             new TourStep(

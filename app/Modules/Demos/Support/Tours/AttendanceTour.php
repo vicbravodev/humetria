@@ -33,13 +33,13 @@ final readonly class AttendanceTour implements Tour
             new TourStep(
                 'attendance.zone', TourKey::Attendance, 'Dibuja la zona',
                 'Dibuja en el mapa la zona donde se puede marcar.',
-                'Una marca fuera de la zona queda señalada para revisión, sin perseguir a nadie.',
+                'Fuera de la zona, la marca se bloquea o queda señalada para revisión, según la política del centro.',
                 'do', 'tenant.attendance.center', 'attendance-add-zone',
             ),
             new TourStep(
                 'attendance.kiosk', TourKey::Attendance, 'Emite el kiosco',
                 'Emite el kiosco del centro para mostrar su QR en una pantalla.',
-                'El QR cambia solo, así que nadie marca desde su casa con una foto.',
+                'El QR cambia solo, así que una foto vieja del código no sirve para marcar.',
                 'do', 'tenant.attendance.center', 'attendance-issue-kiosk',
             ),
             new TourStep(
@@ -51,7 +51,7 @@ final readonly class AttendanceTour implements Tour
             new TourStep(
                 'attendance.key', TourKey::Attendance, 'El público crea su llave',
                 'Pide al público que abra su acceso y cree su llave con la huella o la cara.',
-                'La llave vive en su celular: nadie puede marcar por otra persona.',
+                'La llave vive en su celular, con su huella o su cara, en lugar de una contraseña que se presta.',
                 'watch', 'tenant.worker-access.index', null,
             ),
             new TourStep(

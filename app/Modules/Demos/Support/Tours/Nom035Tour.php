@@ -34,7 +34,7 @@ final readonly class Nom035Tour implements Tour
             new TourStep(
                 'nom035.answers', TourKey::Nom035, 'El público contesta',
                 'Pide al público que conteste desde su celular.',
-                'Las respuestas son anónimas: RH ve el avance, nunca quién contestó qué.',
+                'Las respuestas no guardan ninguna liga con la persona: RH solo ve cuántas van.',
                 'watch', 'tenant.campaigns.show', 'evaluation-progress',
             ),
             new TourStep(
@@ -46,7 +46,7 @@ final readonly class Nom035Tour implements Tour
             new TourStep(
                 'nom035.results', TourKey::Nom035, 'Mira los resultados',
                 'Abre los resultados y el informe de la evaluación.',
-                'El diagnóstico queda listo para actuar y para presentarlo ante la STPS.',
+                'El diagnóstico queda listo para actuar y para presentarlo ante la STPS. En la demo el mínimo por grupo es 1: con tan pocas personas, un resultado podría identificar respuestas.',
                 'watch', 'tenant.campaigns.results', null,
                 '¿Qué dicen los resultados de la evaluación de este centro?',
             ),

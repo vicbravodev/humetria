@@ -38,13 +38,13 @@ final readonly class EngagementTour implements Tour
             new TourStep(
                 'engagement.answers', TourKey::Engagement, 'El público contesta',
                 'Pide al público que conteste desde su celular.',
-                'RH ve cuántos contestaron, nunca quién contestó qué.',
+                'Las respuestas no guardan ninguna liga con la persona: RH solo ve cuántas van.',
                 'watch', 'tenant.climate.index', null,
             ),
             new TourStep(
                 'engagement.results', TourKey::Engagement, 'Mira los resultados',
                 'Abre los resultados de la encuesta.',
-                'El resultado dice qué cuidar primero, sin exponer a nadie.',
+                'El resultado dice qué cuidar primero. En la demo el mínimo por grupo es 1: con tan pocas personas, un resultado podría identificar respuestas.',
                 'watch', 'tenant.climate.index', null,
                 '¿Qué dice la encuesta de clima?',
             ),
