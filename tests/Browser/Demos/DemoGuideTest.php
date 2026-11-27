@@ -188,6 +188,16 @@ it('skips a step', function (): void {
     expect(DemoSession::query()->firstOrFail()->skipped_steps)->toBe(['nom035.launch']);
 });
 
+it('rings a control that appears after the page', function (): void {
+    $campaign = presentedEvaluation();
+
+    visit("/admin/alba-demo/campaigns/{$campaign->id}")
+        ->assertPresent('[data-tour="launch-evaluation"][data-guide-spotlight]')
+        // As a tab or a deferred prop would: the control the step lights comes later.
+        ->assertScript("() => { document.querySelector('[data-tour=\"launch-evaluation\"]').removeAttribute('data-tour'); const late = document.createElement('button'); late.id = 'late-control'; late.textContent = 'Tarde'; setTimeout(() => { late.setAttribute('data-tour', 'launch-evaluation'); document.querySelector('main, [data-slot=\"page-body\"]').append(late); }, 300); return 'ready'; }", 'ready')
+        ->assertScript('() => new Promise((resolve) => { const start = performance.now(); const check = () => { const lit = document.querySelector(\'#late-control\')?.hasAttribute(\'data-guide-spotlight\') === true; lit || performance.now() - start > 3000 ? resolve(lit) : setTimeout(check, 50); }; check(); })', true);
+});
+
 it('keeps the guide when a skip is refused, and asks for it again', function (): void {
     $campaign = presentedEvaluation();
 
