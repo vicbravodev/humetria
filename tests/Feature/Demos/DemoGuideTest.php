@@ -346,3 +346,20 @@ it('reports the last step done when the session finishes', function (): void {
     expect(polledGuide()->json())->toMatchArray(['finished' => true, 'justDone' => 'Pregúntale a Humi'])
         ->and(polledGuide()->json('justDone'))->toBeNull();
 });
+
+it('shows the guide to a page fetched ahead without moving it nor spending what was just done', function (): void {
+    $session = guidedSession(['nom035']);
+    presentAs();
+    polledGuide()->assertOk();
+    $session->recordVisit('tenant.work-centers.index');
+
+    $page = $this->withHeader('Purpose', 'prefetch')->get(route('tenant.dashboard', $this->demo))->assertOk()->viewData('page');
+
+    expect($page['props']['demoGuide'])->toMatchArray(['justDone' => null])
+        ->and($page['props']['demoGuide']['current']['key'])->toBe('base.people')
+        ->and($session->refresh()->guide_step)->toBe('base.center');
+
+    // The page the presenter does open still celebrates it.
+    $this->withoutHeader('Purpose');
+    expect(polledGuide()->json('justDone'))->toBe('El centro de la sesión');
+});

@@ -23,11 +23,12 @@ interface DemoGuide
     /**
      * The guide of the session in course: each tour with its progress (done or skipped of its steps) and the current step,
      * the first one neither done by the real data nor skipped, with the address of its page in the demo. Null unless the
-     * presenter asks and the session is active. Counts and fixed copy only: never a person nor an answer.
+     * presenter asks and the session is active. Counts and fixed copy only: never a person nor an answer. A page fetched ahead
+     * (`$advance` false) only looks: the guide's step stays and the step just done is left for the page the presenter opens.
      *
      * @return Guide|null
      */
-    public function forCurrentRequest(): ?array;
+    public function forCurrentRequest(bool $advance = true): ?array;
 
     /** The presenter opened the panel page `$routeName`: kept when a step waits for it, for the session in course only. */
     public function recordVisit(string $routeName): void;

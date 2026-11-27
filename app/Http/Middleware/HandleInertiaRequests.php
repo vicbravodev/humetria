@@ -164,11 +164,13 @@ final class HandleInertiaRequests extends Middleware
 
         // Only a page opened in full is a visit: neither a partial reload (the guide's own, or any other) nor a page fetched
         // ahead while a link is hovered (Inertia's prefetch).
-        if (is_string($route) && ! $request->hasHeader('X-Inertia-Partial-Component') && $request->header('Purpose') !== 'prefetch') {
+        $prefetch = $request->header('Purpose') === 'prefetch';
+
+        if (is_string($route) && ! $request->hasHeader('X-Inertia-Partial-Component') && ! $prefetch) {
             $guide->recordVisit($route);
         }
 
-        return $guide->forCurrentRequest();
+        return $guide->forCurrentRequest(advance: ! $prefetch);
     }
 
     private function seesNom035(): bool
