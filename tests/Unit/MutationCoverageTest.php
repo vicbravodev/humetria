@@ -34,12 +34,13 @@ function mutationExemptClasses(): array
         'Arma las rutas del panel a las que enlazan las respuestas, sin decidir nada: los tests de cada herramienta fijan el enlace.' => [
             'App\Modules\Assistant\Support\PanelLinks',
         ],
-        'Pendiente de clasificar (26 nov 2026): entra a la mutación o pasa arriba con su razón. Esta lista solo se achica.' => [
-            'App\Modules\Billing\Support\SatCatalogs',
-            'App\Modules\Billing\Support\ShortDate',
-            'App\Modules\Billing\Support\SubscriptionView',
+        'DTO o valor de solo constructor: no decide nada, lo arma y lo lee lógica que sí se muta.' => [
             'App\Modules\Billing\Support\UnitCost',
-            'App\Modules\Billing\Support\UsagePeriod',
+        ],
+        'Catálogos fijos del SAT (régimen fiscal y uso del CFDI): validar el código lo fijan los tests de AccountRules, que sí se muta, y mutar cada renglón del catálogo no mide ninguna decisión.' => [
+            'App\Modules\Billing\Support\SatCatalogs',
+        ],
+        'Pendiente de clasificar (26 nov 2026): entra a la mutación o pasa arriba con su razón. Esta lista solo se achica.' => [
             'App\Modules\Blog\Support\BlogPresenter',
             'App\Modules\Blog\Support\BlogSeo',
             'App\Modules\Blog\Support\BlogTools',

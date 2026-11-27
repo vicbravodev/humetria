@@ -12,13 +12,15 @@ use App\Modules\Billing\Enums\Profile;
 use App\Modules\Billing\Enums\SubscriptionStatus;
 use App\Modules\Billing\Models\Statement;
 use App\Modules\Billing\Models\Subscription;
+use App\Modules\Billing\Support\ShortDate;
+use App\Modules\Billing\Support\SubscriptionView;
 use App\Modules\Tenancy\Contracts\CompanyLimits;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Models\Tenant;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Log;
 
-mutates(ApplyScheduledChanges::class);
+mutates(ApplyScheduledChanges::class, SubscriptionView::class, ShortDate::class);
 
 function reductionWish(Plan $plan, int $seats, int $centers): SubscriptionData
 {
