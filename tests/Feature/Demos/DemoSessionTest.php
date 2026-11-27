@@ -251,7 +251,9 @@ it('keeps the session ending when its reset fails, and ends it on a second try',
     $this->delete(route('demo-room.session.end'))->assertSessionHas('inertia.flash_data.toast.type', 'success');
     resolve(ResetDemo::class, ['runId' => DemoRun::query()->where('status', 'running')->sole()->id])->handle(resolve(DemoWorkspace::class));
 
-    expect($session->refresh()->status)->toBe(DemoSessionStatus::Ended);
+    // The trail is insert-only: the second try ends the same session, so it records nothing new.
+    expect($session->refresh()->status)->toBe(DemoSessionStatus::Ended)
+        ->and(DB::table('audit_entries')->where('event', 'demo.session_ended')->count())->toBe(1);
 });
 
 it('leaves a plain reset alone when no session is ending', function (): void {

@@ -47,7 +47,10 @@ final readonly class EndDemoSession
             return $outcome;
         }
 
-        $this->audit->handle('demo.session_ended', $session, ['tenant_id' => $this->demos->id()]);
+        // Once per end: a second try of a session already ending was audited by the call that moved it.
+        if ($moved) {
+            $this->audit->handle('demo.session_ended', $session, ['tenant_id' => $this->demos->id()]);
+        }
 
         return $outcome;
     }

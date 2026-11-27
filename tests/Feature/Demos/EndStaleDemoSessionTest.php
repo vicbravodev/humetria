@@ -125,7 +125,8 @@ it('ends again a session stuck ending because its reset died', function (string 
     $this->artisan('demo:end-stale-session')->expectsOutput('Sesión atorada terminándose: reinicio de nuevo.')->assertSuccessful();
 
     expect($session->refresh()->status)->toBe(DemoSessionStatus::Ending)
-        ->and(DemoRun::query()->where('status', 'running')->sole()->kind)->toBe('reset');
+        ->and(DemoRun::query()->where('status', 'running')->sole()->kind)->toBe('reset')
+        ->and(DB::table('audit_entries')->where('event', 'demo.session_ended')->count())->toBe(0);
     Queue::assertPushed(ResetDemo::class);
 })->with([
     'failed' => ['failed', 5],
