@@ -391,3 +391,39 @@ it('brings the superadmin back to the demo room on leaving the demo company, and
     $this->actingAs(support())->post(route('companies.impersonate', $demo));
     $this->post(route('impersonation.stop'))->assertRedirect(route('companies.index'));
 });
+
+it('lands the superadmin on a page of the demo company when the room asks for it, as owner or HR', function (string $as): void {
+    $demo = Tenant::factory()->create(['slug' => 'alba-demo', 'is_demo' => true]);
+    memberOf($demo, TenantRole::Owner);
+    memberOf($demo, TenantRole::Hr);
+
+    $this->actingAs(superadmin())
+        ->post(route('companies.impersonate', $demo), ['as' => $as, 'to' => '/admin/alba-demo/worker-access?center=abc'])
+        ->assertRedirect(url('/admin/alba-demo/worker-access?center=abc'));
+})->with(['owner', 'hr']);
+
+it('lands on the dashboard when the page asked for is not one of the company entered', function (string $to): void {
+    $demo = Tenant::factory()->create(['slug' => 'alba-demo', 'is_demo' => true]);
+    memberOf($demo, TenantRole::Owner);
+
+    $this->actingAs(superadmin())
+        ->post(route('companies.impersonate', $demo), ['to' => $to])
+        ->assertRedirect(route('dashboard'));
+})->with([
+    'another company' => '/admin/otra-empresa/employees',
+    'a slug that only starts the same' => '/admin/alba-demoevil/employees',
+    'another site' => 'https://evil.example/admin/alba-demo/employees',
+    'protocol-relative' => '//evil.example/admin/alba-demo',
+    'a backslash' => '/admin/alba-demo/\\evil.example',
+    'climbing out' => '/admin/alba-demo/../companies',
+    'the console' => '/admin/companies',
+]);
+
+it('ignores the page asked for in a real company: the room only sends to the demo', function (): void {
+    $company = Tenant::factory()->create(['slug' => 'acme']);
+    ownerOf($company);
+
+    $this->actingAs(superadmin())
+        ->post(route('companies.impersonate', $company), ['to' => '/admin/acme/employees'])
+        ->assertRedirect(route('dashboard'));
+});
