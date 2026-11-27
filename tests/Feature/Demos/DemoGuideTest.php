@@ -177,6 +177,11 @@ it('records the pages a step waits for only on a full visit, never from the poll
 
     expect($session->refresh()->visited)->toBe([]);
 
+    // Hovering a link of the sidebar fetches its page ahead (Inertia's prefetch): nobody opened it yet.
+    $this->get(route('tenant.work-centers.index', $this->demo), ['X-Inertia' => 'true', 'Purpose' => 'prefetch']);
+
+    expect($session->refresh()->visited)->toBe([]);
+
     // A page no step waits for is not kept.
     sharedGuide('tenant.employees.index');
 

@@ -162,8 +162,9 @@ final class HandleInertiaRequests extends Middleware
         $guide = app(DemoGuide::class);
         $route = $request->route()?->getName();
 
-        // Only a page opened in full is a visit: a partial reload (the guide's own, or any other) is not.
-        if (is_string($route) && ! $request->hasHeader('X-Inertia-Partial-Component')) {
+        // Only a page opened in full is a visit: neither a partial reload (the guide's own, or any other) nor a page fetched
+        // ahead while a link is hovered (Inertia's prefetch).
+        if (is_string($route) && ! $request->hasHeader('X-Inertia-Partial-Component') && $request->header('Purpose') !== 'prefetch') {
             $guide->recordVisit($route);
         }
 
