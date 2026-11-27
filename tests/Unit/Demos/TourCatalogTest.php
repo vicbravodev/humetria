@@ -97,3 +97,17 @@ it('promises no hiding the demo cannot keep: its group minimum is 1', function (
     expect($results)->toHaveCount(2)
         ->each(fn ($step) => $step->why->toContain('En la demo el mínimo por grupo es 1'));
 });
+
+it('says what the platform does in plain words, without promising what it cannot', function (): void {
+    $why = array_column(array_map(fn (TourStep $step): array => [$step->key, $step->why], everyStep()), 1, 0);
+
+    // «Anónima» promises more than the demo keeps with its minimum of 1: say what is kept instead.
+    expect($why['engagement.launch'])->toContain('cada respuesta se guarda sin el nombre de quien contesta')
+        ->not->toContain('anónima')
+        // RH sees the results once it closes: only while it runs does RH see just how many answered.
+        ->and($why['nom035.answers'])->toContain('Mientras tanto, RH solo ve cuántas van')
+        ->and($why['engagement.answers'])->toContain('Mientras tanto, RH solo ve cuántas van')
+        // The date of entry two years back is what the vacation tour needs: the balance the law gives.
+        ->and($why['base.people'])->toContain('con su antigüedad, sus vacaciones ya salen con el saldo que marca la ley')
+        ->and($why['attendance.mode'])->toContain('Una oficina marca con el QR de la entrada; quien trabaja en campo, desde donde esté');
+});

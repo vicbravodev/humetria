@@ -32,13 +32,13 @@ final readonly class EngagementTour implements Tour
             new TourStep(
                 'engagement.launch', TourKey::Engagement, 'Lanza la encuesta',
                 'Abre la encuesta y lánzala.',
-                'La invitación sale por correo y WhatsApp, y cada respuesta es anónima.',
+                'La invitación sale por correo y WhatsApp, y cada respuesta se guarda sin el nombre de quien contesta.',
                 'do', 'tenant.climate.index', null,
             ),
             new TourStep(
                 'engagement.answers', TourKey::Engagement, 'El público contesta',
                 'Pide al público que conteste desde su celular.',
-                'Las respuestas no guardan ninguna liga con la persona: RH solo ve cuántas van.',
+                'Las respuestas no guardan ninguna liga con la persona. Mientras tanto, RH solo ve cuántas van.',
                 'watch', 'tenant.climate.index', null,
             ),
             new TourStep(

@@ -11,7 +11,7 @@ final class Answers
 {
     /**
      * Done when everyone invited answered, or when it closed: closing (even with nobody answering) must not leave the guide
-     * stuck on a step that can no longer happen. With no invitation yet there is nothing to tell.
+     * stuck on a step that can no longer happen. With nobody invited there is nothing to tell live.
      */
     public static function state(bool $launched, int $invited, int $answered, bool $closed): StepState
     {
@@ -19,8 +19,15 @@ final class Answers
             return StepState::pending();
         }
 
-        $live = $answered === 1 ? "Llegó 1 de {$invited} respuestas" : "Llegaron {$answered} de {$invited} respuestas";
+        $done = $closed || ($answered >= 1 && $answered >= $invited);
 
-        return new StepState($closed || ($answered >= 1 && $answered >= $invited), $live);
+        if ($invited === 0) {
+            return new StepState($done);
+        }
+
+        $verb = $answered === 1 ? 'Llegó' : 'Llegaron';
+        $noun = $invited === 1 ? 'respuesta' : 'respuestas';
+
+        return new StepState($done, "{$verb} {$answered} de {$invited} {$noun}");
     }
 }

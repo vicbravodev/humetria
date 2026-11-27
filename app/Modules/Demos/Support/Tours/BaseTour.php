@@ -28,7 +28,7 @@ final readonly class BaseTour implements Tour
             new TourStep(
                 'base.people', TourKey::Base, 'Da de alta al público',
                 'Agrega a cada persona del público en el centro de la sesión, con su correo, su teléfono y una fecha de ingreso de hace dos años.',
-                'Con su gente cargada, la empresa invita y recolecta sin pedirle nada más a nadie.',
+                'Con su gente cargada, la empresa invita y recolecta sin pedirle nada más a nadie; con su antigüedad, sus vacaciones ya salen con el saldo que marca la ley.',
                 'do', 'tenant.employees.index', 'add-employee',
             ),
         ];

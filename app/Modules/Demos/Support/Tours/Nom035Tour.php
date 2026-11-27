@@ -34,7 +34,7 @@ final readonly class Nom035Tour implements Tour
             new TourStep(
                 'nom035.answers', TourKey::Nom035, 'El público contesta',
                 'Pide al público que conteste desde su celular.',
-                'Las respuestas no guardan ninguna liga con la persona: RH solo ve cuántas van.',
+                'Las respuestas no guardan ninguna liga con la persona. Mientras tanto, RH solo ve cuántas van.',
                 'watch', 'tenant.campaigns.show', 'evaluation-progress',
             ),
             new TourStep(

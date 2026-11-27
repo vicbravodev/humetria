@@ -27,7 +27,7 @@ final readonly class AttendanceTour implements Tour
             new TourStep(
                 'attendance.mode', TourKey::Attendance, 'Escoge cómo se marca',
                 'Escoge el modo del centro: con el QR del kiosco o sin él.',
-                'Cada centro marca como le funciona, y la regla queda escrita para todos.',
+                'Cada centro marca como le funciona. Una oficina marca con el QR de la entrada; quien trabaja en campo, desde donde esté.',
                 'do', 'tenant.attendance.center', 'attendance-center-mode',
             ),
             new TourStep(
