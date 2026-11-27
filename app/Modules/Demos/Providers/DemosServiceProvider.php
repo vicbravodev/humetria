@@ -17,12 +17,23 @@ use App\Modules\Demos\Support\DemoLeadRegistry;
 use App\Modules\Demos\Support\DoorKeeper;
 use App\Modules\Demos\Support\SessionCenter;
 use App\Modules\Demos\Support\SessionGuide;
+use App\Modules\Demos\Support\TourCatalog;
+use App\Modules\Demos\Support\Tours\AttendanceTour;
+use App\Modules\Demos\Support\Tours\BaseTour;
+use App\Modules\Demos\Support\Tours\ComplaintsTour;
+use App\Modules\Demos\Support\Tours\EngagementTour;
+use App\Modules\Demos\Support\Tours\HumiTour;
+use App\Modules\Demos\Support\Tours\LeaveTour;
+use App\Modules\Demos\Support\Tours\Nom035Tour;
+use App\Modules\Demos\Support\Tours\SharedAccessActivity;
+use App\Modules\WorkerAccess\Contracts\WorkerAccessActivity;
 use Database\Seeders\Demo\DemoShowcaseLinks;
 use Database\Seeders\Demo\DemoWorkspaceRunner;
 use Database\Seeders\Demo\RosterDoorPool;
 use Database\Seeders\Demo\WorkerAccessEntrance;
 use Illuminate\Auth\Access\Response as AccessResponse;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Gate;
@@ -42,6 +53,20 @@ final class DemosServiceProvider extends ServiceProvider
         $this->app->bind(DoorControl::class, DoorKeeper::class);
         $this->app->bind(DemoSessionCenter::class, SessionCenter::class);
         $this->app->bind(DemoGuide::class, SessionGuide::class);
+        // Asistencia and Vacaciones share one read of WorkerAccess per catalog: a poll asks each fact once.
+        $this->app->bind(TourCatalog::class, function (Application $app): TourCatalog {
+            $access = ['access' => new SharedAccessActivity($app->make(WorkerAccessActivity::class))];
+
+            return new TourCatalog(
+                $app->make(BaseTour::class),
+                $app->make(Nom035Tour::class),
+                $app->make(AttendanceTour::class, $access),
+                $app->make(EngagementTour::class),
+                $app->make(ComplaintsTour::class),
+                $app->make(LeaveTour::class, $access),
+                $app->make(HumiTour::class),
+            );
+        });
     }
 
     public function boot(): void

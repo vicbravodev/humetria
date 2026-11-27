@@ -201,9 +201,9 @@ it('polls with a fixed number of queries', function (): void {
     presentAs();
     polledGuide()->assertOk();
 
-    // The request's own (the account, the one behind it, the demo, the session, the company) and one read per fact. Asistencia
-    // and Vacaciones each ask WorkerAccess once: two queries repeat only when both tours are chosen.
-    $this->expectsDatabaseQueryCount(23);
+    // The request's own (the account and its roles, the one behind it and theirs, the demo, the session), the company and
+    // one read per fact: 7 + 1 + 13.
+    $this->expectsDatabaseQueryCount(21);
 
     polledGuide()->assertOk();
 });

@@ -287,3 +287,16 @@ it('reads each fact of a tour once for all its steps', function (TourKey $tour):
     expect(array_keys($states))->toBe(array_map(fn (TourStep $step): string => $step->key, resolve(TourCatalog::class)->for([$tour])))
         ->and($queries)->toBe(array_values(array_unique($queries)));
 })->with(array_filter(TourKey::cases(), fn (TourKey $tour): bool => $tour !== TourKey::Base));
+
+it('reads each fact once even when two tours share it', function (): void {
+    $this->actingAs(memberOf($this->demo, TenantRole::Owner));
+    $queries = [];
+    DB::listen(function (Illuminate\Database\Events\QueryExecuted $query) use (&$queries): void {
+        $queries[] = $query->sql.' '.json_encode($query->bindings);
+    });
+
+    // Asistencia and Vacaciones both ask WorkerAccess what happened since the session started.
+    resolve(TourCatalog::class)->states(TourKey::cases(), $this->session);
+
+    expect($queries)->toBe(array_values(array_unique($queries)));
+});
