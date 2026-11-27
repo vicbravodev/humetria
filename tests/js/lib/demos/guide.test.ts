@@ -6,7 +6,9 @@ import {
     guideCount,
     isDemoGuide,
     liveCount,
+    nextCelebration,
     progressLabel,
+    shownCelebration,
     spotlightFor,
 } from '@/lib/demos/guide';
 import type { DemoGuide, DemoGuideStep } from '@/types/demo-guide';
@@ -179,5 +181,39 @@ describe('isDemoGuide', () => {
             isDemoGuide({ ...guide, current: { ...launch, kind: 'other' } }),
         ).toBe(false);
         expect(isDemoGuide({ ...guide, tours: [{ key: 'x' }] })).toBe(false);
+    });
+});
+
+describe('nextCelebration and shownCelebration', () => {
+    const answering: DemoGuide = {
+        ...guide,
+        current: answers,
+        justDone: 'Lanza la evaluación',
+    };
+
+    it('holds the step just done while the guide stays on the next one', () => {
+        const held = nextCelebration(null, answering);
+
+        expect(held).toEqual({
+            text: 'Listo: «Lanza la evaluación».',
+            key: 'nom035.answers',
+        });
+        expect(nextCelebration(held, answering)).toBe(held);
+
+        const polled = { ...answering, justDone: null };
+
+        expect(nextCelebration(held, polled)).toBe(held);
+        expect(shownCelebration(held, polled)).toBe(
+            'Listo: «Lanza la evaluación».',
+        );
+    });
+
+    it('lets it go once the guide moves on, and celebrates nothing without a guide', () => {
+        const held = nextCelebration(null, answering);
+
+        expect(shownCelebration(held, { ...guide, justDone: null })).toBeNull();
+        expect(shownCelebration(null, answering)).toBeNull();
+        expect(nextCelebration(null, null)).toBeNull();
+        expect(shownCelebration(held, null)).toBeNull();
     });
 });

@@ -72,6 +72,34 @@ export function celebrationOf(guide: DemoGuide): string | null {
     return guide.justDone === null ? null : `Listo: «${guide.justDone}».`;
 }
 
+/** A celebration held on screen, with the step the guide was on when it came. */
+export type Celebration = { text: string; key: string | null };
+
+/** What to hold once `guide` arrives: a new celebration replaces the one held; a guide with none keeps it. */
+export function nextCelebration(
+    held: Celebration | null,
+    guide: DemoGuide | null,
+): Celebration | null {
+    const text = guide === null ? null : celebrationOf(guide);
+    const key = guide?.current?.key ?? null;
+
+    return text === null || (held?.text === text && held.key === key)
+        ? held
+        : { text, key };
+}
+
+/** The held celebration, while the guide stays on the step it came with (the next poll brings none). */
+export function shownCelebration(
+    held: Celebration | null,
+    guide: DemoGuide | null,
+): string | null {
+    return held !== null &&
+        guide !== null &&
+        held.key === (guide.current?.key ?? null)
+        ? held.text
+        : null;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === 'object' && value !== null;
 }
