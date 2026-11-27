@@ -313,6 +313,12 @@ Casi plano. La jerarquía la dan el espacio y los bordes; hay dos niveles de pro
 
 Medidor de 5 segmentos llenos según el nivel, más la etiqueta escrita («Riesgo medio»), más color. Tres señales redundantes, legible en impresión en blanco y negro. Etiqueta con fondo tintado, nunca un bloque sólido terracota.
 
+### Humi y el foco de un recorrido
+
+`Humi`, `HumiAvatar` (su cara en un círculo `accent`) y el foco de los recorridos (`spotlight-tour.css`, la burbuja de
+driver.js con los tokens) viven en `components/humetria/`: los usan Humi, Primeros pasos y el guía de la demo. Ficha:
+`docs/design-system/componentes/HumiAvatar.md`.
+
 ### Survey Shell (componente firma)
 
 Hoja de la encuesta con radio 14px, avance por sección visible, aviso de confidencialidad antes de la primera pregunta, en cabecera y al pie. Trata de «usted», opciones en filas de 56 px con texto de 18/28, y no avanza sola.

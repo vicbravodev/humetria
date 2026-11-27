@@ -116,4 +116,4 @@ Las animaciones respetan `prefers-reduced-motion`.
 
 ## Qué entregar
 
-Componentes en la carpeta de componentes del repo: `HumiLauncher`, `HumiPanel`, `HumiThread`, `HumiMessage`, `HumiToolStep`, `HumiComposer`, `HumiSuggestions`, `HumiResultCard`, más el hook que envuelve el cliente de chat. Humi (`components/assistant/humi.tsx`) es la pieza base del avatar.
+Componentes en la carpeta de componentes del repo: `HumiLauncher`, `HumiPanel`, `HumiThread`, `HumiMessage`, `HumiToolStep`, `HumiComposer`, `HumiSuggestions`, `HumiResultCard`, más el hook que envuelve el cliente de chat. Humi (`components/humetria/humi.tsx`, con `HumiAvatar`) es la pieza base del avatar: vive en el design system porque también la usan Primeros pasos y el guía de la demo.

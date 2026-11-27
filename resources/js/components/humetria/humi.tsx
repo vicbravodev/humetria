@@ -1,6 +1,6 @@
 import { useId } from 'react';
-import HumiCrown from '@/components/assistant/humi-crown';
-import HumiEyes from '@/components/assistant/humi-eyes';
+import HumiCrown from '@/components/humetria/humi-crown';
+import HumiEyes from '@/components/humetria/humi-eyes';
 import {
     litTicks,
     type HumiExpression,

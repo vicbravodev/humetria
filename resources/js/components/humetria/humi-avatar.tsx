@@ -1,4 +1,4 @@
-import Humi from '@/components/assistant/humi';
+import Humi from '@/components/humetria/humi';
 import type { HumiExpression } from '@/lib/assistant/humi-expressions';
 
 /** Humi's face in a round, tinted badge, as it sits in the header, beside its answers and on the launcher. */

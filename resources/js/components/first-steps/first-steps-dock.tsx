@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import FirstStepsDone from '@/components/first-steps/first-steps-done';
 import FirstStepsLauncher from '@/components/first-steps/first-steps-launcher';
 import FirstStepsPanel from '@/components/first-steps/first-steps-panel';
-import '@/components/first-steps/first-steps-tour.css';
+import '@/components/humetria/spotlight-tour.css';
 import FirstStepsWelcome from '@/components/first-steps/first-steps-welcome';
 import { Popover, PopoverContent } from '@/components/ui/popover';
 import { useFirstStepsActions } from '@/hooks/use-first-steps-actions';
