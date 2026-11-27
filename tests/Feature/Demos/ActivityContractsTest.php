@@ -259,3 +259,26 @@ describe('ComplaintActivity', function (): void {
         expect(resolve(ComplaintActivity::class)->since($this->since))->toEqual(new ComplaintCounts(0, 0));
     });
 });
+
+describe('LeaveActivity', function (): void {
+    it('counts only what happened after the session started', function (): void {
+        LeaveRequest::factory()->approved()->create(['tenant_id' => $this->a->id]);
+        $this->travelTo($this->since);
+        LeaveRequest::factory()->create(['tenant_id' => $this->a->id]);
+        LeaveRequest::factory()->approved()->create(['tenant_id' => $this->a->id]);
+        LeaveRequest::factory()->taken()->create(['tenant_id' => $this->a->id]);
+        LeaveRequest::factory()->rejected()->create(['tenant_id' => $this->a->id]);
+        workIn($this->a);
+
+        expect(resolve(LeaveActivity::class)->since($this->since))->toEqual(new LeaveCounts(4, 2))
+            ->and(resolve(LeaveActivity::class)->since($this->since->setTimezone('America/Mexico_City')))->toEqual(new LeaveCounts(4, 2));
+    });
+
+    it('does not read another company', function (): void {
+        $this->travelTo($this->since);
+        LeaveRequest::factory()->approved()->create(['tenant_id' => $this->b->id]);
+        workIn($this->a);
+
+        expect(resolve(LeaveActivity::class)->since($this->since))->toEqual(new LeaveCounts(0, 0));
+    });
+});
