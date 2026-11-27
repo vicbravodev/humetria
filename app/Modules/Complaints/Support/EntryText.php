@@ -35,11 +35,11 @@ final readonly class EntryText
 
         $resolution = is_string($meta['resolution'] ?? null) ? ComplaintResolution::tryFrom($meta['resolution']) : null;
 
-        return match (true) {
-            ($meta['to'] ?? null) === 'closed' => 'cerró el caso'.($resolution === null ? '.' : ": {$resolution->label()}."),
-            ($meta['from'] ?? null) === 'closed' => 'abrió el caso de nuevo.',
-            default => 'pasó el caso a revisión.',
-        };
+        if (($meta['to'] ?? null) === 'closed') {
+            return 'cerró el caso'.($resolution === null ? '.' : ": {$resolution->label()}.");
+        }
+
+        return ($meta['from'] ?? null) === 'closed' ? 'abrió el caso de nuevo.' : 'pasó el caso a revisión.';
     }
 
     /**
