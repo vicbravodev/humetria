@@ -14,13 +14,13 @@ use App\Modules\Tenancy\Data\ChannelSetting;
 use App\Support\PhoneNumber;
 
 /**
- * Rules 1, 2, 4 and 5 of the design: which channel wins and whether WhatsApp may write to a phone. `canSend` always reads fresh (a
+ * Rules 1, 2, 4 and 5 of the design: which channel wins (in the demo, every channel that works) and whether WhatsApp may write to a phone. `canSend` always reads fresh (a
  * job runs it just before sending); `route` loads the company's settings and opt-outs once and compares in memory, because a
  * launch asks it for every person.
  */
 final class ChannelRules implements ChannelConsent, ChannelPicker
 {
-    /** @var array<string, array{settings: list<ChannelSetting>, whatsAppOpen: bool, optOuts: array<string, true>}> */
+    /** @var array<string, array{settings: list<ChannelSetting>, whatsAppOpen: bool, demo: bool, optOuts: array<string, true>}> */
     private array $routing = [];
 
     public function __construct(
@@ -63,6 +63,7 @@ final class ChannelRules implements ChannelConsent, ChannelPicker
 
         $tenantId = $this->current->id();
         $routing = $this->routing[$tenantId] ??= $this->load($tenantId);
+        $routes = [];
 
         foreach ($routing['settings'] as $setting) {
             if (! $setting->enabled) {
@@ -70,19 +71,24 @@ final class ChannelRules implements ChannelConsent, ChannelPicker
             }
 
             if ($setting->channel === 'mail' && $hasEmail) {
-                return ['mail' => $email];
+                $routes['mail'] = $email;
             }
 
             if ($setting->channel === 'whatsapp' && $whatsAppAllowed && $routing['whatsAppOpen'] && $this->reachable($mobile, $routing['optOuts'])) {
-                return ['whatsapp' => (string) $mobile];
+                $routes['whatsapp'] = (string) $mobile;
+            }
+
+            // A real company writes through the first channel that works; the demo through every one, so its audience gets both.
+            if ($routes !== [] && ! $routing['demo']) {
+                return $routes;
             }
         }
 
-        return [];
+        return $routes;
     }
 
     /**
-     * @return array{settings: list<ChannelSetting>, whatsAppOpen: bool, optOuts: array<string, true>}
+     * @return array{settings: list<ChannelSetting>, whatsAppOpen: bool, demo: bool, optOuts: array<string, true>}
      */
     private function load(string $tenantId): array
     {
@@ -96,7 +102,7 @@ final class ChannelRules implements ChannelConsent, ChannelPicker
 
         $settings = $this->channels->settings($tenantId);
 
-        return ['settings' => $settings, 'whatsAppOpen' => $this->whatsAppOpen($tenantId, $settings), 'optOuts' => $optOuts];
+        return ['settings' => $settings, 'whatsAppOpen' => $this->whatsAppOpen($tenantId, $settings), 'demo' => $this->demo->isDemo($tenantId), 'optOuts' => $optOuts];
     }
 
     /** @param array<string, true> $optOuts */
@@ -122,8 +128,8 @@ final class ChannelRules implements ChannelConsent, ChannelPicker
     }
 
     /**
-     * The company-level part of the WhatsApp rule: the function is available, the company is not the demo, and its owner has the
-     * channel on with the current words accepted.
+     * The company-level part of the WhatsApp rule: the function is available and the owner has the channel on with the current
+     * words accepted. The demo too (decision 5 of the guided demo): its seeded people have no phone, only the audience added live.
      *
      * @param  list<ChannelSetting>  $settings
      */
@@ -134,8 +140,7 @@ final class ChannelRules implements ChannelConsent, ChannelPicker
         return $whatsApp !== null
             && $whatsApp->enabled
             && $whatsApp->consentVersion === config()->string('whatsapp.consent.version')
-            && $this->switch->available()
-            && ! $this->demo->isDemo($tenantId);
+            && $this->switch->available();
     }
 
     /** @param list<ChannelSetting> $settings */
