@@ -50,6 +50,7 @@ vigentes, número válido, sin baja), pero `ChannelPicker` devuelve **todos** lo
 alta en vivo recibe la invitación por correo y por WhatsApp a la vez. `invited_via` guarda el primero (correo, el preferido de la
 sesión). Las 180 personas sembradas no tienen teléfono, así que a nadie ficticio le sale un mensaje. La demo no cuenta en cobros:
 Billing no le aparta cupo de WhatsApp ni le cuenta los mensajes aceptados.
+
 - Nada del payload de Meta ni de Resend llega a logs.
 
 ## Orden de validación
