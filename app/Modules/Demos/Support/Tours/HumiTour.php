@@ -10,7 +10,6 @@ use App\Modules\Demos\Data\TourStep;
 use App\Modules\Demos\Enums\TourKey;
 use App\Modules\Demos\Models\DemoSession;
 use Illuminate\Contracts\Auth\Factory;
-use LogicException;
 
 /**
  * Humi: the presenter asks it how compliance stands. Humi keeps the usage under the account the panel is open as (the
@@ -34,14 +33,10 @@ final readonly class HumiTour implements Tour
         ];
     }
 
-    public function state(TourStep $step, DemoSession $session): StepState
+    public function states(DemoSession $session): array
     {
-        if ($step->key !== 'humi.ask') {
-            throw new LogicException("Unknown step {$step->key}.");
-        }
-
         $userId = $this->auth->guard()->id();
 
-        return new StepState(is_int($userId) && $this->humi->hasAsked($userId));
+        return ['humi.ask' => new StepState(is_int($userId) && $this->humi->hasAsked($userId))];
     }
 }

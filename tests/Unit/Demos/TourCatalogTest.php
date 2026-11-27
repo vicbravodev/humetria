@@ -52,7 +52,15 @@ it('has unique step keys and routes that exist', function (): void {
             ->and($route)->not->toBeNull("{$step->key}: {$step->route}")
             ->and($route?->methods())->toContain('GET')
             ->and($step->route)->toStartWith('tenant.');
+
+        // A step done by opening a page waits for a panel page that exists: its name is what the guide records.
+        if ($step->visit !== null) {
+            expect(Route::getRoutes()->getByName($step->visit)?->methods() ?? ["{$step->key}: {$step->visit}"])->toContain('GET')
+                ->and($step->visit)->toStartWith('tenant.');
+        }
     }
+
+    expect(resolve(TourCatalog::class)->visits())->toBe(array_values(array_filter(array_map(fn (TourStep $step): ?string => $step->visit, everyStep()))));
 });
 
 it('lists every spot it lights up in one place, in kebab-case', function (): void {

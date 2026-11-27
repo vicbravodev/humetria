@@ -14,6 +14,11 @@ interface Tour
     /** @return list<TourStep> */
     public function steps(): array;
 
-    /** Computed every time from the data: nothing is kept as done (only the skipped steps, on the session). */
-    public function state(TourStep $step, DemoSession $session): StepState;
+    /**
+     * The state of each step that waits for a fact of the data, by key, reading each contract once: nothing is kept as done
+     * (only the skipped steps, on the session). A step that waits for a page visit (`TourStep::$visit`) is the catalog's.
+     *
+     * @return array<string, StepState>
+     */
+    public function states(DemoSession $session): array;
 }

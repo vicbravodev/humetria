@@ -10,7 +10,6 @@ use App\Modules\Demos\Enums\TourKey;
 use App\Modules\Demos\Models\DemoSession;
 use App\Modules\Leave\Contracts\LeaveActivity;
 use App\Modules\WorkerAccess\Contracts\WorkerAccessActivity;
-use LogicException;
 
 /**
  * Vacaciones, on the presenter's computer: the portal of a person of the audience, their key, a request, its approval and
@@ -45,19 +44,19 @@ final readonly class LeaveTour implements Tour
                 'leave.balance', TourKey::Leave, 'Mira el saldo',
                 'Abre los saldos de vacaciones.',
                 'Cada saldo sigue lo que marca la ley, sin hojas de cálculo.',
-                'watch', 'tenant.vacations.balances.index', null,
+                'watch', 'tenant.vacations.balances.index', null, visit: 'tenant.vacations.balances.index',
             ),
         ];
     }
 
-    public function state(TourStep $step, DemoSession $session): StepState
+    public function states(DemoSession $session): array
     {
-        return match ($step->key) {
+        $leave = $this->leave->since($session->since());
+
+        return [
             'leave.key' => new StepState($this->access->since($session->since())->keys >= 1),
-            'leave.request' => new StepState($this->leave->since($session->since())->requested >= 1),
-            'leave.approve' => new StepState($this->leave->since($session->since())->approved >= 1),
-            'leave.balance' => new StepState(in_array('tenant.vacations.balances.index', $session->visited, true)),
-            default => throw new LogicException("Unknown step {$step->key}."),
-        };
+            'leave.request' => new StepState($leave->requested >= 1),
+            'leave.approve' => new StepState($leave->approved >= 1),
+        ];
     }
 }

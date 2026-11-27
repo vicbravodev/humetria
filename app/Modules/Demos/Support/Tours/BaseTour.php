@@ -9,7 +9,6 @@ use App\Modules\Demos\Data\TourStep;
 use App\Modules\Demos\Enums\TourKey;
 use App\Modules\Demos\Models\DemoSession;
 use App\Modules\Organization\Contracts\Headcount;
-use LogicException;
 
 /** «El centro y su gente»: always first; the session's center and the people of the audience, which the others need. */
 final readonly class BaseTour implements Tour
@@ -23,7 +22,7 @@ final readonly class BaseTour implements Tour
                 'base.center', TourKey::Base, 'El centro de la sesión',
                 'Abre los centros de trabajo y ubica el de esta sesión.',
                 'Todo en la plataforma parte del centro de trabajo: ahí se aplican la NOM-035, la asistencia y lo demás.',
-                'do', 'tenant.work-centers.index', 'work-centers-list',
+                'do', 'tenant.work-centers.index', 'work-centers-list', visit: 'tenant.work-centers.index',
             ),
             new TourStep(
                 'base.people', TourKey::Base, 'Da de alta al público',
@@ -34,13 +33,9 @@ final readonly class BaseTour implements Tour
         ];
     }
 
-    public function state(TourStep $step, DemoSession $session): StepState
+    public function states(DemoSession $session): array
     {
-        return match ($step->key) {
-            'base.center' => new StepState(in_array('tenant.work-centers.index', $session->visited, true)),
-            'base.people' => $this->people($session->work_center_id),
-            default => throw new LogicException("Unknown step {$step->key}."),
-        };
+        return ['base.people' => $this->people($session->work_center_id)];
     }
 
     private function people(?string $workCenterId): StepState

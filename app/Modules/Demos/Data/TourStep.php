@@ -20,6 +20,7 @@ final readonly class TourStep
      * @param  string  $route  the named panel route («Llévame» goes there, with the session's center or evaluation)
      * @param  string|null  $target  the `data-tour` lit on that page (one of TourCatalog::TARGETS)
      * @param  string|null  $ask  a question for Humi, written for the presenter to send
+     * @param  string|null  $visit  the named panel route whose opening is the step's fact, when that is all it waits for
      */
     public function __construct(
         public string $key,
@@ -31,5 +32,6 @@ final readonly class TourStep
         public string $route,
         public ?string $target = null,
         public ?string $ask = null,
+        public ?string $visit = null,
     ) {}
 }

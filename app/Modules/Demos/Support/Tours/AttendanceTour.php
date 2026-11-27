@@ -10,7 +10,6 @@ use App\Modules\Demos\Data\TourStep;
 use App\Modules\Demos\Enums\TourKey;
 use App\Modules\Demos\Models\DemoSession;
 use App\Modules\WorkerAccess\Contracts\WorkerAccessActivity;
-use LogicException;
 
 /**
  * Asistencia: the session's center gets its mode, zone and kiosk; the audience gets its access, creates its key and marks.
@@ -65,26 +64,29 @@ final readonly class AttendanceTour implements Tour
                 'Abre el reporte de asistencia.',
                 'RH ve las horas de todo el centro en un solo lugar, listas para la nómina.',
                 'watch', 'tenant.attendance.report', null,
-                '¿Cómo va la asistencia de esta semana?',
+                '¿Cómo va la asistencia de esta semana?', visit: 'tenant.attendance.report',
             ),
         ];
     }
 
-    public function state(TourStep $step, DemoSession $session): StepState
+    public function states(DemoSession $session): array
     {
+        $keys = ['attendance.mode', 'attendance.zone', 'attendance.kiosk', 'attendance.access', 'attendance.key', 'attendance.mark'];
+
         if ($session->work_center_id === null) {
-            return StepState::pending();
+            return array_fill_keys($keys, StepState::pending());
         }
 
-        return match ($step->key) {
-            'attendance.mode' => new StepState($this->attendance->atCenter($session->work_center_id, $session->since())->modeSet),
-            'attendance.zone' => new StepState($this->attendance->atCenter($session->work_center_id, $session->since())->zones >= 1),
-            'attendance.kiosk' => new StepState($this->attendance->atCenter($session->work_center_id, $session->since())->kiosks >= 1),
-            'attendance.access' => StepState::counted($this->access->since($session->since())->invited, '1 acceso enviado', 'accesos enviados'),
-            'attendance.key' => StepState::counted($this->access->since($session->since())->keys, '1 llave creada', 'llaves creadas'),
-            'attendance.mark' => StepState::counted($this->attendance->atCenter($session->work_center_id, $session->since())->marks, '1 marca en el centro', 'marcas en el centro'),
-            'attendance.report' => new StepState(in_array('tenant.attendance.report', $session->visited, true)),
-            default => throw new LogicException("Unknown step {$step->key}."),
-        };
+        $center = $this->attendance->atCenter($session->work_center_id, $session->since());
+        $access = $this->access->since($session->since());
+
+        return [
+            'attendance.mode' => new StepState($center->modeSet),
+            'attendance.zone' => new StepState($center->zones >= 1),
+            'attendance.kiosk' => new StepState($center->kiosks >= 1),
+            'attendance.access' => StepState::counted($access->invited, '1 acceso enviado', 'accesos enviados'),
+            'attendance.key' => StepState::counted($access->keys, '1 llave creada', 'llaves creadas'),
+            'attendance.mark' => StepState::counted($center->marks, '1 marca en el centro', 'marcas en el centro'),
+        ];
     }
 }

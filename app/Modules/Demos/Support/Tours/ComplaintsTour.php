@@ -9,7 +9,6 @@ use App\Modules\Demos\Data\StepState;
 use App\Modules\Demos\Data\TourStep;
 use App\Modules\Demos\Enums\TourKey;
 use App\Modules\Demos\Models\DemoSession;
-use LogicException;
 
 /** Denuncias: the public channel's QR, a complaint from the audience (or the presenter's screen), and RH acknowledging it. */
 final readonly class ComplaintsTour implements Tour
@@ -34,14 +33,13 @@ final readonly class ComplaintsTour implements Tour
         ];
     }
 
-    public function state(TourStep $step, DemoSession $session): StepState
+    public function states(DemoSession $session): array
     {
         $counts = $this->complaints->since($session->since());
 
-        return match ($step->key) {
+        return [
             'complaints.receive' => StepState::counted($counts->received, '1 denuncia recibida', 'denuncias recibidas'),
             'complaints.acknowledge' => new StepState($counts->acknowledged >= 1),
-            default => throw new LogicException("Unknown step {$step->key}."),
-        };
+        ];
     }
 }

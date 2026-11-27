@@ -9,7 +9,6 @@ use App\Modules\Demos\Data\TourStep;
 use App\Modules\Demos\Enums\TourKey;
 use App\Modules\Demos\Models\DemoSession;
 use App\Modules\Engagement\Contracts\EngagementActivity;
-use LogicException;
 
 /**
  * Clima y pulso, with a climate survey: the demo's story leaves a pulse open and a company has one open survey of each
@@ -46,21 +45,19 @@ final readonly class EngagementTour implements Tour
                 'Abre los resultados de la encuesta.',
                 'El resultado dice qué cuidar primero. En la demo el mínimo por grupo es 1: con tan pocas personas, un resultado podría identificar respuestas.',
                 'watch', 'tenant.climate.index', null,
-                '¿Qué dice la encuesta de clima?',
+                '¿Qué dice la encuesta de clima?', visit: 'tenant.climate.results',
             ),
         ];
     }
 
-    public function state(TourStep $step, DemoSession $session): StepState
+    public function states(DemoSession $session): array
     {
         $survey = $this->engagement->since($session->since());
 
-        return match ($step->key) {
+        return [
             'engagement.create' => new StepState($survey->created),
             'engagement.launch' => new StepState($survey->launched),
             'engagement.answers' => Answers::state($survey->launched, $survey->invited, $survey->answered, $survey->closed),
-            'engagement.results' => new StepState(in_array('tenant.climate.results', $session->visited, true)),
-            default => throw new LogicException("Unknown step {$step->key}."),
-        };
+        ];
     }
 }

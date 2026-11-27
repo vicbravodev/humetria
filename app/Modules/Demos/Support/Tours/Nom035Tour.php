@@ -9,7 +9,6 @@ use App\Modules\Demos\Data\StepState;
 use App\Modules\Demos\Data\TourStep;
 use App\Modules\Demos\Enums\TourKey;
 use App\Modules\Demos\Models\DemoSession;
-use LogicException;
 
 /** NOM-035: the evaluation of the session's center, from the draft to the results and the Guía I list. */
 final readonly class Nom035Tour implements Tour
@@ -48,33 +47,30 @@ final readonly class Nom035Tour implements Tour
                 'Abre los resultados y el informe de la evaluación.',
                 'El diagnóstico queda listo para actuar y para presentarlo ante la STPS. En la demo el mínimo por grupo es 1: con tan pocas personas, un resultado podría identificar respuestas.',
                 'watch', 'tenant.campaigns.results', null,
-                '¿Qué dicen los resultados de la evaluación de este centro?',
+                '¿Qué dicen los resultados de la evaluación de este centro?', visit: 'tenant.campaigns.results',
             ),
             new TourStep(
                 'nom035.screenings', TourKey::Nom035, 'Canalización de la Guía I',
                 'Abre la lista de canalización de la Guía I.',
                 'La norma obliga a canalizar a quien vivió un acontecimiento traumático severo, y solo los roles autorizados lo ven.',
-                'watch', 'tenant.campaigns.screenings', null,
+                'watch', 'tenant.campaigns.screenings', null, visit: 'tenant.campaigns.screenings',
             ),
         ];
     }
 
-    public function state(TourStep $step, DemoSession $session): StepState
+    public function states(DemoSession $session): array
     {
         if ($session->work_center_id === null) {
-            return StepState::pending();
+            return array_fill_keys(['nom035.draft', 'nom035.launch', 'nom035.answers', 'nom035.close'], StepState::pending());
         }
 
         $activity = $this->campaigns->atCenter($session->work_center_id);
 
-        return match ($step->key) {
+        return [
             'nom035.draft' => new StepState($activity->campaignId !== null),
             'nom035.launch' => new StepState($activity->launched),
             'nom035.answers' => Answers::state($activity->launched, $activity->invited, $activity->answered, $activity->closed),
             'nom035.close' => new StepState($activity->closed),
-            'nom035.results' => new StepState(in_array('tenant.campaigns.results', $session->visited, true)),
-            'nom035.screenings' => new StepState(in_array('tenant.campaigns.screenings', $session->visited, true)),
-            default => throw new LogicException("Unknown step {$step->key}."),
-        };
+        ];
     }
 }

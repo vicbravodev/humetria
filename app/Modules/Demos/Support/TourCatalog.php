@@ -16,6 +16,7 @@ use App\Modules\Demos\Support\Tours\HumiTour;
 use App\Modules\Demos\Support\Tours\LeaveTour;
 use App\Modules\Demos\Support\Tours\Nom035Tour;
 use App\Modules\Demos\Support\Tours\Tour;
+use LogicException;
 
 /** The tours of a guided session and their steps: «El centro y su gente» first, then the chosen ones in their order. */
 final readonly class TourCatalog
@@ -57,14 +58,56 @@ final readonly class TourCatalog
      */
     public function for(array $tours): array
     {
-        $chosen = array_filter($tours, fn (TourKey $tour): bool => $tour !== TourKey::Base);
+        return array_merge(...array_map(fn (TourKey $tour): array => $this->tour($tour)->steps(), $this->withBase($tours)));
+    }
 
-        return array_merge(...array_map(fn (TourKey $tour): array => $this->tour($tour)->steps(), [TourKey::Base, ...$chosen]));
+    /**
+     * The state of every step of `$tours` («base» first), by key, in their order: each tour reads its facts once for all its
+     * steps; a step that waits for a page is done once the session saw it.
+     *
+     * @param  list<TourKey>  $tours
+     * @return array<string, StepState>
+     */
+    public function states(array $tours, DemoSession $session): array
+    {
+        $states = [];
+
+        foreach ($this->withBase($tours) as $key) {
+            $tour = $this->tour($key);
+            $detected = $tour->states($session);
+
+            foreach ($tour->steps() as $step) {
+                $states[$step->key] = $step->visit === null
+                    ? $detected[$step->key] ?? throw new LogicException("No detector for {$step->key}.")
+                    : new StepState(in_array($step->visit, $session->visited, true));
+            }
+        }
+
+        return $states;
     }
 
     public function state(TourStep $step, DemoSession $session): StepState
     {
-        return $this->tour($step->tour)->state($step, $session);
+        return $this->states([$step->tour], $session)[$step->key];
+    }
+
+    /**
+     * The panel pages some step waits for: only these are worth recording as visited.
+     *
+     * @return list<string>
+     */
+    public function visits(): array
+    {
+        return array_values(array_filter(array_map(fn (TourStep $step): ?string => $step->visit, $this->for(TourKey::cases()))));
+    }
+
+    /**
+     * @param  list<TourKey>  $tours
+     * @return list<TourKey>
+     */
+    private function withBase(array $tours): array
+    {
+        return [TourKey::Base, ...array_values(array_filter($tours, fn (TourKey $tour): bool => $tour !== TourKey::Base))];
     }
 
     private function tour(TourKey $tour): Tour
