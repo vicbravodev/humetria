@@ -21,6 +21,7 @@ use App\Modules\Attendance\Models\WeeklyConfirmation;
 use App\Modules\Attendance\Support\OfflineChallenge;
 use App\Modules\Attendance\Support\OfflineTicket;
 use App\Modules\Attendance\Support\QrToken;
+use App\Modules\Attendance\Support\VerifiedOfflineMark;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -39,7 +40,7 @@ use ParagonIE\ConstantTime\Base64UrlSafe;
 use Tests\Support\SoftAuthenticator;
 use Tests\Support\SoftDeviceKey;
 
-mutates(RecordOfflineMark::class);
+mutates(RecordOfflineMark::class, VerifiedOfflineMark::class);
 
 /*
  * RecordOfflineMark: what becomes of each mark a phone made without a connection (criterio 3.3.1). Every time is UTC on

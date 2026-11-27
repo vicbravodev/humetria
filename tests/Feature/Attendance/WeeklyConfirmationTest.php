@@ -18,6 +18,7 @@ use App\Modules\Attendance\Exceptions\WeekRejected;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
+use App\Modules\Attendance\Support\PersonTimezone;
 use App\Modules\Attendance\Support\WeekDigest;
 use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Leave\Models\LeaveHoliday;
@@ -36,7 +37,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 
-mutates(ConfirmWeek::class, DisputeWeek::class, ReopenWeeks::class, CloseDays::class);
+mutates(ConfirmWeek::class, DisputeWeek::class, ReopenWeeks::class, CloseDays::class, PersonTimezone::class);
 
 const LAST_WEEK = '2026-11-02';
 
