@@ -38,8 +38,11 @@ final class PrepareDemoSession implements ShouldQueue
         $run = DemoRun::query()->findOrFail($this->runId);
         $session = DemoSession::query()->findOrFail($this->sessionId);
 
-        // Taken over while this job waited in the queue: the run that took over may be telling the story now.
+        // Taken over while this job waited in the queue: the run that took over may be telling the story now, and the
+        // session, never prepared, must not hold the lock.
         if ($run->status !== 'running') {
+            $session->markFailed();
+
             return;
         }
 

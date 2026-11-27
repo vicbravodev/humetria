@@ -384,14 +384,26 @@ describe('the preparation of a session', function (): void {
         expect($session->refresh()->status)->toBe($status)->and($session->ended_at)->toBeNull();
     })->with([DemoSessionStatus::Active, DemoSessionStatus::Ending]);
 
-    it('does nothing when its run was taken over while it waited', function (): void {
+    it('prepares nothing and fails its session when its run was taken over while it waited', function (): void {
         $calls = sessionWorkspace();
         $session = openSession(DemoSessionStatus::Preparing);
         $run = DemoRun::query()->forceCreate(['kind' => 'session', 'status' => 'failed', 'started_at' => now(), 'finished_at' => now()]);
 
         (new PrepareDemoSession($run->id, $session->id))->handle(resolve(DemoWorkspace::class));
 
-        expect($calls->getArrayCopy())->toBe([])->and($session->refresh()->status)->toBe(DemoSessionStatus::Preparing);
+        expect($calls->getArrayCopy())->toBe([])
+            ->and($session->refresh()->status)->toBe(DemoSessionStatus::Failed)
+            ->and(DemoSession::current())->toBeNull();
+    });
+
+    it('leaves an ending session ending when its run was taken over', function (): void {
+        sessionWorkspace();
+        $session = openSession(DemoSessionStatus::Ending);
+        $run = DemoRun::query()->forceCreate(['kind' => 'session', 'status' => 'failed', 'started_at' => now(), 'finished_at' => now()]);
+
+        (new PrepareDemoSession($run->id, $session->id))->handle(resolve(DemoWorkspace::class));
+
+        expect($session->refresh()->status)->toBe(DemoSessionStatus::Ending);
     });
 });
 
