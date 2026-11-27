@@ -71,7 +71,8 @@ function planByModule(array $testFilesByClass): string
     $modules = [];
 
     foreach ($testFilesByClass as $class => $files) {
-        if (preg_match('/\\\\(Http\\\\(Controllers|Requests)|Notifications)\\\\/', $class) === 1) {
+        // A module's notifications are thin; a module called Notifications is not.
+        if (preg_match('/\\\\(Http\\\\(Controllers|Requests)|(?<!Modules\\\\)Notifications)\\\\/', $class) === 1) {
             continue;
         }
 

@@ -33,7 +33,7 @@ Cada checkout usa su propia base de pruebas (ver `docs/setup.md`, "Worktrees en 
 |---|---|---|
 | Local, a mano | La clase que pasas con `--class` | — |
 | `tests.yml` (PR y `main`) | Nada: la mutación no bloquea el merge | — |
-| `mutation.yml`, domingo 23:00 (CDMX) y a mano | Las clases de `mutates()` sin controladores, FormRequests ni notificaciones, un módulo a la vez (`composer mutate:critical`) | 95% por módulo |
+| `mutation.yml`, domingo 23:00 (CDMX) y a mano | Las clases de `mutates()` sin controladores, FormRequests ni notificaciones (las carpetas `Notifications/` de cada módulo; el módulo `Notifications` sí entra), un módulo a la vez (`composer mutate:critical`) | 95% por módulo |
 
 ### Por qué un módulo a la vez
 
