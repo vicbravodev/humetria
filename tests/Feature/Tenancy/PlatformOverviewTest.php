@@ -5,8 +5,12 @@ declare(strict_types=1);
 use App\Http\Middleware\ForbidWhileImpersonating;
 use App\Models\User;
 use App\Modules\Billing\Enums\Plan;
+use App\Modules\Billing\Enums\Profile;
 use App\Modules\Billing\Enums\SubscriptionStatus;
+use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Models\Subscription;
+use App\Modules\Billing\Support\ContractedRevenue;
+use App\Modules\Billing\Support\LedgerPlatformCost;
 use App\Modules\Demos\Enums\DemoStatus;
 use App\Modules\Demos\Models\DemoRequest;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -15,7 +19,7 @@ use App\Modules\Tenancy\Support\PlatformOverview;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(PlatformOverview::class);
+mutates(PlatformOverview::class, ContractedRevenue::class, LedgerPlatformCost::class);
 
 beforeEach(fn () => $this->travelTo('2026-11-12 18:00 UTC'));
 
@@ -62,6 +66,17 @@ it('adds up the monthly income the paying subscriptions contract, before VAT', f
 
     $this->actingAs(superadmin())->get(route('overview.index'))
         ->assertInertia(fn (Assert $page) => $page->where('revenueCents', $one));
+});
+
+it('prices each channel Integral company with the discount its own account earns', function (): void {
+    $discounted = BillingAccount::factory()->consultant()->create();
+    $direct = BillingAccount::factory()->consultant()->create();
+    foreach ([$discounted, $discounted, $discounted, $direct, $direct] as $account) {
+        planFor($account, ['plan' => Plan::Integral, 'profile' => Profile::ChannelIntegral, 'centers' => 3]);
+    }
+
+    $this->actingAs(superadmin())->get(route('overview.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('revenueCents', 3 * 792_000 + 2 * 990_000));
 });
 
 it('has zero income when nobody pays', function (): void {

@@ -4,15 +4,20 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Models\User;
+use App\Modules\Billing\Actions\ExportReport;
 use App\Modules\Billing\Actions\GenerateStatement;
 use App\Modules\Billing\Actions\IssueStatement;
 use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
+use App\Modules\Billing\Models\Subscription;
 use App\Modules\Billing\Support\CsvCell;
+use App\Modules\Tenancy\Contracts\CompanyRegistry;
+use App\Modules\Tenancy\Data\CompanyBrief;
+use App\Modules\Tenancy\Models\Tenant;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Log;
 
-mutates(CsvCell::class);
+mutates(CsvCell::class, ExportReport::class);
 
 /** The CSV a staff member downloads, as its rows (without the byte-order mark). */
 function exportRows(object $test, string $report, ?User $user = null): array
@@ -54,7 +59,7 @@ it('downloads as a CSV file named for the report and the day, for the superadmin
 it('lists the portfolio: every company an account pays with its plan, status, size and what it costs a month before VAT', function (): void {
     [$tenant] = statementCompany(['starts_on' => '2026-09-01']);
     $account = BillingAccount::query()->findOrFail(AccountCompany::query()->where('tenant_id', $tenant->id)->value('billing_account_id'));
-    $withoutPlan = App\Modules\Tenancy\Models\Tenant::factory()->create();
+    $withoutPlan = Tenant::factory()->create();
     AccountCompany::factory()->for($account, 'account')->create(['tenant_id' => $withoutPlan->id]);
 
     $rows = exportRows($this, 'portfolio');
@@ -92,6 +97,57 @@ it('lists the renewals by date: each company that pays, its renewal and what the
     expect($rows[0])->toBe(['Empresa', 'Cuenta', 'Plan', 'Estado', 'Renovación', 'Total del siguiente estado con IVA'])
         ->and(array_column(array_slice($rows, 1), 0))->toBe([$sooner->trade_name, $later->trade_name])
         ->and($rows[1][4])->toBe('2026-12-01')->and($rows[1][5])->toBe('5684.00');
+});
+
+it('leaves the account and the next total blank for a company that pays but has no account to bill yet', function (): void {
+    $tenant = Tenant::factory()->create();
+    Subscription::factory()->create(['tenant_id' => $tenant->id, 'starts_on' => '2026-09-01', 'renews_on' => '2026-12-01']);
+
+    $rows = exportRows($this, 'renewals');
+
+    expect($rows)->toHaveCount(2)
+        ->and($rows[1])->toBe([$tenant->trade_name, '', 'Cumplimiento', 'Activa', '2026-12-01', '']);
+});
+
+it('leaves out of the portfolio a company the registry does not know, and keeps listing the rest', function (): void {
+    [$gone, $account] = paidCompany();
+    $kept = Tenant::factory()->create();
+    AccountCompany::factory()->for($account, 'account')->create(['tenant_id' => $kept->id, 'starts_on' => CarbonImmutable::parse('2026-11-20')]);
+    AccountCompany::query()->where('tenant_id', $gone->id)->update(['starts_on' => '2026-11-01']);
+    $registry = resolve(CompanyRegistry::class);
+    app()->instance(CompanyRegistry::class, new readonly class($registry, $gone->id) implements CompanyRegistry
+    {
+        public function __construct(private CompanyRegistry $real, private string $hidden) {}
+
+        public function find(string $id): ?CompanyBrief
+        {
+            return $this->real->find($id);
+        }
+
+        public function findBySlug(string $slug): ?CompanyBrief
+        {
+            return $this->real->findBySlug($slug);
+        }
+
+        public function many(array $ids): array
+        {
+            return array_diff_key($this->real->many($ids), [$this->hidden => true]);
+        }
+
+        public function search(string $term, int $limit = 20): array
+        {
+            return $this->real->search($term, $limit);
+        }
+
+        public function ids(): array
+        {
+            return $this->real->ids();
+        }
+    });
+
+    $rows = exportRows($this, 'portfolio');
+
+    expect(array_column(array_slice($rows, 1), 3))->toBe([$kept->trade_name]);
 });
 
 it('writes one line of log and one audit entry for each export, with the report and the number of rows', function (): void {

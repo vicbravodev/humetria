@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Billing\Enums\Plan;
 use App\Modules\Billing\Models\Subscription;
+use App\Modules\Billing\Support\SubscriptionPlans;
 use App\Modules\Tenancy\Contracts\CompanyLimits;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -12,7 +13,7 @@ use App\Modules\Tenancy\Support\PlanPage;
 use Carbon\CarbonImmutable;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(PlanPage::class);
+mutates(PlanPage::class, SubscriptionPlans::class);
 
 beforeEach(fn () => $this->travelTo('2026-11-12 18:00 UTC'));
 
