@@ -110,6 +110,10 @@ nunca el mensaje. Preparar, reiniciar, abrir y cerrar la puerta y emitir el enla
 bitácora (`demo.prepare_started`, `demo.reset_started`, `demo.door_opened`, `demo.door_closed`, `demo.kiosk_reissued`),
 solo con ids.
 
+**Respaldo de la sesión:** cada hora `demo:end-stale-session` termina la sesión abierta hace más de 24 h, como «Terminar
+sesión» (`demo.session_expired`; el reinicio borra lo que dejó el público). Una sesión atorada porque su corrida falló o
+murió suelta el candado: preparándose, se marca fallida; terminándose, su reinicio corre de nuevo.
+
 ## 6. Notas de seguridad
 
 - **Excepción a las tablas de solo inserción.** Una migración deja que 14 tablas de solo inserción (respuestas anónimas,
