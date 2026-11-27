@@ -4,8 +4,9 @@ import { useSyncExternalStore } from 'react';
 const OPEN = '[data-slot="dialog-content"], [data-slot="sheet-content"]';
 
 function subscribe(changed: () => void): () => void {
+    // Radix mounts its portals as children of the body: their coming and going is all there is to watch.
     const observer = new MutationObserver(changed);
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, { childList: true });
 
     return () => observer.disconnect();
 }
