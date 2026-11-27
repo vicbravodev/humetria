@@ -74,7 +74,6 @@ function mutationExemptClasses(): array
             'App\Modules\Instruments\Support\Nom037\Nom037',
         ],
         'Pendiente de clasificar (26 nov 2026): entra a la mutación o pasa arriba con su razón. Esta lista solo se achica.' => [
-            'App\Modules\Interventions\Support\ProgramClock',
             'App\Modules\Leave\Actions\SaveWorkWeek',
             'App\Modules\Leave\Support\CompanyPendingRequests',
             'App\Modules\Leave\Support\EmployeeLock',
