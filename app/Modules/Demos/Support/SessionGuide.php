@@ -145,6 +145,17 @@ final class SessionGuide implements DemoGuide
     }
 
     /**
+     * The filter a page takes in its address to open on the session's center: the access page lists every center otherwise,
+     * and only filtered to one does it offer to invite that center.
+     *
+     * @return array<string, string>
+     */
+    private function filters(string $route, DemoSession $session): array
+    {
+        return $route === 'tenant.worker-access.index' && $session->work_center_id !== null ? ['center' => $session->work_center_id] : [];
+    }
+
+    /**
      * The step's page in the demo; while it needs what does not exist yet (the evaluation not yet created), the first page
      * of its tour that needs nothing more, and the dashboard as the last resort.
      *
@@ -162,7 +173,7 @@ final class SessionGuide implements DemoGuide
             }
 
             if (! in_array(null, $parameters, true)) {
-                return route($name, $parameters);
+                return route($name, [...$parameters, ...$this->filters($name, $session)]);
             }
         }
 

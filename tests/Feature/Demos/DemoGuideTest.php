@@ -167,6 +167,19 @@ it('takes the presenter to the session center for the attendance steps', functio
     expect(polledGuide()->json('current'))->toMatchArray(['key' => 'attendance.mode', 'href' => route('tenant.attendance.center', [$this->demo, $this->center])]);
 });
 
+it('opens the access page filtered to the session center, where the button that invites it is', function (): void {
+    $session = guidedSession(['attendance']);
+    presentAs();
+    Employee::factory()->create(['tenant_id' => $this->demo->id, 'work_center_id' => $this->center->id]);
+    $session->recordVisit('tenant.work-centers.index');
+    $session->forceFill(['skipped_steps' => ['attendance.mode', 'attendance.zone', 'attendance.kiosk']])->save();
+
+    expect(polledGuide()->json('current'))->toMatchArray([
+        'key' => 'attendance.access',
+        'href' => route('tenant.worker-access.index', ['tenant' => $this->demo, 'center' => $this->center->id]),
+    ]);
+});
+
 it('records the pages a step waits for only on a full visit, never from the poll nor a partial reload', function (): void {
     $session = guidedSession(['nom035']);
     presentAs();
