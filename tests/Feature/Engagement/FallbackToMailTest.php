@@ -68,8 +68,14 @@ function surveyWaFailure(Invitation $invitation, Survey $survey, FailureCause $c
     );
 }
 
+function surveyMailReserved(Tenant $tenant): int
+{
+    return (int) UsageCounter::query()->where('tenant_id', $tenant->id)->where('meter', 'email_campaign')->sum('reserved');
+}
+
 it('rotates the link and mails the person when the number has no WhatsApp (CUJ 3)', function (): void {
     expect($this->invitation->invited_via)->toBe('whatsapp');
+    $reservedBefore = surveyMailReserved($this->tenant);
 
     event(surveyWaFailure($this->invitation, $this->survey));
 
@@ -79,6 +85,7 @@ it('rotates the link and mails the person when the number has no WhatsApp (CUJ 3
         ->and($invitation->invited_via)->toBe('mail')
         ->and($invitation->token_version)->toBe(1)
         ->and($invitation->token_hash)->toBe(Invitation::hashToken($newToken))
+        ->and(surveyMailReserved($this->tenant))->toBe($reservedBefore + 1)
         ->and(fn () => resolve(OpenInvitation::class)->handle($this->oldToken))->toThrow(SurveyUnavailable::class)
         ->and(resolve(OpenInvitation::class)->handle($newToken)->invitation->id)->toBe($invitation->id);
     Notification::assertSentOnDemandTimes(SurveyInvitation::class, 1);
@@ -175,12 +182,14 @@ it('leaves alone a person the mail already reached with the same link (the demo 
     Log::spy();
     Notification::fake();
     $this->invitation->update(['invited_via' => 'mail']);
+    $reservedBefore = surveyMailReserved($this->tenant);
 
     event(surveyWaFailure($this->invitation, $this->survey));
 
     $invitation = $this->invitation->refresh();
     expect($invitation->token_version)->toBe(0)
-        ->and($invitation->surveyToken())->toBe($this->oldToken);
+        ->and($invitation->surveyToken())->toBe($this->oldToken)
+        ->and(surveyMailReserved($this->tenant))->toBe($reservedBefore);
     Notification::assertNothingSent();
     Log::shouldHaveReceived('info')->with('engagement.fallback_unneeded', ['invitation_id' => $invitation->id])->once();
 });
