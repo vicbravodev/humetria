@@ -151,3 +151,38 @@ export function guideAnswer(
 
     return poll && GONE.includes(status) ? null : undefined;
 }
+
+/** The order of the guide's requests: which answer still counts, and whether a skip is on its way. */
+export type GuideSequence = {
+    /** Numbers a request as the latest; a skip holds the poll until it lands. */
+    begin: (skip: boolean) => number;
+    /** The request `ticket` landed: true when its answer counts (no later request, no new page, since it left). */
+    settle: (ticket: number, skip: boolean) => boolean;
+    /** A new page brought its guide: no answer still on its way counts. */
+    supersede: () => void;
+    /** A skip is on its way: a poll now could land after it with the step it skips. */
+    holdsPolls: () => boolean;
+};
+
+export function guideSequence(): GuideSequence {
+    let latest = 0;
+    let skips = 0;
+
+    return {
+        begin: (skip) => {
+            latest += 1;
+            skips += skip ? 1 : 0;
+
+            return latest;
+        },
+        settle: (ticket, skip) => {
+            skips -= skip ? 1 : 0;
+
+            return ticket === latest;
+        },
+        supersede: () => {
+            latest += 1;
+        },
+        holdsPolls: () => skips > 0,
+    };
+}

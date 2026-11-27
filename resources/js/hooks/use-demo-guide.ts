@@ -1,8 +1,9 @@
 import { usePage } from '@inertiajs/react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { xsrfToken } from '@/lib/assistant/xsrf';
 import {
     guideAnswer,
+    guideSequence,
     nextCelebration,
     shownCelebration,
 } from '@/lib/demos/guide';
@@ -38,29 +39,29 @@ function useCelebration(guide: DemoGuide | null): string | null {
 }
 
 /**
- * The guide's requests, each numbered: only the answer of the latest one counts, so a poll that left before a skip and lands
- * after it cannot take the dock back a step. A new page's guide supersedes them all.
+ * The guide's requests, in the order `guideSequence` keeps: only the latest answer counts, so a poll that left before a skip
+ * and lands after it cannot take the dock back a step, and no poll leaves while a skip is on its way. A new page's guide
+ * supersedes them all.
  */
 function useGuideRequests(setGuide: (guide: DemoGuide | null) => void) {
-    const latest = useRef(0);
+    const [sequence] = useState(guideSequence);
 
     const send = useCallback(
-        (request: () => Promise<Response>, poll: boolean): Promise<boolean> => {
-            latest.current += 1;
-            const mine = latest.current;
+        (request: () => Promise<Response>, skip: boolean): Promise<boolean> => {
+            const ticket = sequence.begin(skip);
 
             return request()
-                .then((response) => answerOf(response, poll))
+                .then((response) => answerOf(response, !skip))
+                .catch(() => undefined)
                 .then((answer) => {
-                    if (mine === latest.current && answer !== undefined) {
+                    if (sequence.settle(ticket, skip) && answer !== undefined) {
                         setGuide(answer);
                     }
 
                     return answer !== undefined;
-                })
-                .catch(() => false);
+                });
         },
-        [setGuide],
+        [sequence, setGuide],
     );
 
     const poll = useCallback(
@@ -70,16 +71,12 @@ function useGuideRequests(setGuide: (guide: DemoGuide | null) => void) {
                     fetch(guideRoute.url(), {
                         headers: { Accept: 'application/json' },
                     }),
-                true,
+                false,
             ),
         [send],
     );
 
-    const supersede = useCallback(() => {
-        latest.current += 1;
-    }, []);
-
-    return { send, poll, supersede };
+    return { send, poll, sequence };
 }
 
 /**
@@ -95,7 +92,7 @@ export function useDemoGuide(polling: boolean): {
     const shared = usePage().props.demoGuide;
     const [guide, setGuide] = useState(shared);
     const [seen, setSeen] = useState(shared);
-    const { send, poll, supersede } = useGuideRequests(setGuide);
+    const { send, poll, sequence } = useGuideRequests(setGuide);
 
     if (shared !== seen) {
         setSeen(shared);
@@ -105,17 +102,23 @@ export function useDemoGuide(polling: boolean): {
     const active = guide !== null;
 
     useEffect(() => {
-        // A new page's guide supersedes any answer still on its way.
-        supersede();
+        // A new page's guide supersedes any answer still on its way; hiding or showing the dock does not.
+        sequence.supersede();
+    }, [shared, sequence]);
 
+    useEffect(() => {
         if (!active || !polling) {
             return;
         }
 
-        const timer = window.setInterval(() => void poll(), POLL_MS);
+        const timer = window.setInterval(() => {
+            if (!sequence.holdsPolls()) {
+                void poll();
+            }
+        }, POLL_MS);
 
         return () => window.clearInterval(timer);
-    }, [active, polling, shared, poll, supersede]);
+    }, [active, polling, poll, sequence]);
 
     const skip = useCallback(
         (step: string) => {
@@ -130,7 +133,7 @@ export function useDemoGuide(polling: boolean): {
                             ...(xsrf === null ? {} : { 'X-XSRF-TOKEN': xsrf }),
                         },
                     }),
-                false,
+                true,
             ).then((taken) => {
                 if (!taken) {
                     void poll();
