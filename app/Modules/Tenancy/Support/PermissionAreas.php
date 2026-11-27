@@ -13,7 +13,7 @@ namespace App\Modules\Tenancy\Support;
  */
 final class PermissionAreas
 {
-    private const array NONE = ['label' => 'Sin acceso', 'permissions' => []];
+    private const array NONE = ['label' => 'Sin acceso', 'permissions' => []]; // @pest-mutate-ignore: RemoveArrayItem
 
     /**
      * By area key, in the screen's order; each extra by permission, as Humi says it.

@@ -8,6 +8,8 @@ use App\Modules\Tenancy\Models\TenantModule;
 use App\Modules\Tenancy\Support\PermissionCatalog;
 use Illuminate\Support\Facades\DB;
 
+mutates(PermissionCatalog::class);
+
 /** @return list<string> */
 function catalogNames(): array
 {
