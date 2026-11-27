@@ -241,6 +241,8 @@ return [
     ],
 
     'attributes' => [
+        'client_name' => 'nombre del cliente',
+        'tours' => 'recorridos',
         'mail_enabled' => 'correo',
         'whatsapp_enabled' => 'WhatsApp',
         'preferred' => 'canal preferido',

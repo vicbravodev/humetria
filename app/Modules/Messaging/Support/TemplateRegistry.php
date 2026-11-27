@@ -14,6 +14,9 @@ final class TemplateRegistry
 {
     private const string FOOTER = 'Humetria';
 
+    /** The footer as submitted from 2026-11-26 on; the older templates keep theirs until Victor submits them again. */
+    private const string ACCENTED_FOOTER = 'Humetría';
+
     private const array EXAMPLES = [
         'empresa' => 'Industrias Ejemplo',
         'fecha_limite' => 'viernes 20 de noviembre',
@@ -35,6 +38,7 @@ final class TemplateRegistry
         $template = $this->get(match ($invitationType) {
             'campaign_participant' => 'survey_invite_v1',
             'engagement_invitation' => 'engagement_invite_v1',
+            'worker_access_link' => 'worker_invite_v1',
             default => throw new InvalidArgumentException("No WhatsApp template for invitation type [{$invitationType}]."),
         });
 
@@ -103,7 +107,8 @@ final class TemplateRegistry
         $pending = fn (string $text, string $what): TemplateButton => TemplateButton::pendingUrl($text, "The {$what} sits after the slug in the route, and Meta's variable goes at the end: a route that ends in it is missing.");
 
         return [
-            $this->template('worker_invite_v1', $language, 'Hola, buen día. {{empresa}} le invita a crear su acceso personal al portal. El enlace es personal y solo sirve una vez.', null, [$pending('Crear mi acceso', 'one-use link')]),
+            // Submitted to Meta on 2026-11-26: the button opens the short route of the one-use link, which ends in the token.
+            $this->template('worker_invite_v1', $language, 'Hola, buen día. {{empresa}} le invita a crear su acceso personal al portal. El enlace es personal y solo sirve una vez.', null, [TemplateButton::urlWithVariable('Crear mi acceso', $this->base('worker.link.short'), 'abc123')], self::ACCENTED_FOOTER),
             $this->template('access_link_v1', $language, 'Hola, buen día. Este es el enlace que pidió para entrar a su portal de {{empresa}}. Solo sirve una vez y vence en {{minutos}} minutos.', null, [$pending('Entrar al portal', 'one-use link')]),
             $this->template('key_registered_v1', $language, 'Hola, buen día. Se registró una llave de acceso nueva en su portal de {{empresa}}. Si no fue usted, avísenos.', null, [$pending('No fui yo', 'signed address that revokes the key')]),
             new AuthenticationTemplate('proof_code_v1', $language),
@@ -113,7 +118,7 @@ final class TemplateRegistry
     /**
      * @param  list<TemplateButton>  $buttons
      */
-    private function template(string $key, string $language, string $body, ?string $header, array $buttons): TemplateDefinition
+    private function template(string $key, string $language, string $body, ?string $header, array $buttons, string $footer = self::FOOTER): TemplateDefinition
     {
         $used = [...self::variablesIn($body), ...self::variablesIn($header ?? '')];
 
@@ -123,7 +128,7 @@ final class TemplateRegistry
             body: $body,
             examples: array_intersect_key(self::EXAMPLES, array_flip($used)),
             header: $header,
-            footer: self::FOOTER,
+            footer: $footer,
             buttons: $buttons,
         );
     }

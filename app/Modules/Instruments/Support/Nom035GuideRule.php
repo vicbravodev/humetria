@@ -9,9 +9,10 @@ use App\Modules\Instruments\Support\Nom035\GuideOne;
 use App\Modules\Instruments\Support\Nom035\GuideThree;
 use App\Modules\Instruments\Support\Nom035\GuideTwo;
 
+/** The norm's rule alone (num. 4.4 and 2): the work center never changes it. */
 final class Nom035GuideRule implements Nom035Guides
 {
-    public function for(int $workers): array
+    public function for(int $workers, ?string $workCenterId = null): array
     {
         return match (true) {
             $workers <= 0 => [],
@@ -21,7 +22,7 @@ final class Nom035GuideRule implements Nom035Guides
         };
     }
 
-    public function instruments(int $workers): array
+    public function instruments(int $workers, ?string $workCenterId = null): array
     {
         $keys = ['I' => GuideOne::KEY, 'II' => GuideTwo::KEY, 'III' => GuideThree::KEY];
 

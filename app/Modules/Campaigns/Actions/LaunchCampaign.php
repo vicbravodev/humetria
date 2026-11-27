@@ -81,7 +81,7 @@ final readonly class LaunchCampaign
      */
     private function assertDraftStillHolds(Campaign $campaign, array $people): void
     {
-        if ($people === [] || $this->guides->instruments(count($people)) !== $campaign->instruments) {
+        if ($people === [] || $this->guides->instruments(count($people), $campaign->work_center_id) !== $campaign->instruments) {
             throw DraftOutdated::guides();
         }
 

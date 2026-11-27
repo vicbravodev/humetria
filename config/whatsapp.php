@@ -26,6 +26,12 @@ return [
     'verify_token' => env('WHATSAPP_VERIFY_TOKEN'),
 
     'language' => 'es_MX',
+
+    // Templates that go out only once Meta approves them; until then their message goes by mail. Victor turns each on in Dokploy.
+    'templates' => [
+        // The invitation to the portal (WorkerAccess), submitted on 2026-11-26.
+        'worker_invite_v1' => (bool) env('WHATSAPP_WORKER_INVITE', false),
+    ],
     'timeout_seconds' => 10,
 
     // Supuesto por confirmar (Victor, antes de la Fase 2 (c)): sends a second, against the limit of the number.

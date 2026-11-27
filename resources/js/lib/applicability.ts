@@ -1,3 +1,5 @@
+import { DEMO_GUIDES_REASON } from '@/lib/evaluation-centers';
+
 /** «¿Te aplica?» of NOM-035 and Ley Silla (board V2-Aplica-Otras): the choices and what each answer means. */
 export type Range = 'up_to_15' | '16_to_50' | 'over_50';
 
@@ -109,4 +111,20 @@ export function seatingResult(
               extra: 'Tu ruta empieza por identificar los puestos de pie.',
               applies: true,
           };
+}
+
+/**
+ * The note under the size of a center: it was marked from the people registered; in the demo session's room, whose
+ * guides no size explains, why they apply instead.
+ */
+export function staffNote(
+    people: number,
+    center: string,
+    range: Range,
+): string {
+    const registered = `Tienes ${people} registradas en ${center}.`;
+
+    return people <= 15 && range !== 'up_to_15'
+        ? `${registered} ${DEMO_GUIDES_REASON}`
+        : `${registered} Lo marcamos por ti; las guías de cada evaluación salen de las personas que registres.`;
 }

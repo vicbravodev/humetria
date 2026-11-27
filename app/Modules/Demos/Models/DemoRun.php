@@ -18,7 +18,7 @@ use Throwable;
  * longer holds the lock.
  *
  * @property string $id
- * @property string $kind prepare or reset
+ * @property string $kind prepare, reset or session (prepares the demo for a demo session)
  * @property string $status running, finished or failed
  * @property string|null $step
  * @property CarbonImmutable $started_at

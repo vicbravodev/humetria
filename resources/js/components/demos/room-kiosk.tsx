@@ -18,9 +18,9 @@ export default function RoomKiosk() {
             aria-labelledby="room-kiosk"
             className="flex flex-col gap-3 card p-5"
         >
-            <h2 id="room-kiosk" className="text-base font-semibold">
+            <h3 id="room-kiosk" className="text-base font-semibold">
                 Pantallas del checador
-            </h2>
+            </h3>
             {links === undefined ? (
                 <>
                     <p className="text-sm text-pretty text-muted-foreground">
@@ -60,9 +60,9 @@ export default function RoomKiosk() {
                     </p>
                     {links.map((link) => (
                         <div key={link.url} className="flex flex-col gap-2">
-                            <h3 className="text-sm font-medium">
+                            <h4 className="text-sm font-medium">
                                 {link.center}
-                            </h3>
+                            </h4>
                             <RoomShareLink
                                 link={link}
                                 alt={`Código QR del enlace de la pantalla del checador de ${link.center}`}

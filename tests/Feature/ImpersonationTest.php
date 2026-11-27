@@ -7,6 +7,7 @@ use App\Http\Impersonation;
 use App\Http\Middleware\EndRevokedImpersonation;
 use App\Models\AuditEntry;
 use App\Models\User;
+use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
 use Illuminate\Log\Events\MessageLogged;
@@ -378,4 +379,54 @@ it('sends a revoked change back to login with 303, so Inertia follows it with a 
         ->assertRedirect(route('login'));
 
     $this->assertGuest();
+});
+
+it('brings the superadmin back to the demo room on leaving the demo company, and support to the console', function (): void {
+    $demo = Tenant::factory()->demo()->create();
+    memberOf($demo, TenantRole::Owner);
+
+    $this->actingAs(superadmin())->post(route('companies.impersonate', $demo), ['as' => 'owner']);
+    $this->post(route('impersonation.stop'))->assertRedirect(route('demo-room.show'));
+
+    $this->actingAs(support())->post(route('companies.impersonate', $demo));
+    $this->post(route('impersonation.stop'))->assertRedirect(route('companies.index'));
+});
+
+it('lands the superadmin on a page of the demo company when the room asks for it, as owner or HR', function (string $as): void {
+    $demo = Tenant::factory()->create(['slug' => 'alba-demo', 'is_demo' => true]);
+    memberOf($demo, TenantRole::Owner);
+    memberOf($demo, TenantRole::Hr);
+
+    $this->actingAs(superadmin())
+        ->post(route('companies.impersonate', $demo), ['as' => $as, 'to' => '/admin/alba-demo/worker-access?center=abc'])
+        ->assertRedirect(url('/admin/alba-demo/worker-access?center=abc'));
+})->with(['owner', 'hr']);
+
+it('lands on the dashboard when the page asked for is not one of the company entered', function (string $to): void {
+    $demo = Tenant::factory()->create(['slug' => 'alba-demo', 'is_demo' => true]);
+    memberOf($demo, TenantRole::Owner);
+
+    $this->actingAs(superadmin())
+        ->post(route('companies.impersonate', $demo), ['to' => $to])
+        ->assertRedirect(route('dashboard'));
+})->with([
+    'another company' => '/admin/otra-empresa/employees',
+    'a slug that only starts the same' => '/admin/alba-demoevil/employees',
+    'another site' => 'https://evil.example/admin/alba-demo/employees',
+    'protocol-relative' => '//evil.example/admin/alba-demo',
+    'a backslash' => '/admin/alba-demo/\\evil.example',
+    'climbing out' => '/admin/alba-demo/../companies',
+    'climbing out, encoded' => '/admin/alba-demo/%2e%2e/companies',
+    'climbing out, encoded in capitals' => '/admin/alba-demo/%2E%2E/companies',
+    'climbing out, half encoded' => '/admin/alba-demo/.%2E/companies',
+    'the console' => '/admin/companies',
+]);
+
+it('ignores the page asked for in a real company: the room only sends to the demo', function (): void {
+    $company = Tenant::factory()->create(['slug' => 'acme']);
+    ownerOf($company);
+
+    $this->actingAs(superadmin())
+        ->post(route('companies.impersonate', $company), ['to' => '/admin/acme/employees'])
+        ->assertRedirect(route('dashboard'));
 });

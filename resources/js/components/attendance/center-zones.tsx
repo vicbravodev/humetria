@@ -31,7 +31,7 @@ export default function CenterZones({
     // The map is drawn again only when the zones change, not when the dialog opens.
     const mapped = useMemo(() => mapZones(zones.data), [zones.data]);
     const add = canManage ? (
-        <Button onClick={() => setAdding(true)}>
+        <Button onClick={() => setAdding(true)} data-tour="attendance-add-zone">
             <Plus aria-hidden />
             Agregar zona
         </Button>

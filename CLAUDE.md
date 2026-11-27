@@ -130,7 +130,7 @@ No hay SMS. WhatsApp sale solo por `Messaging`.
 ## Arquitectura del frontend
 
 - `resources/js`: `pages/{module}/` (una página por ruta, delgada, sin lógica), `components/{module}/` (espejo del módulo
-  del backend), `components/humetria/` (design system: solo usa ui, hooks y lib), `components/ui/` (shadcn generado),
+  del backend), `components/humetria/` (design system: solo usa ui, sus propias piezas, hooks y lib), `components/ui/` (shadcn generado),
   `components/*.tsx` (el marco de la app), `layouts/ hooks/ lib/ types/`.
 - Un módulo nunca importa componentes de otro. Las páginas no se importan desde ningún lado.
   `hooks`, `lib` y `types` no importan componentes ni layouts. Imports siempre con `@/`, nunca `../`.

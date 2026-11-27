@@ -4,6 +4,7 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
 import HumiDock from '@/components/assistant/humi-dock';
 import { CommandPalette } from '@/components/command-palette';
+import GuideDock from '@/components/demos/guide-dock';
 import FirstStepsDock from '@/components/first-steps/first-steps-dock';
 import { CompanyReadOnlyNotice } from '@/components/company-read-only-notice';
 import { ImpersonatedBlockNotice } from '@/components/impersonated-block-notice';
@@ -36,6 +37,7 @@ export default function AppSidebarLayout({
             </AppContent>
             <MobileTabBar />
             <FirstStepsDock />
+            <GuideDock />
             <HumiDock />
             <CommandPalette />
             <ImpersonatedBlockNotice />

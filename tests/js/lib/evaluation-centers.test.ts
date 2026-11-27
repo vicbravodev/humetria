@@ -4,11 +4,15 @@ import {
     centerFollowUp,
     centerSize,
     centerStatus,
+    DEMO_GUIDES_REASON,
+    guidesOutgrowStaff,
     guidesReason,
     numeralsText,
     openCampaignLine,
     periodText,
     SIZES,
+    staffBand,
+    staffReason,
 } from '@/lib/evaluation-centers';
 import type { CampaignSummary, WorkCenterEvaluation } from '@/types';
 
@@ -70,20 +74,67 @@ describe('centerSize', () => {
     });
 });
 
+describe('staffBand', () => {
+    it('groups the people as the norm does, at its exact limits', () => {
+        expect(staffBand(15)).toBe('hasta 15 personas');
+        expect(staffBand(16)).toBe('de 16 a 50 personas');
+        expect(staffBand(50)).toBe('de 16 a 50 personas');
+        expect(staffBand(51)).toBe('más de 50 personas');
+    });
+});
+
+describe('staffReason', () => {
+    it('gives the size of the center as the reason for its guides', () => {
+        expect(staffReason(3, ['Guía I'])).toBe(
+            ', porque el centro tiene hasta 15 personas.',
+        );
+        expect(staffReason(16, ['Guía I', 'Guía II'])).toBe(
+            ', porque el centro tiene de 16 a 50 personas.',
+        );
+    });
+
+    it('claims no size where the demo applies Guía II to a few people', () => {
+        const reason = staffReason(3, ['Guía I', 'Guía II']);
+
+        expect(reason).toBe(
+            ': en esta demostración se aplican siempre, sin importar cuántas personas tenga el centro.',
+        );
+        expect(reason).not.toMatch(/hasta 15|16 a 50/);
+    });
+});
+
 describe('guidesReason', () => {
     it('says why those guides apply', () => {
-        expect(guidesReason([])).toBe(
+        expect(guidesReason([], 0)).toBe(
             'Sin personal todavía: ninguna guía aplica.',
         );
-        expect(guidesReason(['I'])).toBe(
+        expect(guidesReason(['I'], 15)).toBe(
             'Con hasta 15 personas aplica solo la Guía I.',
         );
-        expect(guidesReason(['I', 'II'])).toBe(
+        expect(guidesReason(['I', 'II'], 16)).toBe(
             'De 16 a 50 personas aplican las Guías I y II.',
         );
-        expect(guidesReason(['I', 'III'])).toBe(
+        expect(guidesReason(['I', 'III'], 51)).toBe(
             'Con más de 50 personas aplican las Guías I y III.',
         );
+    });
+
+    it('claims no size where the demo applies Guía II to a few people', () => {
+        expect(guidesReason(['I', 'II'], 3)).toBe(
+            'Aplican las Guías I y II: en esta demostración se aplican siempre, sin importar cuántas personas tenga el centro.',
+        );
+        expect(guidesReason(['I', 'II'], 15)).toBe(DEMO_GUIDES_REASON);
+        expect(guidesReason(['I', 'II'], 15)).not.toMatch(/hasta 15|16 a 50/);
+    });
+});
+
+describe('guidesOutgrowStaff', () => {
+    it('is true only when Guía II applies to 15 people or fewer, as numerals or titles', () => {
+        expect(guidesOutgrowStaff(3, ['I', 'II'])).toBe(true);
+        expect(guidesOutgrowStaff(15, ['Guía I', 'Guía II'])).toBe(true);
+        expect(guidesOutgrowStaff(16, ['I', 'II'])).toBe(false);
+        expect(guidesOutgrowStaff(3, ['I'])).toBe(false);
+        expect(guidesOutgrowStaff(0, [])).toBe(false);
     });
 });
 

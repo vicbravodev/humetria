@@ -1,56 +1,55 @@
 import { Head } from '@inertiajs/react';
-import RoomComplaints from '@/components/demos/room-complaints';
-import RoomDoor from '@/components/demos/room-door';
-import RoomEmpty from '@/components/demos/room-empty';
-import RoomEnter from '@/components/demos/room-enter';
-import RoomKiosk from '@/components/demos/room-kiosk';
-import RoomNotes from '@/components/demos/room-notes';
 import RoomNotices from '@/components/demos/room-notices';
-import RoomRunButton from '@/components/demos/room-run-button';
+import RoomPoll from '@/components/demos/room-poll';
+import RoomSession from '@/components/demos/room-session';
 import RoomStatus from '@/components/demos/room-status';
+import RoomTools from '@/components/demos/room-tools';
 import PageHeader from '@/components/humetria/page-header';
+import { roomDescription } from '@/lib/demos/room';
 import type { DemoRoom } from '@/types';
 
-/** «Sala de demostración»: prepare the demo company, enter it, and share it live with an audience. */
-export default function Room({
-    company,
-    run,
-    prepared,
-    complaints,
-    door,
-}: DemoRoom) {
+/** «Sala de demostración»: a session for a client on top, guided in the demo company; the room's tools under it. */
+export default function Room(props: DemoRoom) {
+    const { company, run, session } = props;
     const running = run?.status === 'running';
 
     return (
         <>
             <Head title="Sala de demostración" />
-            <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
+            {(running ||
+                session?.status === 'preparing' ||
+                session?.status === 'ending') && <RoomPoll />}
+            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
+                    caption="Consola · solo superadmin"
                     title="Sala de demostración"
-                    status={<RoomStatus run={run} company={company} />}
-                    description={
-                        company === null
-                            ? 'La empresa demo para enseñar Humetría en vivo.'
-                            : `${company.name}${prepared === null ? '' : ` · preparada ${prepared.ago} (${prepared.at})`}`
+                    status={
+                        session === null && (
+                            <RoomStatus run={run} company={company} />
+                        )
                     }
-                >
-                    {company !== null && (
-                        <RoomRunButton kind="reset" running={running} />
-                    )}
-                </PageHeader>
-                <RoomNotices run={run} prepared={prepared} />
-                {company === null ? (
-                    <RoomEmpty running={running} />
-                ) : (
-                    <div className="grid gap-4 md:grid-cols-2">
-                        <RoomEnter companyId={company.id} running={running} />
-                        <RoomDoor door={door} />
-                        {complaints !== null && (
-                            <RoomComplaints link={complaints} />
-                        )}
-                        <RoomKiosk />
-                        <RoomNotes />
-                    </div>
+                    description={roomDescription(props)}
+                />
+                <RoomNotices
+                    run={run}
+                    prepared={props.prepared}
+                    session={session}
+                />
+                <RoomSession
+                    session={session}
+                    tours={props.tours}
+                    run={run}
+                    company={company}
+                />
+                {/* A failed session leaves the demo half made: nothing to enter or share until it ends. */}
+                {session?.status !== 'failed' && (
+                    <RoomTools
+                        company={company}
+                        complaints={props.complaints}
+                        door={props.door}
+                        session={session}
+                        running={running}
+                    />
                 )}
             </div>
         </>

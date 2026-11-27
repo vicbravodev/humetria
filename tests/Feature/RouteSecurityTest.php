@@ -83,6 +83,7 @@ function publicRouteNames(): array
         'worker.link.request', // guest: la persona escribe su correo y pide un enlace de un solo uso (30 min); la respuesta es siempre la misma exista o no la persona; solo se envía si exactamente una persona activa de la empresa tiene ese correo; anula los enlaces pedidos antes; throttled por IP y por correo (hash)
         'worker.link.show', // guest: muestra «Continuar» de un enlace de un solo uso sin gastarlo (los filtros de correo abren los enlaces); un enlace usado, anulado, vencido, desconocido, ajeno o de alguien dado de baja muestra la misma pantalla; throttled por IP y por enlace
         'worker.link.open', // guest: gasta el enlace de un solo uso con una actualización condicional (de dos a la vez solo uno gana) y abre la sesión de su persona; regenera la sesión; el mismo resultado para todo enlace que no sirve; throttled por IP y por enlace
+        'worker.link.short', // guest: el token de un solo uso es la credencial; solo redirige sin gastarlo: la dirección corta del botón de WhatsApp (`access/{token}`, Meta pone la variable solo al final) busca la empresa por el hash del token y lleva a worker.link.show; un enlace desconocido, usado, anulado o vencido da la misma pantalla de enlace que no sirve, sin empresa; throttled por IP y por enlace
         'worker.key.show', // guest: la pantalla para crear una llave en el dispositivo; exige la sesión de la persona (sin ella, a la entrada) y dice si esa sesión no puede (entró con un enlace pedido por la persona o ya tiene 3 llaves); solo el nombre de la propia persona; throttled por IP
         'worker.key.options', // guest: da las opciones WebAuthn para crear la llave de la persona de la sesión; 403 sin sesión o con una que entró con un enlace pedido por la persona, 409 con 3 llaves activas; el desafío es de un solo uso y vence en 60 s; throttled por IP
         'worker.key.store', // guest: guarda la llave verificada de la persona de la sesión (mismas reglas que las opciones, el límite contado bajo candado); bitácora, log y aviso con «No fui yo»; throttled por IP
@@ -208,6 +209,7 @@ function credentialAddresses(): array
         // The person's, single use.
         'worker.link.show' => 'el enlace de entrada: un solo uso, vence en 48 h (RH) o 30 min (la persona); mostrarlo no lo gasta',
         'worker.link.open' => 'gasta el mismo enlace de entrada al abrir la sesión: de dos a la vez solo uno gana',
+        'worker.link.short' => 'el mismo enlace de entrada sin la empresa en la dirección (botón de WhatsApp): solo redirige a worker.link.show, nunca lo gasta',
         'worker.not-me.show' => '«No fui yo»: {credential} es el id de la llave; la credencial es la firma de la app (signed, 30 días) y solo revoca',
         'worker.not-me.confirm' => '«No fui yo»: la misma dirección firmada; revoca una vez',
         // Not the person's: a screen, an anonymous survey, a company's channel, a report shared for a while.

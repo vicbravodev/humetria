@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { Maximize2, SquarePen, X } from 'lucide-react';
-import HumiAvatar from '@/components/assistant/humi-avatar';
+import HumiAvatar from '@/components/humetria/humi-avatar';
 import type { HumiExpression } from '@/lib/assistant/humi-expressions';
 import { Button } from '@/components/ui/button';
 

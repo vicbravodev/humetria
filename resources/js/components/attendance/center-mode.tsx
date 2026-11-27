@@ -41,6 +41,7 @@ export default function CenterMode({
     return (
         <section
             aria-labelledby="como-marcan"
+            data-tour="attendance-center-mode"
             className="flex flex-col gap-4 card p-5 md:p-6"
         >
             <div className="flex items-start gap-4">

@@ -35,6 +35,8 @@ final class ImpersonateOwnerController extends Controller
 
         Context::scope(fn () => $impersonation->start($user, $target, $tenant->id), ['tenant_id' => $tenant->id]);
 
-        return redirect()->route('dashboard');
+        $landing = $request->landing($tenant->slug, $tenant->is_demo);
+
+        return $landing === null ? redirect()->route('dashboard') : redirect()->to($landing);
     }
 }

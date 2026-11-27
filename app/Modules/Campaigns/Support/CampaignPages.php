@@ -409,7 +409,7 @@ final readonly class CampaignPages
         $sizes = ['small' => 0, 'medium' => 0, 'large' => 0];
 
         foreach ($workCenters as $workCenter) {
-            $guides = $workCenter->archived ? [] : $this->guides->for($headcount[$workCenter->id] ?? 0);
+            $guides = $workCenter->archived ? [] : $this->guides->for($headcount[$workCenter->id] ?? 0, $workCenter->id);
             $size = match (array_last($guides)) {
                 'I' => 'small',
                 'II' => 'medium',
@@ -441,7 +441,7 @@ final readonly class CampaignPages
             'name' => $workCenter->name,
             'activity' => $workCenter->mainActivity,
             'workers' => $workers,
-            'guides' => $this->guides->for($workers),
+            'guides' => $this->guides->for($workers, $workCenter->id),
             'lastEvaluatedOn' => $last?->closed_at === null ? null : CampaignClock::day($last->closed_at),
             'dueOn' => $due === null ? null : CampaignClock::day($due),
             'overdue' => $due !== null && $due->isPast(),

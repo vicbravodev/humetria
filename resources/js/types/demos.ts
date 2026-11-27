@@ -47,10 +47,39 @@ export type DemoRoom = {
     prepared: { ago: string; at: string; stale: boolean } | null;
     complaints: DemoShareLink | null;
     door: DemoDoor;
+    /** The tours a session may show, «El centro y su gente» aside: it always goes first. */
+    tours: DemoTour[];
+    session: DemoRoomSession | null;
+};
+
+/** A tour a session may show: what it shows and about how long it takes. */
+export type DemoTour = {
+    key: string;
+    title: string;
+    summary: string;
+    minutes: number;
+};
+
+/** The session in course, or the last one when its preparation failed: each tour's progress and the step that follows. */
+export type DemoRoomSession = {
+    client: string | null;
+    status: 'preparing' | 'active' | 'ending' | 'failed';
+    failed: boolean;
+    /** Since when it is under way: «hace 12 minutos». */
+    since: string;
+    tours: { key: string; title: string; done: number; total: number }[];
+    /** Where the guide goes on (a path inside the demo), while active and not finished. */
+    next: {
+        title: string;
+        tour: string;
+        index: number;
+        total: number;
+        href: string;
+    } | null;
 };
 
 export type DemoRunState = {
-    kind: 'prepare' | 'reset';
+    kind: 'prepare' | 'reset' | 'session';
     status: 'running' | 'finished' | 'failed';
     step: string | null;
     error_class: string | null;
