@@ -12,6 +12,7 @@ use App\Modules\Results\Enums\ShareDuration;
 use App\Modules\Results\Http\Controllers\ReportShareController;
 use App\Modules\Results\Http\Controllers\SharedReportController;
 use App\Modules\Results\Models\ReportShare;
+use App\Modules\Results\Support\ResultsClock;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -22,7 +23,7 @@ use Illuminate\Support\Facades\Log;
 use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ReportShareController::class, SharedReportController::class, CreateReportShare::class, RevokeReportShare::class, ShareDuration::class);
+mutates(ReportShareController::class, SharedReportController::class, CreateReportShare::class, RevokeReportShare::class, ShareDuration::class, ResultsClock::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-20 18:00:00');

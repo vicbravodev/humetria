@@ -56,6 +56,7 @@ function mutationExemptClasses(): array
             'App\Modules\Engagement\Support\Results\ResponseRow',
             'App\Modules\Engagement\Support\Results\Wave',
             'App\Modules\Instruments\Support\Nom035\ScoringTable',
+            'App\Modules\Results\Support\SuppressionResult',
         ],
         'Catálogos fijos del SAT (régimen fiscal y uso del CFDI): validar el código lo fijan los tests de AccountRules, que sí se muta, y mutar cada renglón del catálogo no mide ninguna decisión.' => [
             'App\Modules\Billing\Support\SatCatalogs',
@@ -77,9 +78,6 @@ function mutationExemptClasses(): array
             'App\Modules\Leave\Support\EmployeeLock',
         ],
         'Pendiente de clasificar (26 nov 2026): entra a la mutación o pasa arriba con su razón. Esta lista solo se achica.' => [
-            'App\Modules\Results\Support\ResultsClock',
-            'App\Modules\Results\Support\RiskLevels',
-            'App\Modules\Results\Support\SuppressionResult',
             'App\Modules\Seating\Listeners\FlagOnPersonInput',
             'App\Modules\Seating\Listeners\RequestOnSignature',
             'App\Modules\Seating\Support\AssessmentAccess',
