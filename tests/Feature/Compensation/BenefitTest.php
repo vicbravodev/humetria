@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Modules\Compensation\Actions\CountBenefits;
+use App\Modules\Compensation\Actions\ListBenefits;
 use App\Modules\Compensation\Enums\BenefitKind;
 use App\Modules\Compensation\Enums\SbcIntegration;
 use App\Modules\Compensation\Models\Benefit;
@@ -19,7 +21,7 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(PolicyVacationTerms::class);
+mutates(PolicyVacationTerms::class, ListBenefits::class, CountBenefits::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-03 10:00:00');
@@ -51,6 +53,14 @@ function benefitForm(array $override = []): array
         ...$override,
     ];
 }
+
+it('lists the catalog fifteen benefits a page', function (): void {
+    $this->get(route('tenant.compensation.benefits.index', $this->tenant))->assertOk();
+    Benefit::factory()->count(5)->create(['tenant_id' => $this->tenant->id]);
+
+    $this->get(route('tenant.compensation.benefits.index', $this->tenant))
+        ->assertInertia(fn (Assert $page) => $page->where('benefits.total', 16)->where('benefits.per_page', 15)->has('benefits.data', 15));
+});
 
 it('creates the base benefits the first time and lists them paginated, base first and then by name', function (): void {
     $this->get(route('tenant.compensation.benefits.index', $this->tenant))

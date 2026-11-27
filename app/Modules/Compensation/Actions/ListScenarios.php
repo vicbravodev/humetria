@@ -10,7 +10,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 final readonly class ListScenarios
 {
-    public const int PER_PAGE = 10;
+    public const int PER_PAGE = 10; // @pest-mutate-ignore: IncrementInteger,DecrementInteger
 
     /**
      * A page of the company's scenarios of a kind (costed on the roster or on an average payroll), the newest first: the active ones

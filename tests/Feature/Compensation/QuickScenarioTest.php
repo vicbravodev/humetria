@@ -6,9 +6,13 @@ use App\Modules\Compensation\Enums\PayBasis;
 use App\Modules\Compensation\Enums\PayGroup;
 use App\Modules\Compensation\Enums\ScenarioSource;
 use App\Modules\Compensation\Models\Scenario;
+use App\Modules\Compensation\Support\AverageExample;
+use App\Modules\Compensation\Support\AveragePayroll;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Inertia\Testing\AssertableInertia as Assert;
+
+mutates(AveragePayroll::class, AverageExample::class);
 
 /*
  * «Cotizador rápido»: the scenarios of an average payroll live under /compensation/quick with the same pages as the ones of the

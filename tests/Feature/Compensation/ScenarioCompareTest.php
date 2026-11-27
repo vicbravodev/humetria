@@ -6,12 +6,15 @@ use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\ContractTerm;
 use App\Modules\Compensation\Models\GradeSalary;
 use App\Modules\Compensation\Models\Scenario;
+use App\Modules\Compensation\Support\ScenarioComparison;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Models\JobGrade;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
+
+mutates(ScenarioComparison::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-04 10:00:00');
@@ -115,6 +118,20 @@ it('puts the scenarios from the cheapest, each with what it costs over the cheap
             ->where('moves.retroactive_month_text', fn (string $text): bool => preg_match('/\A\$[\d,]+00\z/', $text) === 1)
             ->where('midpoint', ['raise_unit' => 'percent', 'unionized_raise' => '5.5', 'trusted_raise' => '', 'retroactive_months' => 0]));
 });
+
+it('offers the trusted a point in between when either scenario raises them on their own, the other giving them the raise of the unionized', function (array $lower, array $higher, string $unionized, string $trusted): void {
+    $cheaper = Scenario::factory()->create(['tenant_id' => $this->tenant->id, 'group_changes' => $lower]);
+    $dearer = Scenario::factory()->create(['tenant_id' => $this->tenant->id, 'group_changes' => $higher]);
+
+    $this->get(compareUrl($this->tenant, $dearer->id, $cheaper->id))
+        ->assertInertia(fn (Assert $page) => $page->where('scenarios.0.id', $cheaper->id)
+            ->where('midpoint', ['raise_unit' => 'percent', 'unionized_raise' => $unionized, 'trusted_raise' => $trusted, 'retroactive_months' => 0]));
+})->with([
+    'the cheaper raises the trusted' => [['unionized' => 500, 'trusted' => 200], ['unionized' => 700, 'trusted' => null], '6', '4.5'],
+    'the dearer raises the trusted' => [['unionized' => 500, 'trusted' => null], ['unionized' => 700, 'trusted' => 301], '6', '4.01'],
+    'the cheaper raises nobody, against an even raise' => [['unionized' => null, 'trusted' => null], ['unionized' => 600, 'trusted' => 300], '3', '1.5'],
+    'the cheaper raises nobody, against an odd raise' => [['unionized' => null, 'trusted' => null], ['unionized' => 600, 'trusted' => 301], '3', '1.51'],
+]);
 
 it('offers no point in between two scenarios that raise in different ways', function (): void {
     $amount = Scenario::factory()->create(['tenant_id' => $this->tenant->id, 'raise_unit' => 'amount', 'group_changes' => ['unionized' => 60_800, 'trusted' => null], 'retroactive_months' => 3]);

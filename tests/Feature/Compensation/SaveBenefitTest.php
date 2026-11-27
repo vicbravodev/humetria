@@ -16,6 +16,7 @@ use App\Modules\Compensation\Enums\SbcIntegration;
 use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\ContractTerm;
 use App\Modules\Compensation\Models\WorkRiskPremium;
+use App\Modules\Compensation\Support\CurrentRiskPremium;
 use App\Modules\Organization\Models\JobGrade;
 use App\Modules\Tenancy\Models\Tenant;
 use Carbon\CarbonImmutable;
@@ -23,7 +24,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
-mutates(SaveBenefit::class, SaveContractTerm::class, SaveWorkRiskPremium::class, ArchiveBenefit::class, RestoreBenefit::class);
+mutates(SaveBenefit::class, SaveContractTerm::class, SaveWorkRiskPremium::class, ArchiveBenefit::class, RestoreBenefit::class, CurrentRiskPremium::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();

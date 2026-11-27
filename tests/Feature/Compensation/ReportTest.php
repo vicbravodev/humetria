@@ -3,12 +3,15 @@
 declare(strict_types=1);
 
 use App\Models\AuditEntry;
+use App\Modules\Compensation\Actions\OpenReport;
 use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\ContractTerm;
 use App\Modules\Compensation\Models\GradeSalary;
 use App\Modules\Compensation\Models\SalaryOverride;
 use App\Modules\Compensation\Models\Scenario;
+use App\Modules\Compensation\Support\OtherScenarios;
 use App\Modules\Compensation\Support\ReportBuilder;
+use App\Modules\Compensation\Support\ReportImpact;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Models\JobGrade;
@@ -17,7 +20,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ReportBuilder::class);
+mutates(ReportBuilder::class, ReportImpact::class, OtherScenarios::class, OpenReport::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-04 10:00:00');

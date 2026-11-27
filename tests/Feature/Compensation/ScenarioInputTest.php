@@ -13,14 +13,17 @@ use App\Modules\Compensation\Models\GradeSalary;
 use App\Modules\Compensation\Models\SalaryOverride;
 use App\Modules\Compensation\Models\Scenario;
 use App\Modules\Compensation\Models\WorkRiskPremium;
+use App\Modules\Compensation\Support\AveragePayroll;
+use App\Modules\Compensation\Support\BenefitSpecs;
 use App\Modules\Compensation\Support\Calculation\Rate;
 use App\Modules\Compensation\Support\Calculation\ScenarioCost;
+use App\Modules\Compensation\Support\CurrentRiskPremium;
 use App\Modules\Compensation\Support\ScenarioInputBuilder;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Models\JobGrade;
 use App\Modules\Tenancy\Models\Tenant;
 
-mutates(ScenarioInputBuilder::class);
+mutates(ScenarioInputBuilder::class, BenefitSpecs::class, CurrentRiskPremium::class, AveragePayroll::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();

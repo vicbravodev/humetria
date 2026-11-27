@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Compensation\Actions\ArchiveScenario;
 use App\Modules\Compensation\Actions\DuplicateScenario;
+use App\Modules\Compensation\Actions\ListScenarios;
 use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\ContractTerm;
 use App\Modules\Compensation\Models\GradeSalary;
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ArchiveScenario::class, DuplicateScenario::class);
+mutates(ArchiveScenario::class, DuplicateScenario::class, ListScenarios::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-04 10:00:00');
