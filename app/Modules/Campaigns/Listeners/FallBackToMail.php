@@ -51,6 +51,14 @@ final class FallBackToMail implements ShouldQueue
             return;
         }
 
+        // The mail already carries this very link (the demo sends by mail and WhatsApp at once): rotating it would kill the link in
+        // their inbox for a second mail. A real company never has mail first with a WhatsApp message out for the same invitation.
+        if ($participant->invited_via === 'mail' && $participant->token_version === 0) {
+            Log::info('campaign.fallback_unneeded', ['participant_id' => $participant->id]);
+
+            return;
+        }
+
         $person = resolve(Roster::class)->find($participant->employee_id);
         // Mail only: the person's mobile is what just failed, so the picker is asked without it.
         $mail = $person === null || ! $person->active ? [] : resolve(ChannelPicker::class)->route($person->email, null);
