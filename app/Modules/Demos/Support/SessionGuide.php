@@ -60,6 +60,24 @@ final class SessionGuide implements DemoGuide
 
         // The poll comes from outside the company's routes: it works in the demo, the only company the presenter may enter.
         $slug = ($this->demos->isCurrent() ? $this->companies->current() : $this->companies->enter($this->demoId))->slug;
+
+        return $this->guide($session, $slug, $advance);
+    }
+
+    /**
+     * The guide of `$session` as it stands, for the room: inside the demo company (its slug, for the step's address), never
+     * moving the guide's step nor taking the celebration of the step just done, which are the dock's.
+     *
+     * @return Guide
+     */
+    public function overview(DemoSession $session, string $slug): array
+    {
+        return $this->guide($session, $slug, false);
+    }
+
+    /** @return Guide */
+    private function guide(DemoSession $session, string $slug, bool $advance): array
+    {
         $tours = $this->catalog->toursOf($session);
         $states = $this->catalog->states($tours, $session);
         $steps = $this->catalog->for($tours);

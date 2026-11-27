@@ -5,9 +5,11 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Demos\Contracts\DoorControl;
+use App\Modules\Demos\Enums\DemoSessionStatus;
 use App\Modules\Demos\Jobs\PrepareDemo;
 use App\Modules\Demos\Jobs\ResetDemo;
 use App\Modules\Demos\Models\DemoRun;
+use App\Modules\Demos\Models\DemoSession;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Support\TenantContext;
@@ -173,6 +175,95 @@ it('shows the step a running preparation is on', function (): void {
         ->assertInertia(fn (Assert $page) => $page->where('run', ['kind' => 'prepare', 'status' => 'running', 'step' => 'Asistencia', 'error_class' => null]));
 });
 
+it('offers the tours to choose, in the catalog\'s order, without «El centro y su gente» that always goes first', function (): void {
+    $this->actingAs(superadmin())
+        ->get(route('demo-room.show'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('session', null)
+            ->where('tours', [
+                ['key' => 'nom035', 'title' => 'NOM-035', 'summary' => 'Crea la evaluación, el público contesta en su teléfono y ves el informe al cerrar.', 'minutes' => 12],
+                ['key' => 'attendance', 'title' => 'Asistencia', 'summary' => 'Modo del centro, zona y kiosco; el público crea su llave y marca.', 'minutes' => 10],
+                ['key' => 'engagement', 'title' => 'Clima y pulso', 'summary' => 'Encuesta de clima del centro; las respuestas llegan en vivo.', 'minutes' => 8],
+                ['key' => 'complaints', 'title' => 'Denuncias', 'summary' => 'Alguien denuncia con el QR y RH la recibe y la atiende.', 'minutes' => 5],
+                ['key' => 'leave', 'title' => 'Vacaciones', 'summary' => 'Abres el portal de una persona, pide días y los apruebas como RH.', 'minutes' => 6],
+                ['key' => 'humi', 'title' => 'Humi', 'summary' => 'Una pregunta sobre el cumplimiento de la empresa.', 'minutes' => 3],
+            ]));
+});
+
+/** A session of the demo, for Grupo Ejemplo, as `$status`. */
+function roomSession(DemoSessionStatus $status, ?string $workCenterId = null): DemoSession
+{
+    return DemoSession::query()->forceCreate([
+        'client_name' => 'Grupo Ejemplo',
+        'tours' => ['nom035', 'attendance'],
+        'skipped_steps' => [],
+        'status' => $status,
+        'work_center_id' => $workCenterId,
+        'started_at' => now()->subMinutes(12),
+        'ready_at' => $status === DemoSessionStatus::Active ? now()->subMinutes(12) : null,
+        'ended_at' => in_array($status, [DemoSessionStatus::Ended, DemoSessionStatus::Failed], true) ? now()->subMinutes(10) : null,
+    ]);
+}
+
+it('lists the tours and the open session', function (): void {
+    $this->freezeSecond();
+    $demo = demoCompany();
+    $center = WorkCenterFactory::new()->createOne(['tenant_id' => $demo->id]);
+    roomSession(DemoSessionStatus::Active, $center->id)->forceFill(['visited' => ['tenant.work-centers.index'], 'skipped_steps' => ['nom035.draft']])->save();
+
+    $this->actingAs(superadmin())
+        ->get(route('demo-room.show'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('session.client', 'Grupo Ejemplo')
+            ->where('session.status', 'active')
+            ->where('session.failed', false)
+            ->where('session.since', 'hace 12 minutos')
+            ->where('session.tours', [
+                ['key' => 'base', 'title' => 'El centro y su gente', 'done' => 1, 'total' => 2],
+                ['key' => 'nom035', 'title' => 'NOM-035', 'done' => 1, 'total' => 6],
+                ['key' => 'attendance', 'title' => 'Asistencia', 'done' => 0, 'total' => 7],
+            ])
+            ->where('session.next', ['title' => 'Da de alta al público', 'tour' => 'El centro y su gente', 'index' => 2, 'total' => 2, 'href' => '/admin/alba-demo/employees']));
+
+    // The room reads the demo's data from inside it, and only for that: the console goes on outside the demo.
+    expect(Context::has('tenant_id'))->toBeFalse()
+        ->and(Context::hasHidden(TenantContext::DEMO))->toBeFalse()
+        ->and(resolve(PermissionRegistrar::class)->getPermissionsTeamId())->toBeNull();
+});
+
+it('shows a session being prepared or ending with its tours and nothing done yet', function (DemoSessionStatus $status): void {
+    roomSession($status);
+
+    $this->actingAs(superadmin())
+        ->get(route('demo-room.show'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('session.status', $status->value)
+            ->where('session.failed', false)
+            ->where('session.next', null)
+            ->where('session.tours.1', ['key' => 'nom035', 'title' => 'NOM-035', 'done' => 0, 'total' => 6]));
+})->with([DemoSessionStatus::Preparing, DemoSessionStatus::Ending]);
+
+it('shows a failed session with a way to end it', function (): void {
+    roomSession(DemoSessionStatus::Failed);
+
+    $this->actingAs(superadmin())
+        ->get(route('demo-room.show'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('session.client', 'Grupo Ejemplo')
+            ->where('session.status', 'failed')
+            ->where('session.failed', true)
+            ->where('session.next', null));
+});
+
+it('forgets a session once it ended, and a failed one once a newer session ended after it', function (): void {
+    roomSession(DemoSessionStatus::Failed)->forceFill(['started_at' => now()->subHour()])->save();
+    roomSession(DemoSessionStatus::Ended);
+
+    $this->actingAs(superadmin())
+        ->get(route('demo-room.show'))
+        ->assertInertia(fn (Assert $page) => $page->where('session', null));
+});
+
 it('shows the door open, until when, and how many workers are left for the audience', function (): void {
     fakeDoor(open: true);
 
@@ -186,7 +277,8 @@ it('reads the page in a fixed number of queries', function (): void {
     finishedRun(now()->subDay());
     $this->actingAs(superadmin());
 
-    $this->expectsDatabaseQueryCount(9);
+    // One of them reads the last demo session.
+    $this->expectsDatabaseQueryCount(10);
 
     $this->get(route('demo-room.show'))->assertOk();
 });
