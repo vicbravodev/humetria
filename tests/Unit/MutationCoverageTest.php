@@ -61,6 +61,7 @@ function mutationExemptClasses(): array
             'App\Modules\Telework\Support\CenterFacts',
             'App\Modules\Telework\Support\ComplianceRow',
             'App\Modules\Telework\Support\OpenedPortal',
+            'App\Modules\Tenancy\Support\Nom035Facts',
         ],
         'Catálogos fijos del SAT (régimen fiscal y uso del CFDI): validar el código lo fijan los tests de AccountRules, que sí se muta, y mutar cada renglón del catálogo no mide ninguna decisión.' => [
             'App\Modules\Billing\Support\SatCatalogs',
@@ -88,10 +89,6 @@ function mutationExemptClasses(): array
             'App\Modules\Seating\Support\QuintaIncisos',
         ],
         'Pendiente de clasificar (26 nov 2026): entra a la mutación o pasa arriba con su razón. Esta lista solo se achica.' => [
-            'App\Modules\Tenancy\Support\ComplianceRoutes',
-            'App\Modules\Tenancy\Support\DisplayDate',
-            'App\Modules\Tenancy\Support\Nom035Facts',
-            'App\Modules\Tenancy\Support\PermissionDefinition',
             'App\Modules\WorkerAccess\Support\CeremonySignatures',
             'App\Modules\WorkerAccess\Support\IgnoreCounter',
             'App\Modules\WorkerAccess\Support\LinkInvitations',

@@ -12,7 +12,7 @@ use Illuminate\Routing\Route as LaravelRoute;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
-mutates(LimitUnionToCompensation::class);
+mutates(LimitUnionToCompensation::class, ComplianceRoutes::class);
 
 /**
  * The routes of an account that are open to a union as well as to a company. A new `tenant.*` route must be listed here
