@@ -7,6 +7,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Contracts\WorkerKeys;
 use App\Modules\WorkerAccess\Contracts\WorkerLinks;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
+use App\Modules\WorkerAccess\Support\RouteWorkerLinks;
 use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Support\SoftAuthenticator;
+
+mutates(RouteWorkerLinks::class);
 
 beforeEach(function (): void {
     config(['fortify.passkeys.relying_party_id' => 'localhost', 'fortify.passkeys.allowed_origins' => ['http://localhost']]);

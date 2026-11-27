@@ -62,6 +62,7 @@ function mutationExemptClasses(): array
             'App\Modules\Telework\Support\ComplianceRow',
             'App\Modules\Telework\Support\OpenedPortal',
             'App\Modules\Tenancy\Support\Nom035Facts',
+            'App\Modules\WorkerAccess\Support\OpenSession',
         ],
         'Catálogos fijos del SAT (régimen fiscal y uso del CFDI): validar el código lo fijan los tests de AccountRules, que sí se muta, y mutar cada renglón del catálogo no mide ninguna decisión.' => [
             'App\Modules\Billing\Support\SatCatalogs',
@@ -88,12 +89,8 @@ function mutationExemptClasses(): array
         'Lista fija de los incisos de la Quinta disposición (A a J) con su nombre corto: la regla que la usa (un inciso que no existe se rechaza) la fijan los tests de los documentos, y mutar cada renglón no mide ninguna decisión.' => [
             'App\Modules\Seating\Support\QuintaIncisos',
         ],
-        'Pendiente de clasificar (26 nov 2026): entra a la mutación o pasa arriba con su razón. Esta lista solo se achica.' => [
-            'App\Modules\WorkerAccess\Support\CeremonySignatures',
+        'Revisión del contador de la passkey que a propósito no revisa nada (la firma diferida de una marca sin conexión): su método está vacío y no hay código que mutar; WorkerSignaturesTest fija que la misma firma se acepta dos veces.' => [
             'App\Modules\WorkerAccess\Support\IgnoreCounter',
-            'App\Modules\WorkerAccess\Support\LinkInvitations',
-            'App\Modules\WorkerAccess\Support\OpenSession',
-            'App\Modules\WorkerAccess\Support\RouteWorkerLinks',
         ],
     ];
 }

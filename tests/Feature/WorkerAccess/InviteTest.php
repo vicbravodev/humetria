@@ -10,13 +10,14 @@ use App\Modules\WorkerAccess\Contracts\WorkerInvitations;
 use App\Modules\WorkerAccess\Data\InvitationOutcome;
 use App\Modules\WorkerAccess\Models\WorkerAccessLink;
 use App\Modules\WorkerAccess\Notifications\WorkerInvitation;
+use App\Modules\WorkerAccess\Support\LinkInvitations;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
-mutates(IssueAccessLink::class, CreateAccessLink::class);
+mutates(IssueAccessLink::class, CreateAccessLink::class, LinkInvitations::class);
 
 beforeEach(function (): void {
     $this->travelTo(CarbonImmutable::parse('2026-11-16 15:00:00', 'UTC'));

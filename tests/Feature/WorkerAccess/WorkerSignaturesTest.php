@@ -7,11 +7,14 @@ use App\Modules\WorkerAccess\Contracts\WorkerKeys;
 use App\Modules\WorkerAccess\Contracts\WorkerSignatures;
 use App\Modules\WorkerAccess\Data\SignedBy;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
+use App\Modules\WorkerAccess\Support\CeremonySignatures;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\DB;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 use Tests\Support\SoftAuthenticator;
+
+mutates(CeremonySignatures::class);
 
 beforeEach(function (): void {
     config(['fortify.passkeys.relying_party_id' => 'localhost', 'fortify.passkeys.allowed_origins' => ['http://localhost']]);
