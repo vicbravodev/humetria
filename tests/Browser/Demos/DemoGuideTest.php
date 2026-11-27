@@ -128,7 +128,7 @@ it('folds into its pill and opens again', function (): void {
         ->assertNoJavaScriptErrors();
 });
 
-it('steps aside to its pill while a sheet is open, so it never covers a form', function (): void {
+it('steps aside to its pill while a dialog is open, and celebrates the launch done there', function (): void {
     $campaign = presentedEvaluation();
 
     visit("/admin/alba-demo/campaigns/{$campaign->id}")
@@ -136,6 +136,42 @@ it('steps aside to its pill while a sheet is open, so it never covers a form', f
         ->click('Lanzar e invitar a 2 personas')
         ->assertNotPresent(GUIDE_DOCK)
         ->assertSee('Lanza la evaluación')
+        // The page that comes back after the launch spends the step just done: the dock celebrates it from the page itself.
+        ->click('[data-slot="dialog-content"] button[type="submit"]')
+        ->assertScript(guideShows('El público contesta'), true)
+        ->assertSeeIn(GUIDE_DOCK, 'Listo: «Lanza la evaluación».')
+        ->assertNoJavaScriptErrors();
+});
+
+it('takes the presenter to the step page and moves on when the page is all the step waits for', function (): void {
+    presentedEvaluation();
+    DemoSession::query()->firstOrFail()->forceFill(['visited' => []])->save();
+
+    visit('/admin/alba-demo')
+        ->assertSeeIn(GUIDE_DOCK, 'El centro de la sesión')
+        ->click('Llévame')
+        ->assertScript(guideShows('Paso 2 de 6 · NOM-035'), true)
+        ->assertPathIs('/admin/alba-demo/work-centers')
+        ->assertSeeIn(GUIDE_DOCK, 'Listo: «El centro de la sesión».')
+        ->assertNoJavaScriptErrors();
+});
+
+it('opens Humi with the step question written, beside the guide', function (): void {
+    presentedEvaluation();
+    DemoSession::query()->firstOrFail()->forceFill(['tours' => ['humi']])->save();
+
+    visit('/admin/alba-demo')
+        ->assertSeeIn(GUIDE_DOCK, 'Humi abre con la pregunta escrita: «¿Cómo va el cumplimiento de la empresa?»')
+        ->click('#demo-guide button:has-text("Pregúntale a Humi")')
+        ->assertScript('() => new Promise((resolve) => { const start = performance.now(); const check = () => { const value = document.querySelector(\'aside[aria-label="Humi"] textarea\')?.value; value || performance.now() - start > 8000 ? resolve(value ?? null) : setTimeout(check, 100); }; check(); })', '¿Cómo va el cumplimiento de la empresa?')
+        ->assertScript(<<<'JS'
+            () => {
+                const dock = document.querySelector('section[aria-label="Guía de la demo"]').getBoundingClientRect();
+                const humi = document.querySelector('aside[aria-label="Humi"]').getBoundingClientRect();
+
+                return dock.right <= humi.left;
+            }
+            JS, true)
         ->assertNoJavaScriptErrors();
 });
 
