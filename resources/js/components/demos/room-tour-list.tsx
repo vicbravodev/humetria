@@ -36,11 +36,13 @@ export default function RoomTourList({
                     {`${BASE_MINUTES} min`}
                 </span>
             </li>
-            {tours.map((tour) => (
+            {tours.map((tour, index) => (
                 <RoomTourRow
                     key={tour.key}
                     tour={tour}
                     chosen={chosen.includes(tour.key)}
+                    first={index === 0}
+                    last={index === tours.length - 1}
                     onChange={(change) => onChange(tour.key, change)}
                 />
             ))}

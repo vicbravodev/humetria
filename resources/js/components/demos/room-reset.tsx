@@ -8,7 +8,7 @@ export default function RoomReset({ running }: { running: boolean }) {
             className="flex flex-col gap-3 card p-5"
         >
             <h3 id="room-reset" className="text-base font-semibold">
-                Reiniciar sin sesión
+                Reiniciar demo
             </h3>
             <p className="text-sm text-pretty text-muted-foreground">
                 Deja la demo limpia sin dar una sesión. Empezar y terminar una

@@ -3,14 +3,18 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { DemoTour } from '@/types';
 
-/** A tour to choose for the session: what it shows, how long it takes, and its place in the order. */
+/** A tour to choose for the session: what it shows, how long it takes, and its place in the order (no «Subir» first, no «Bajar» last). */
 export default function RoomTourRow({
     tour,
     chosen,
+    first,
+    last,
     onChange,
 }: {
     tour: DemoTour;
     chosen: boolean;
+    first: boolean;
+    last: boolean;
     onChange: (change: { on: boolean } | { by: -1 | 1 }) => void;
 }) {
     const id = `tour-${tour.key}`;
@@ -43,6 +47,7 @@ export default function RoomTourRow({
                     variant="ghost"
                     size="icon"
                     aria-label={`Subir ${tour.title}`}
+                    disabled={first}
                     onClick={() => onChange({ by: -1 })}
                 >
                     <ArrowUp aria-hidden />
@@ -52,6 +57,7 @@ export default function RoomTourRow({
                     variant="ghost"
                     size="icon"
                     aria-label={`Bajar ${tour.title}`}
+                    disabled={last}
                     onClick={() => onChange({ by: 1 })}
                 >
                     <ArrowDown aria-hidden />

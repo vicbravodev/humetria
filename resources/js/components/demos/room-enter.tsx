@@ -6,14 +6,16 @@ import { impersonate } from '@/routes/companies';
 /**
  * «Entrar como dueño» or «como RH»: the demo company is not on the companies list, so the room enters it itself. HR is
  * offered only here: a real company never lets the staff enter as its HR. While a run rebuilds the company nobody enters:
- * it is half made.
+ * it is half made. During a session the guide shows either way, so the card says only that.
  */
 export default function RoomEnter({
     companyId,
     running,
+    session,
 }: {
     companyId: string;
     running: boolean;
+    session: boolean;
 }) {
     return (
         <section
@@ -24,8 +26,9 @@ export default function RoomEnter({
                 Entrar a la demo
             </h3>
             <p className="text-sm text-pretty text-muted-foreground">
-                Como dueño ves la empresa completa; como RH, lo que ve quien
-                opera el día a día. Para volver a la consola, usa «Salir».
+                {session
+                    ? 'Como dueño o como RH. El guía aparece igual.'
+                    : 'Como dueño ves la empresa completa; como RH, lo que ve quien opera el día a día. Para volver a la consola, usa «Salir».'}
             </p>
             <div className="flex flex-wrap gap-2">
                 {/* Another person's session: nothing prefetched as the staff member carries over. */}

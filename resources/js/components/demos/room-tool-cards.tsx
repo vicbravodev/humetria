@@ -20,7 +20,11 @@ export default function RoomToolCards({
 }) {
     return (
         <div className="grid gap-4 md:grid-cols-2">
-            <RoomEnter companyId={companyId} running={running} />
+            <RoomEnter
+                companyId={companyId}
+                running={running}
+                session={!reset}
+            />
             <RoomDoor door={tools.door} />
             {tools.complaints !== null && (
                 <RoomComplaints link={tools.complaints} />

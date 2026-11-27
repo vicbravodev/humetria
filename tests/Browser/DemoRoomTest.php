@@ -60,7 +60,8 @@ it('shows the prepared demo: enter it, its door, its complaint channel and its t
         ->assertSee('Antes de presentar')
         ->assertSee('pendientes se escalan (a los tres días hábiles) y la encuesta de pulso cierra (a los nueve días)')
         ->assertSee('revisa el buzón antes de presentar')
-        ->assertSee('Reiniciar demo')
+        ->assertSeeIn('#room-reset', 'Reiniciar demo')
+        ->assertSee('Como dueño ves la empresa completa')
         ->assertDontSee('ya envejecieron');
 })->with($looks);
 
@@ -69,7 +70,7 @@ it('says before a reset what it wipes, what keeps working and that the door clos
     preparedDemo();
 
     visitPage('demos/room', '/admin/demo')
-        ->click('Reiniciar demo')
+        ->click('button:has-text("Reiniciar demo")')
         ->assertSee('El QR del canal de denuncias sigue sirviendo.')
         ->assertSee('La puerta se cierra: ábrela otra vez; los enlaces que dio dejan de servir.')
         ->assertSee('Tarda alrededor de medio minuto');
@@ -184,6 +185,9 @@ it('starts a session with two tours, shows it preparing, and ends it', function 
         ->assertSee('El centro y su gente')
         ->assertSee('Empezar reinicia la demo de cero (unos 30 s).')
         ->assertButtonDisabled('Empezar sesión')
+        ->assertButtonDisabled('button[aria-label="Subir NOM-035"]')
+        ->assertButtonEnabled('button[aria-label="Bajar NOM-035"]')
+        ->assertButtonDisabled('button[aria-label="Bajar Humi"]')
         ->fill('client_name', 'Grupo Ejemplo')
         ->click('#tour-attendance')
         ->click('#tour-nom035')
@@ -228,6 +232,7 @@ it('shows the session in course: each tour\'s progress, the next step and the to
         ->assertSee('0 de 6')
         ->assertSee('Herramientas de la sala')
         ->assertSee('La puerta')
+        ->assertSee('Como dueño o como RH. El guía aparece igual.')
         ->assertDontSee('Nueva sesión')
         ->assertDontSee('Reiniciar demo');
 })->with($looks);
