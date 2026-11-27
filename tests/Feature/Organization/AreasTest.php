@@ -9,7 +9,7 @@ use App\Modules\Organization\Support\CompanyAreas;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\Log;
 
-mutates(CompanyAreas::class);
+mutates(CompanyAreas::class, FindOrCreateArea::class);
 
 it('names an area of the company, and no other company\'s', function (): void {
     $tenant = Tenant::factory()->create();

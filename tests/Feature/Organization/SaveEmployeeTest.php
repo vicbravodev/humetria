@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\AuditEntry;
 use App\Modules\Organization\Actions\CreateEmployee;
 use App\Modules\Organization\Actions\DeactivateEmployee;
+use App\Modules\Organization\Actions\FindOrCreateArea;
 use App\Modules\Organization\Actions\ReactivateEmployee;
 use App\Modules\Organization\Actions\UpdateEmployee;
 use App\Modules\Organization\Data\EmployeeData;
@@ -19,7 +20,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Support\Facades\Log;
 use Inertia\Support\SessionKey;
 
-mutates(CreateEmployee::class, UpdateEmployee::class, DeactivateEmployee::class, ReactivateEmployee::class, EmployeeRequest::class);
+mutates(CreateEmployee::class, UpdateEmployee::class, DeactivateEmployee::class, ReactivateEmployee::class, EmployeeRequest::class, FindOrCreateArea::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();
