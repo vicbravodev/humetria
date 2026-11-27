@@ -315,6 +315,26 @@ it('prepares the demo on the queue, once at a time', function (string $route, st
     'reset' => ['demo-room.reset', 'reset', ResetDemo::class],
 ]);
 
+it('neither prepares nor resets the demo under an open session: ending it is what wipes it', function (string $route, string $message, DemoSessionStatus $status): void {
+    Queue::fake();
+    $demo = demoCompany();
+    $center = WorkCenterFactory::new()->createOne(['tenant_id' => $demo->id]);
+    $session = roomSession($status, $center->id);
+
+    $this->actingAs(superadmin())
+        ->post(route($route))
+        ->assertRedirect()
+        ->assertSessionHas('inertia.flash_data.toast', ['type' => 'error', 'message' => $message]);
+
+    expect(DemoRun::query()->count())->toBe(0)
+        ->and($session->refresh()->status)->toBe($status)
+        ->and($session->work_center_id)->toBe($center->id);
+    Queue::assertNothingPushed();
+})->with([
+    'prepare' => ['demo-room.prepare', 'Hay una sesión en curso: termínala antes de preparar la demo.'],
+    'reset' => ['demo-room.reset', 'Hay una sesión en curso: termínala para reiniciar la demo.'],
+])->with([DemoSessionStatus::Preparing, DemoSessionStatus::Active, DemoSessionStatus::Ending]);
+
 it('records in the audit trail who started a run, with ids only', function (string $route, string $event): void {
     Queue::fake();
     $demo = demoCompany();

@@ -12,6 +12,7 @@ use App\Modules\Demos\Contracts\DemoShowcase;
 use App\Modules\Demos\Contracts\DoorControl;
 use App\Modules\Demos\Http\Requests\DemoRoomRequest;
 use App\Modules\Demos\Http\Requests\StartDemoSessionRequest;
+use App\Modules\Demos\Models\DemoSession;
 use App\Modules\Demos\Support\DemoRoomPage;
 use App\Modules\Demos\Support\QrCode;
 use App\Modules\Tenancy\Contracts\DemoCompanies;
@@ -34,11 +35,20 @@ final class DemoRoomController extends Controller
 
     public function prepare(DemoRoomRequest $request, StartDemoRun $start): RedirectResponse
     {
+        // An open session's demo is the audience's: only ending the session (with its confirmation) wipes it.
+        if (DemoSession::current() !== null) {
+            return $this->busySession('termínala antes de preparar la demo.');
+        }
+
         return $this->started($start->handle('prepare'), 'Preparando la demo: tarda alrededor de medio minuto.');
     }
 
     public function reset(DemoRoomRequest $request, StartDemoRun $start): RedirectResponse
     {
+        if (DemoSession::current() !== null) {
+            return $this->busySession('termínala para reiniciar la demo.');
+        }
+
         return $this->started($start->handle('reset'), 'Reiniciando la demo: tarda alrededor de medio minuto.');
     }
 
@@ -91,6 +101,13 @@ final class DemoRoomController extends Controller
         } else {
             Inertia::flash('demoKioskLinks', array_map(fn (array $link): array => [...$link, 'qr' => $qr->dataUri($link['url'])], $links));
         }
+
+        return back();
+    }
+
+    private function busySession(string $what): RedirectResponse
+    {
+        Inertia::flash('toast', ['type' => 'error', 'message' => "Hay una sesión en curso: {$what}"]);
 
         return back();
     }

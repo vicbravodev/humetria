@@ -46,7 +46,9 @@ terminar se borra todo.
 
 Solo hay una sesión a la vez. Un segundo «Empezar sesión» responde «Ya hay una sesión en curso o una preparación
 corriendo: espera a que termine.». Sin sesión, **Reiniciar demo** queda como una tarjeta discreta en **Herramientas de
-la sala**: empezar y terminar una sesión ya reinician la demo.
+la sala**: empezar y terminar una sesión ya reinician la demo. Con una sesión abierta (una pestaña vieja, un doble
+clic), Preparar y Reiniciar no hacen nada y responden «Hay una sesión en curso: …»: la demo es del público hasta que
+**Terminar sesión** la borra.
 
 ### El guía
 
