@@ -9,6 +9,7 @@ use App\Modules\Compensation\Models\ContractTerm;
 use App\Modules\Compensation\Models\GradeSalary;
 use App\Modules\Compensation\Models\SalaryOverride;
 use App\Modules\Compensation\Models\Scenario;
+use App\Modules\Compensation\Support\ConceptLabels;
 use App\Modules\Compensation\Support\OtherScenarios;
 use App\Modules\Compensation\Support\ReportBuilder;
 use App\Modules\Compensation\Support\ReportImpact;
@@ -20,7 +21,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ReportBuilder::class, ReportImpact::class, OtherScenarios::class, OpenReport::class);
+mutates(ReportBuilder::class, ReportImpact::class, OtherScenarios::class, OpenReport::class, ConceptLabels::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-04 10:00:00');
@@ -265,3 +266,32 @@ it('gives what each concept adds to a year of the new salary, retroactivity asid
     expect(array_sum(array_column($props['concepts'], 'recurring_cents')))->toBe($props['headline']['recurring_cents'])
         ->and($props['concepts'][0]['recurring_cents'])->toBeGreaterThan(0);
 });
+
+it('names each employer line of the cost by its law, and a line it does not know by its key', function (string $key, string $label): void {
+    expect((new ConceptLabels)->label(App\Modules\Compensation\Enums\CostConcept::Contribution, $key, []))->toBe($label);
+})->with([
+    ['imss_fixed', 'IMSS: cuota fija de enfermedad y maternidad'],
+    ['imss_surplus', 'IMSS: excedente de enfermedad y maternidad'],
+    ['imss_pensioners', 'IMSS: gastos médicos de pensionados'],
+    ['imss_cash', 'IMSS: prestaciones en dinero'],
+    ['imss_disability_life', 'IMSS: invalidez y vida'],
+    ['work_risk', 'IMSS: riesgo de trabajo'],
+    ['imss_childcare', 'IMSS: guarderías y prestaciones sociales'],
+    ['retirement', 'Retiro'],
+    ['severance_old_age', 'Cesantía en edad avanzada y vejez'],
+    ['infonavit', 'Infonavit'],
+    ['payroll_tax', 'Impuesto sobre nómina'],
+    ['new_line', 'new_line'],
+]);
+
+it('names each fiscal value the report says is out of date, and one it does not know by its key', function (string $key, string $label): void {
+    expect((new ConceptLabels)->fiscalLabel($key))->toBe($label);
+})->with([
+    ['uma', 'UMA'],
+    ['minimum_wage', 'Salario mínimo'],
+    ['minimum_wage_border', 'Salario mínimo de la frontera norte'],
+    ['payroll_tax.JAL', 'Impuesto sobre nómina de los estados'],
+    ['severance_old_age_limit.2027', 'Cesantía en edad avanzada y vejez'],
+    ['old_age_severance', 'old_age_severance'],
+    ['imss_fixed', 'imss_fixed'],
+]);

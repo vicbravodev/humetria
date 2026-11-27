@@ -45,12 +45,6 @@ function mutationExemptClasses(): array
             'App\Modules\Blog\Support\BlogTools',
         ],
         'Pendiente de clasificar (26 nov 2026): entra a la mutación o pasa arriba con su razón. Esta lista solo se achica.' => [
-            'App\Modules\Compensation\Support\BenefitRows',
-            'App\Modules\Compensation\Support\CompensationStart',
-            'App\Modules\Compensation\Support\ConceptLabels',
-            'App\Modules\Compensation\Support\ScenarioEditor',
-            'App\Modules\Compensation\Support\ScenarioRows',
-            'App\Modules\Compensation\Support\ShareMoments',
             'App\Modules\Complaints\Support\ChannelSettings',
             'App\Modules\Complaints\Support\ComplaintInput',
             'App\Modules\Complaints\Support\Dates',

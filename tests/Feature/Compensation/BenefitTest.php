@@ -10,6 +10,7 @@ use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\ContractTerm;
 use App\Modules\Compensation\Models\Scenario;
 use App\Modules\Compensation\Models\WorkRiskPremium;
+use App\Modules\Compensation\Support\BenefitRows;
 use App\Modules\Leave\Enums\PolicyScope;
 use App\Modules\Leave\Models\LeavePolicy;
 use App\Modules\Leave\Models\LeavePolicyAssignment;
@@ -21,7 +22,7 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(PolicyVacationTerms::class, ListBenefits::class, CountBenefits::class);
+mutates(PolicyVacationTerms::class, ListBenefits::class, CountBenefits::class, BenefitRows::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-03 10:00:00');

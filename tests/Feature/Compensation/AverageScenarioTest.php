@@ -11,10 +11,11 @@ use App\Modules\Compensation\Support\AverageExample;
 use App\Modules\Compensation\Support\AveragePayroll;
 use App\Modules\Compensation\Support\Calculation\ScenarioCost;
 use App\Modules\Compensation\Support\CurrentRiskPremium;
+use App\Modules\Compensation\Support\ScenarioEditor;
 use App\Modules\Compensation\Support\ScenarioInputBuilder;
 use App\Modules\Tenancy\Models\Tenant;
 
-mutates(ScenarioInputBuilder::class, AveragePayroll::class, AverageExample::class, CurrentRiskPremium::class);
+mutates(ScenarioInputBuilder::class, AveragePayroll::class, AverageExample::class, CurrentRiskPremium::class, ScenarioEditor::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();

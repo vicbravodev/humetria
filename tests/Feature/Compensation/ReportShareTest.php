@@ -8,6 +8,7 @@ use App\Modules\Compensation\Actions\ListReportShares;
 use App\Modules\Compensation\Actions\RevokeReportShare;
 use App\Modules\Compensation\Models\ReportShare;
 use App\Modules\Compensation\Models\Scenario;
+use App\Modules\Compensation\Support\ShareMoments;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Database\QueryException;
@@ -17,7 +18,7 @@ use Illuminate\Support\Str;
 use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(CreateReportShare::class, RevokeReportShare::class, ListReportShares::class);
+mutates(CreateReportShare::class, RevokeReportShare::class, ListReportShares::class, ShareMoments::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-04 10:00:00');

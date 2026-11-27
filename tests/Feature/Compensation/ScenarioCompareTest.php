@@ -6,7 +6,9 @@ use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\ContractTerm;
 use App\Modules\Compensation\Models\GradeSalary;
 use App\Modules\Compensation\Models\Scenario;
+use App\Modules\Compensation\Support\ConceptLabels;
 use App\Modules\Compensation\Support\ScenarioComparison;
+use App\Modules\Compensation\Support\ScenarioEditor;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Models\JobGrade;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -14,7 +16,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ScenarioComparison::class);
+mutates(ScenarioComparison::class, ConceptLabels::class, ScenarioEditor::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-04 10:00:00');
