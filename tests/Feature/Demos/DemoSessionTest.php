@@ -363,6 +363,27 @@ describe('the preparation of a session', function (): void {
         expect($run->refresh()->status)->toBe('failed')->and($session->refresh()->status)->toBe(DemoSessionStatus::Failed);
     });
 
+    it('does not reopen a session that started ending while it prepared', function (DemoSessionStatus $status): void {
+        sessionWorkspace();
+        $session = openSession($status);
+        $run = DemoRun::start('session') ?? throw new LogicException('Not started.');
+
+        (new PrepareDemoSession($run->id, $session->id))->handle(resolve(DemoWorkspace::class));
+
+        expect($session->refresh()->status)->toBe($status)->and($session->ready_at)->toBeNull();
+    })->with([DemoSessionStatus::Ending, DemoSessionStatus::Ended]);
+
+    it('does not fail a session that is no longer preparing', function (DemoSessionStatus $status): void {
+        sessionWorkspace(fails: true);
+        $session = openSession($status);
+        $run = DemoRun::start('session') ?? throw new LogicException('Not started.');
+
+        (new PrepareDemoSession($run->id, $session->id))->handle(resolve(DemoWorkspace::class));
+        (new PrepareDemoSession($run->id, $session->id))->failed(new TimeoutExceededException('Timed out.'));
+
+        expect($session->refresh()->status)->toBe($status)->and($session->ended_at)->toBeNull();
+    })->with([DemoSessionStatus::Active, DemoSessionStatus::Ending]);
+
     it('does nothing when its run was taken over while it waited', function (): void {
         $calls = sessionWorkspace();
         $session = openSession(DemoSessionStatus::Preparing);

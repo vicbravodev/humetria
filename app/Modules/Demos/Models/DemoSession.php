@@ -76,11 +76,12 @@ final class DemoSession extends Model
         return self::query()->where('status', DemoSessionStatus::Active)->first();
     }
 
-    /** Its demo is ready for the audience. Task 2 passes the session's center; until then there is none. */
+    /** Its demo is ready for the audience, in the session's center. Only while preparing: a late job never reopens it. */
     public function markReady(?string $workCenterId): void
     {
-        $this->forceFill(['status' => DemoSessionStatus::Active, 'work_center_id' => $workCenterId, 'ready_at' => now()])->save();
-        Log::info('demo.session_ready', ['session_id' => $this->id]);
+        if ($this->moveFrom(DemoSessionStatus::Preparing, ['status' => DemoSessionStatus::Active, 'work_center_id' => $workCenterId, 'ready_at' => now()])) {
+            Log::info('demo.session_ready', ['session_id' => $this->id]);
+        }
     }
 
     public function markEnded(): void
@@ -89,11 +90,12 @@ final class DemoSession extends Model
         Log::info('demo.session_ended', ['session_id' => $this->id]);
     }
 
-    /** Its preparation failed: the run keeps why; the lock is freed for another try. */
+    /** Its preparation failed: the run keeps why; the lock is freed for another try. Only while preparing. */
     public function markFailed(): void
     {
-        $this->forceFill(['status' => DemoSessionStatus::Failed, 'ended_at' => now()])->save();
-        Log::warning('demo.session_failed', ['session_id' => $this->id]);
+        if ($this->moveFrom(DemoSessionStatus::Preparing, ['status' => DemoSessionStatus::Failed, 'ended_at' => now()])) {
+            Log::warning('demo.session_failed', ['session_id' => $this->id]);
+        }
     }
 
     /** The moment the session's own activity starts: when it became ready (before that, when it started). */
@@ -144,6 +146,23 @@ final class DemoSession extends Model
         Log::info('demo.session_guide_moved', ['session_id' => $this->id, 'from' => $previous, 'to' => $key]);
 
         return $previous;
+    }
+
+    /**
+     * Writes `$values` only while the session is still `$from` (another request or job may have moved it since it was
+     * read); true when it moved.
+     *
+     * @param  array<string, mixed>  $values
+     */
+    private function moveFrom(DemoSessionStatus $from, array $values): bool
+    {
+        if (self::query()->whereKey($this->id)->where('status', $from)->update($values) === 0) {
+            return false;
+        }
+
+        $this->forceFill($values)->syncOriginal();
+
+        return true;
     }
 
     /**
