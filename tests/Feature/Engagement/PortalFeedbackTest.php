@@ -7,12 +7,13 @@ use App\Modules\Engagement\Http\Controllers\PortalFeedbackController;
 use App\Modules\Engagement\Models\Comment;
 use App\Modules\Engagement\Models\CommentSummary;
 use App\Modules\Engagement\Support\FeedbackWorkerSection;
+use App\Modules\Engagement\Support\ManagerSurvey;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(PortalFeedbackController::class, FeedbackWorkerSection::class);
+mutates(PortalFeedbackController::class, FeedbackWorkerSection::class, ManagerSurvey::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['trade_name' => 'Acme']);

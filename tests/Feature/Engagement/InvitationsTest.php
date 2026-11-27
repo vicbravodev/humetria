@@ -12,6 +12,7 @@ use App\Modules\Engagement\Jobs\SendInvitations;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Notifications\SurveyInvitation;
+use App\Modules\Engagement\Support\InvitationComposer;
 use App\Modules\Engagement\Support\SurveyClock;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
@@ -29,7 +30,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 
-mutates(RemindPending::class, SendInvitations::class, SurveyInvitation::class, SurveyClock::class);
+mutates(RemindPending::class, SendInvitations::class, SurveyInvitation::class, SurveyClock::class, InvitationComposer::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-09 15:00:00');

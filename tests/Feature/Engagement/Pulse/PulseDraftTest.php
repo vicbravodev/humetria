@@ -9,6 +9,7 @@ use App\Modules\Engagement\Enums\SurveyStatus;
 use App\Modules\Engagement\Http\Requests\PulseDraftRequest;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Notifications\SurveyInvitation;
+use App\Modules\Engagement\Support\Pulse\PulseHistory;
 use App\Modules\Tenancy\Data\CompanySummary;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -17,7 +18,7 @@ use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(CreatePulseDraft::class, PulseDraftRequest::class);
+mutates(CreatePulseDraft::class, PulseDraftRequest::class, PulseHistory::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-12-09 18:00:00');

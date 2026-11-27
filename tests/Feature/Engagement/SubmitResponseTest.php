@@ -10,6 +10,7 @@ use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Response;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Support\Bank\Questionnaire;
+use App\Modules\Engagement\Support\OpenedInvitation;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
@@ -22,7 +23,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(SubmitResponse::class, SubmitResponseRequest::class, RespondentController::class);
+mutates(SubmitResponse::class, SubmitResponseRequest::class, RespondentController::class, OpenedInvitation::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-09 15:00:00');

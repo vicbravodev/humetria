@@ -12,6 +12,7 @@ use App\Modules\Engagement\Enums\SurveyStatus;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Notifications\SurveyInvitation;
+use App\Modules\Engagement\Support\EngagementInvitationLinks;
 use App\Modules\Messaging\Contracts\InvitationLinks;
 use App\Modules\Messaging\Data\InvitationReference;
 use App\Modules\Messaging\Support\TemplateRegistry;
@@ -27,6 +28,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
+
+mutates(EngagementInvitationLinks::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-09 15:00:00');
@@ -182,4 +185,17 @@ it('tells Messaging, when it runs, the phone, the template, the two parameters a
     $survey->update(['status' => SurveyStatus::Closed, 'closed_at' => now()]);
     expect($links->whatsApp($invitation->id))->toBeNull()
         ->and($links->whatsApp((string) Illuminate\Support\Str::uuid()))->toBeNull();
+});
+
+it('tells Messaging nothing for a person who lost their mobile or left the roster', function (): void {
+    [$survey] = waSurveyLaunch($this->tenant, $this->plant, $this->area, $this->user, 6);
+    $invitation = Invitation::query()->where('survey_id', $survey->id)->firstOrFail();
+    $links = collect(app()->tagged(InvitationLinks::TAG))->first(fn (InvitationLinks $links): bool => $links->type() === InvitationReference::ENGAGEMENT_INVITATION);
+    $person = Employee::query()->findOrFail($invitation->employee_id);
+    $mobile = $person->mobile;
+
+    $person->update(['mobile' => null]);
+    expect($links->whatsApp($invitation->id))->toBeNull();
+    $person->update(['mobile' => $mobile, 'deactivated_at' => now()]);
+    expect($links->whatsApp($invitation->id))->toBeNull();
 });
