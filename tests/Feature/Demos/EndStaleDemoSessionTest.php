@@ -98,6 +98,16 @@ it('fails a session stuck preparing because its run died', function (string $sta
     'running past the stale mark' => ['running', DemoRun::STALE_AFTER_MINUTES + 1],
 ]);
 
+it('fails a session left preparing after its run finished: an end tried while it prepared gave it back', function (): void {
+    $run = runStartedAgo('finished', 5);
+    $session = sessionOpenedAgo(new DateInterval('PT10M'), DemoSessionStatus::Preparing, $run->id);
+
+    $this->artisan('demo:end-stale-session')->expectsOutput('Sesión atorada preparándose: marcada fallida.')->assertSuccessful();
+
+    expect($session->refresh()->status)->toBe(DemoSessionStatus::Failed)->and(DemoSession::current())->toBeNull();
+    Queue::assertNothingPushed();
+});
+
 it('fails a session preparing with no run past the stale mark', function (): void {
     $session = sessionOpenedAgo(new DateInterval('PT'.(DemoRun::STALE_AFTER_MINUTES + 1).'M'), DemoSessionStatus::Preparing);
 

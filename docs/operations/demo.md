@@ -242,7 +242,8 @@ entrada en la bitácora (`demo.prepare_started`, `demo.reset_started`, `demo.doo
 
 **Respaldo de la sesión:** cada hora `demo:end-stale-session` termina la sesión abierta hace más de 24 h, como «Terminar
 sesión» (`demo.session_expired`; el reinicio borra lo que dejó el público). Una sesión atorada porque su corrida falló o
-murió suelta el candado: preparándose, se marca fallida; terminándose, su reinicio corre de nuevo. Si la demo está
+murió suelta el candado: preparándose, se marca fallida (también si su corrida terminó sin dejarla lista, como tras un
+«Terminar sesión» pulsado mientras se preparaba); terminándose, su reinicio corre de nuevo. Si la demo está
 ocupada, lo intenta a la hora siguiente. El comando dice qué hizo: «Sesión vencida: terminando.», «Sesión atorada
 preparándose: marcada fallida.», «Sesión atorada terminándose: reinicio de nuevo.», «La demo está ocupada: se intenta de
 nuevo en una hora.» o «Sin cambios.».

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * The backstop of «Terminar sesión», every hour: a session open for more than EXPIRES_AFTER_HOURS ends (its reset wipes
  * what the audience left: «expired»). A younger one whose run died frees the lock: preparing, it fails, since no audience
- * reached it («failed»); ending, its reset starts again («retried»). A reset that cannot start now («deferred») is tried the next hour. Anything
+ * reached it («failed»; so does one whose run finished without making it ready); ending, its reset starts again («retried»). A reset that cannot start now («deferred») is tried the next hour. Anything
  * else is left alone («none»).
  */
 final readonly class EndStaleDemoSession
@@ -41,7 +41,8 @@ final readonly class EndStaleDemoSession
         if ($session->status === DemoSessionStatus::Preparing) {
             $run = $session->run_id === null ? null : DemoRun::query()->find($session->run_id);
 
-            if (! ($run === null ? $session->started_at->lt($stale) : $this->died($run))) {
+            // A finished run that left it preparing will never make it ready: an end tried meanwhile gave it back.
+            if (! ($run === null ? $session->started_at->lt($stale) : $this->died($run) || $run->status === 'finished')) {
                 return 'none';
             }
 
