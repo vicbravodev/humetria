@@ -13,7 +13,11 @@ export default function CreateSurveyButton({ label }: { label: string }) {
     return (
         <Form {...routes.store.form(tenantSlug)}>
             {({ processing }) => (
-                <Button type="submit" disabled={processing}>
+                <Button
+                    type="submit"
+                    disabled={processing}
+                    data-tour="new-climate-survey"
+                >
                     {processing ? <Spinner /> : <Plus aria-hidden="true" />}
                     {label}
                 </Button>

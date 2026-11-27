@@ -75,7 +75,11 @@ export default function LaunchForm({
                 <div className="border-t pt-5">
                     <ConfirmDialog
                         trigger={
-                            <Button type="button" className="w-full">
+                            <Button
+                                type="button"
+                                className="w-full"
+                                data-tour="launch-evaluation"
+                            >
                                 <Send aria-hidden="true" />
                                 Lanzar e invitar a{' '}
                                 {peopleText(contact.reachable)}
