@@ -23,6 +23,8 @@ return new class extends Migration
             // The demo's center for the session; no foreign key: it is a company's row, and each reset wipes it.
             $table->uuid('work_center_id')->nullable();
             $table->jsonb('skipped_steps')->default('[]');
+            // The panel pages (route names) the presenter opened during the session, each once: the guide's «visitó» steps.
+            $table->jsonb('visited')->default('[]');
             $table->string('status', 10);
             $table->foreignUuid('run_id')->nullable()->constrained('demo_runs')->nullOnDelete();
             $table->timestampTz('started_at');

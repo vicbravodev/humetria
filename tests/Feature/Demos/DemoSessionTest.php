@@ -381,3 +381,24 @@ it('lets the database refuse a status it does not know and a second open session
         ->and(fn () => DB::transaction(fn () => DB::table('demo_sessions')->insert(['id' => Illuminate\Support\Str::uuid()->toString(), 'tours' => '[]', 'status' => 'paused', 'started_at' => now()])))
         ->toThrow(Illuminate\Database\QueryException::class);
 });
+
+it('records each panel page the presenter visits, once', function (): void {
+    $session = openSession();
+
+    $session->recordVisit('tenant.campaigns.results');
+    $session->recordVisit('tenant.attendance.report');
+    $session->recordVisit('tenant.campaigns.results');
+
+    expect($session->visited)->toBe(['tenant.campaigns.results', 'tenant.attendance.report'])
+        ->and($session->refresh()->visited)->toBe(['tenant.campaigns.results', 'tenant.attendance.report'])
+        ->and(DemoSession::query()->sole()->visited)->toBe(['tenant.campaigns.results', 'tenant.attendance.report']);
+});
+
+it('does not repeat a visit another request already recorded', function (): void {
+    $session = openSession();
+    DemoSession::query()->sole()->recordVisit('tenant.campaigns.results');
+
+    $session->recordVisit('tenant.campaigns.results');
+
+    expect($session->refresh()->visited)->toBe(['tenant.campaigns.results']);
+});

@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Log;
  * @property list<string> $tours
  * @property string|null $work_center_id
  * @property list<string> $skipped_steps
+ * @property list<string> $visited
  * @property DemoSessionStatus $status
  * @property string|null $run_id
  * @property CarbonImmutable $started_at
@@ -35,6 +36,9 @@ final class DemoSession extends Model
     private const array OPEN = [DemoSessionStatus::Preparing, DemoSessionStatus::Active, DemoSessionStatus::Ending];
 
     public $timestamps = false;
+
+    /** @var array<string, string> */
+    protected $attributes = ['visited' => '[]'];
 
     /**
      * Opens a session, preparing; null when another one is open.
@@ -85,6 +89,31 @@ final class DemoSession extends Model
         Log::warning('demo.session_failed', ['session_id' => $this->id]);
     }
 
+    /** The moment the session's own activity starts: when it became ready (before that, when it started). */
+    public function since(): CarbonImmutable
+    {
+        return $this->ready_at ?? $this->started_at;
+    }
+
+    /** The presenter opened the panel page `$routeName`; each page is kept once, even when two requests record it at once. */
+    public function recordVisit(string $routeName): void
+    {
+        if (in_array($routeName, $this->visited, true)) {
+            return;
+        }
+
+        $recorded = DB::update(
+            'UPDATE demo_sessions SET visited = visited || jsonb_build_array(?::text) WHERE id = ? AND NOT visited @> jsonb_build_array(?::text)',
+            [$routeName, $this->id, $routeName],
+        );
+        $this->visited = [...$this->visited, $routeName];
+        $this->syncOriginalAttribute('visited');
+
+        if ($recorded > 0) {
+            Log::info('demo.session_page_visited', ['session_id' => $this->id, 'route' => $routeName]);
+        }
+    }
+
     /**
      * @return array<string, string>
      */
@@ -93,6 +122,7 @@ final class DemoSession extends Model
         return [
             'tours' => 'array',
             'skipped_steps' => 'array',
+            'visited' => 'array',
             'status' => DemoSessionStatus::class,
             'started_at' => 'immutable_datetime',
             'ready_at' => 'immutable_datetime',
