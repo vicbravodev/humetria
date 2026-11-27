@@ -64,6 +64,14 @@ it('holds the messages of a launch up to the quota and not one more: quota-1, ex
     expect(UsageCounter::query()->where('tenant_id', $tenant->id)->where('meter', 'whatsapp')->sum('reserved'))->toBe(0);
 })->with([[99, true], [100, true], [101, false]]);
 
+it('tries a hold without throwing: true when it fits, false and nothing held when it does not', function (): void {
+    $tenant = whatsAppCompany(2);
+
+    expect(resolve(WhatsAppQuota::class)->tryReserve(2))->toBeTrue()
+        ->and(resolve(WhatsAppQuota::class)->tryReserve(1))->toBeFalse()
+        ->and(whatsAppCounter($tenant)->reserved)->toBe(2);
+});
+
 it('tells the person how many are left and how many are missing', function (): void {
     whatsAppCompany(100);
     resolve(WhatsAppQuota::class)->reserve(90);

@@ -33,6 +33,17 @@ final readonly class LedgerWhatsAppQuota implements WhatsAppQuota
         return new MessagePrice($cost->priceMicros, $cost->currency);
     }
 
+    public function tryReserve(int $count): bool
+    {
+        try {
+            $this->reserve($count);
+
+            return true;
+        } catch (WhatsAppQuotaExceeded) {
+            return false;
+        }
+    }
+
     public function reserve(int $count): void
     {
         if ($count < 1) {
