@@ -14,7 +14,7 @@ use App\Modules\Sso\Exceptions\SsoSignInFailed;
  */
 final class IdToken
 {
-    private const int LEEWAY_SECONDS = 60;
+    private const int LEEWAY_SECONDS = 60; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /**
      * @return array<string, mixed>
@@ -39,12 +39,22 @@ final class IdToken
         $audience = $claims['aud'] ?? null;
         $audiences = is_array($audience) ? $audience : [$audience];
 
-        return match (true) {
-            ! is_string($claims['iss'] ?? null) || rtrim($claims['iss'], '/') !== $issuer => throw new SsoSignInFailed('wrong_issuer'),
-            ! in_array($clientId, $audiences, true) || (count($audiences) > 1 && ($claims['azp'] ?? null) !== $clientId) => throw new SsoSignInFailed('wrong_audience'),
-            ! is_int($claims['exp'] ?? null) || time() > $claims['exp'] + self::LEEWAY_SECONDS => throw new SsoSignInFailed('expired_token'),
-            ! is_string($claims['nonce'] ?? null) || ! hash_equals($nonce, $claims['nonce']) => throw new SsoSignInFailed('wrong_nonce'),
-            default => $claims,
-        };
+        if (! is_string($claims['iss'] ?? null) || rtrim($claims['iss'], '/') !== $issuer) {
+            throw new SsoSignInFailed('wrong_issuer');
+        }
+
+        if (! in_array($clientId, $audiences, true) || (count($audiences) > 1 && ($claims['azp'] ?? null) !== $clientId)) {
+            throw new SsoSignInFailed('wrong_audience');
+        }
+
+        if (! is_int($claims['exp'] ?? null) || now()->getTimestamp() > $claims['exp'] + self::LEEWAY_SECONDS) {
+            throw new SsoSignInFailed('expired_token');
+        }
+
+        if (! is_string($claims['nonce'] ?? null) || ! hash_equals($nonce, $claims['nonce'])) {
+            throw new SsoSignInFailed('wrong_nonce');
+        }
+
+        return $claims;
     }
 }

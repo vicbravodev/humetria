@@ -6,8 +6,11 @@
   (15/16, 50/51), privacidad y seguridad. No se declara en controladores, FormRequests sin reglas propias, DTOs,
   migraciones, config ni enums que solo tienen etiquetas.
 - `mutates()` compara por prefijo: `mutates(Tenant::class)` también muta `TenantInvitation` y `TenantMembership`.
-- En modelos, las listas que PHP resuelve al compilar (`#[Fillable]`, `$casts`, `$hidden`) llevan
-  `// @pest-mutate-ignore: RemoveArrayItem` en su línea: la cobertura nunca las marca y saldrían como "uncovered".
+- Lo que PHP resuelve al compilar nunca lo marca la cobertura y saldría como "uncovered": las listas de los modelos
+  (`#[Fillable]`, `$casts`, `$hidden`), las constantes (`private const int LEEWAY_SECONDS = 60;`) y los valores por omisión
+  de propiedades (`protected $usesPKCE = true;`). Llevan `// @pest-mutate-ignore: <Mutador>` en su línea **y** un test que
+  fije el valor (el límite exacto de la constante, la lista que se ve en la respuesta): el comentario solo dice que la
+  mutación no puede medirlo, no que no se prueba.
 - Mientras desarrollas, la mutación se corre en local **solo por clase**. La corrida de las clases críticas vive en CI, cada semana.
 - Si un mutante escapa, falta un test. Si el mutante es equivalente (no cambia el comportamiento), se reporta; no se
   escribe un test artificial para matarlo.
