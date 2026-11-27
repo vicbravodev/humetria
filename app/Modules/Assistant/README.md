@@ -61,7 +61,9 @@ del mes sin agotar), manda solo texto pasado por `redact()` y cuenta el uso con 
 ni conversación). Implementación: `Support/TenantAiAccess`.
 `Contracts\HumiActivity` (`hasAsked($userId)`): si la persona ya le escribió a Humi en la empresa actual (Primeros pasos lo usa
 para marcar el paso). Se lee de `ai_usage` y no de las conversaciones, porque la persona puede borrarlas; nunca expone qué
-preguntó. Implementación: `Support/TenantHumiActivity`.
+preguntó. `askedSince($since)`: si alguien le escribió a Humi en la empresa actual desde ese instante (el guía de la demo
+lo usa: la sala lo lee como superadmin y el guía como el dueño o RH de la demo); solo cuenta el uso de Humi (con persona),
+nunca quién. Implementación: `Support/TenantHumiActivity`.
 
 ## Reglas que no se rompen
 

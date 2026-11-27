@@ -9,16 +9,15 @@ use App\Modules\Demos\Data\StepState;
 use App\Modules\Demos\Data\TourStep;
 use App\Modules\Demos\Enums\TourKey;
 use App\Modules\Demos\Models\DemoSession;
-use Illuminate\Contracts\Auth\Factory;
 
 /**
- * Humi: the presenter asks it how compliance stands. Humi keeps the usage under the account the panel is open as (the
- * demo's owner while impersonating), so the detector asks for the signed-in account. The demo's story writes no usage and
- * each session starts on a reset demo: whatever is there was asked during the session.
+ * Humi: the presenter asks it how compliance stands. The detector asks whether anyone in the demo asked since the session
+ * started, not the signed-in account: the room reads it as the superadmin, the dock as the demo's owner or its HR. The
+ * demo's story writes no usage and each session starts on a reset demo: whatever is there was asked during the session.
  */
 final readonly class HumiTour implements Tour
 {
-    public function __construct(private HumiActivity $humi, private Factory $auth) {}
+    public function __construct(private HumiActivity $humi) {}
 
     public function steps(): array
     {
@@ -35,8 +34,6 @@ final readonly class HumiTour implements Tour
 
     public function states(DemoSession $session): array
     {
-        $userId = $this->auth->guard()->id();
-
-        return ['humi.ask' => new StepState(is_int($userId) && $this->humi->hasAsked($userId))];
+        return ['humi.ask' => new StepState($this->humi->askedSince($session->since()))];
     }
 }

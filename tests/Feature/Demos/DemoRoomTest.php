@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Assistant\Models\AiUsage;
+use App\Modules\Assistant\Models\ConversationParticipant;
 use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Demos\Contracts\DoorControl;
 use App\Modules\Demos\Enums\DemoSessionStatus;
@@ -11,6 +13,7 @@ use App\Modules\Demos\Jobs\ResetDemo;
 use App\Modules\Demos\Models\DemoRun;
 use App\Modules\Demos\Models\DemoSession;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Support\TenantContext;
 use Carbon\CarbonInterface;
@@ -229,6 +232,19 @@ it('lists the tours and the open session', function (): void {
     expect(Context::has('tenant_id'))->toBeFalse()
         ->and(Context::hasHidden(TenantContext::DEMO))->toBeFalse()
         ->and(resolve(PermissionRegistrar::class)->getPermissionsTeamId())->toBeNull();
+});
+
+it('shows the humi step done once anyone asked Humi in the demo, though the room is the superadmin\'s', function (): void {
+    $demo = demoCompany();
+    $center = WorkCenterFactory::new()->createOne(['tenant_id' => $demo->id]);
+    roomSession(DemoSessionStatus::Active, $center->id)->forceFill(['tours' => ['humi']])->save();
+    $owner = memberOf($demo, TenantRole::Owner);
+    $participant = ConversationParticipant::factory()->for($owner)->create(['tenant_id' => $demo->id]);
+    AiUsage::factory()->create(['tenant_id' => $demo->id, 'participant_id' => $participant->id]);
+
+    $this->actingAs(superadmin())
+        ->get(route('demo-room.show'))
+        ->assertInertia(fn (Assert $page) => $page->where('session.tours.1', ['key' => 'humi', 'title' => 'Humi', 'done' => 1, 'total' => 1]));
 });
 
 it('shows a session being prepared or ending with its tours and nothing done yet', function (DemoSessionStatus $status): void {
