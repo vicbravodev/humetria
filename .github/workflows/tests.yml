@@ -185,7 +185,7 @@ jobs:
           assets: download
 
       - name: Unit and Feature with coverage (shard ${{ matrix.shard }}/3)
-        run: vendor/bin/pest --parallel --exclude-testsuite=Browser,Ssr --shard=${{ matrix.shard }}/3 --coverage-php=coverage-${{ matrix.shard }}.cov
+        run: vendor/bin/pest --parallel --exclude-testsuite=Browser,Ssr --shard=${{ matrix.shard }}/3 --coverage-php=coverage-${{ matrix.shard }}.cov --log-junit=junit-tests-${{ matrix.shard }}.xml
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -193,6 +193,15 @@ jobs:
           path: coverage-${{ matrix.shard }}.cov
           if-no-files-found: error
           retention-days: 1
+
+      # The time of each test class this shard measured: scripts/shard-timings.php writes it into tests/.pest/shards.json
+      # (docs/testing.md, «Los shards»).
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: timings-tests-${{ matrix.shard }}
+          path: junit-tests-${{ matrix.shard }}.xml
+          if-no-files-found: error
+          retention-days: 30
       # The first red job stops the whole run: nothing keeps spending minutes over a pipeline that cannot pass.
       - name: Cancel the run
         if: failure()
@@ -262,7 +271,15 @@ jobs:
           playwright: 'true'
 
       - name: Browser tests (shard ${{ matrix.shard }}/4)
-        run: composer test:browser -- --shard=${{ matrix.shard }}/4
+        run: composer test:browser -- --shard=${{ matrix.shard }}/4 --log-junit=junit-browser-${{ matrix.shard }}.xml
+
+      # The time of each test class this shard measured (docs/testing.md, «Los shards»).
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: timings-browser-${{ matrix.shard }}
+          path: junit-browser-${{ matrix.shard }}.xml
+          if-no-files-found: error
+          retention-days: 30
 
       # What the page looked like when an assertion failed (Pest Browser saves it on every failure).
       - name: Screenshots of the failures

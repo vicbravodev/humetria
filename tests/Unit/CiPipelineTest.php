@@ -133,6 +133,15 @@ it('keeps the 90% minimum over the shards of Unit and Feature together', functio
         ->and((array) $jobs['coverage']['needs'])->toContain('tests');
 });
 
+it('keeps the time of every test class each shard measured, for scripts/shard-timings.php', function (string $name): void {
+    $job = workflowJobs('tests.yml')[$name];
+    $uploads = array_values(array_filter((array) ($job['steps'] ?? []), fn (mixed $step): bool => is_array($step) && ($step['with']['name'] ?? null) === "timings-{$name}-\${{ matrix.shard }}"));
+
+    expect(jobRuns($job))->toContain("--log-junit=junit-{$name}-\${{ matrix.shard }}.xml")
+        ->and($uploads)->toHaveCount(1)
+        ->and($uploads[0]['with']['path'] ?? null)->toBe("junit-{$name}-\${{ matrix.shard }}.xml");
+})->with(['tests', 'browser']);
+
 it('makes the required check wait for every job and decide with the verdict', function (): void {
     $jobs = workflowJobs('tests.yml');
     $others = array_values(array_diff(array_keys($jobs), ['ci']));
