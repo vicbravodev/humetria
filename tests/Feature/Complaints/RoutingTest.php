@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\AuditEntry;
+use App\Modules\Complaints\Actions\AssignComplaint;
 use App\Modules\Complaints\Actions\RouteUnassignedComplaints;
 use App\Modules\Complaints\Enums\RespondentKind;
 use App\Modules\Complaints\Models\Complaint;
@@ -21,7 +22,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schema;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(RouteUnassignedComplaints::class, CaseAccess::class);
+mutates(RouteUnassignedComplaints::class, CaseAccess::class, AssignComplaint::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-20 03:30:00');

@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Complaints\Actions\AssignComplaint;
 use App\Modules\Complaints\Actions\ReleaseHeldComplaints;
 use App\Modules\Complaints\Models\Complaint;
 use App\Modules\Complaints\Models\ComplaintAssignment;
@@ -15,7 +16,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
-mutates(ReleaseHeldComplaints::class, UnassignedCases::class, ComplaintStatistics::class);
+mutates(ReleaseHeldComplaints::class, UnassignedCases::class, ComplaintStatistics::class, AssignComplaint::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-20 18:00:00');

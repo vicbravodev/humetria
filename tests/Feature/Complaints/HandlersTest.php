@@ -12,7 +12,11 @@ use App\Modules\Complaints\Models\ComplaintChannel;
 use App\Modules\Complaints\Models\ComplaintHandler;
 use App\Modules\Complaints\Notifications\HandlersChanged;
 use App\Modules\Complaints\Notifications\YouWereDesignated;
+use App\Modules\Complaints\Support\ActiveHandlers;
+use App\Modules\Complaints\Support\EndedAssignments;
+use App\Modules\Complaints\Support\HandlerCandidates;
 use App\Modules\Complaints\Support\HandlerCoverage;
+use App\Modules\Complaints\Support\HandlerNotices;
 use App\Modules\Tenancy\Contracts\Members;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Events\MemberRemoved;
@@ -23,7 +27,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(DesignateHandler::class, EndHandler::class, HandlerCoverage::class, EndHandlerOnMemberRemoval::class);
+mutates(DesignateHandler::class, EndHandler::class, HandlerCoverage::class, EndHandlerOnMemberRemoval::class, HandlerCandidates::class, HandlerNotices::class, ActiveHandlers::class, EndedAssignments::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-20 18:00:00');
