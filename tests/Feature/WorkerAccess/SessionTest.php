@@ -10,13 +10,14 @@ use App\Modules\WorkerAccess\Enums\EntryVia;
 use App\Modules\WorkerAccess\Events\WorkerAccessRevoked;
 use App\Modules\WorkerAccess\Models\WorkerAccessState;
 use App\Modules\WorkerAccess\Models\WorkerDeviceKey;
+use App\Modules\WorkerAccess\Support\RequestWorkerSession;
 use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 
-mutates(WorkerSessionStore::class);
+mutates(WorkerSessionStore::class, RequestWorkerSession::class);
 
 beforeEach(function (): void {
     $this->travelTo(CarbonImmutable::parse('2026-11-16 15:00:00', 'UTC'));

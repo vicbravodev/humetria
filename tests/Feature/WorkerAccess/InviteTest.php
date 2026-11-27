@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\WorkerAccess\Actions\CreateAccessLink;
 use App\Modules\WorkerAccess\Actions\IssueAccessLink;
 use App\Modules\WorkerAccess\Contracts\WorkerInvitations;
 use App\Modules\WorkerAccess\Data\InvitationOutcome;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
-mutates(IssueAccessLink::class);
+mutates(IssueAccessLink::class, CreateAccessLink::class);
 
 beforeEach(function (): void {
     $this->travelTo(CarbonImmutable::parse('2026-11-16 15:00:00', 'UTC'));
