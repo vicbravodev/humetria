@@ -25,6 +25,8 @@ return new class extends Migration
             $table->jsonb('skipped_steps')->default('[]');
             // The panel pages (route names) the presenter opened during the session, each once: the guide's «visitó» steps.
             $table->jsonb('visited')->default('[]');
+            // The step the guide last showed as current: when it is done by the next read, the guide celebrates it once.
+            $table->string('guide_step')->nullable();
             $table->string('status', 10);
             $table->foreignUuid('run_id')->nullable()->constrained('demo_runs')->nullOnDelete();
             $table->timestampTz('started_at');

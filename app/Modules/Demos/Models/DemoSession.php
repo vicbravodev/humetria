@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Log;
  * @property string|null $work_center_id
  * @property list<string> $skipped_steps
  * @property list<string> $visited
+ * @property string|null $guide_step
  * @property DemoSessionStatus $status
  * @property string|null $run_id
  * @property CarbonImmutable $started_at
@@ -118,6 +119,25 @@ final class DemoSession extends Model
         if ($recorded > 0) {
             Log::info('demo.session_page_visited', ['session_id' => $this->id, 'route' => $routeName]);
         }
+    }
+
+    /**
+     * The guide now shows `$key` as its current step (null once every step is passed); gives the step it showed before, or
+     * null when it already knew, so only one read of the change (one tab, one poll) tells it.
+     */
+    public function moveGuideTo(?string $key): ?string
+    {
+        $previous = $this->guide_step;
+
+        if ($previous === $key) {
+            return null;
+        }
+
+        $moved = DB::update('UPDATE demo_sessions SET guide_step = ? WHERE id = ? AND guide_step IS NOT DISTINCT FROM ?', [$key, $this->id, $previous]);
+        $this->guide_step = $key;
+        $this->syncOriginalAttribute('guide_step');
+
+        return $moved > 0 ? $previous : null;
     }
 
     /**

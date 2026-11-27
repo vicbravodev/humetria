@@ -309,3 +309,35 @@ it('says finished when every step is done or skipped', function (): void {
         'finished' => true,
     ]);
 });
+
+it('reports the step just done once', function (): void {
+    $session = guidedSession(['nom035']);
+    presentAs();
+
+    expect(polledGuide()->json('justDone'))->toBeNull();
+
+    expect(sharedGuide('tenant.work-centers.index'))->toMatchArray(['justDone' => 'El centro de la sesión'])
+        ->and(polledGuide()->json('justDone'))->toBeNull()
+        ->and(sharedGuide())->toMatchArray(['justDone' => null]);
+
+    // A skipped step was not done: nothing to celebrate.
+    $this->postJson(route('demo-room.session.skip', 'base.people'))->assertOk()->assertJsonPath('justDone', null);
+
+    Campaign::factory()->create(['tenant_id' => $this->demo->id, 'work_center_id' => $this->center->id]);
+
+    expect(polledGuide()->json())->toMatchArray(['justDone' => 'Crea la evaluación'])
+        ->and(polledGuide()->json('justDone'))->toBeNull()
+        ->and($session->refresh()->guide_step)->toBe('nom035.launch');
+});
+
+it('reports the last step done when the session finishes', function (): void {
+    guidedSession(['humi']);
+    presentAs();
+    $this->postJson(route('demo-room.session.skip', 'base.center'));
+    $this->postJson(route('demo-room.session.skip', 'base.people'));
+    $participant = App\Modules\Assistant\Models\ConversationParticipant::factory()->for($this->owner)->create(['tenant_id' => $this->demo->id]);
+    App\Modules\Assistant\Models\AiUsage::factory()->create(['tenant_id' => $this->demo->id, 'participant_id' => $participant->id]);
+
+    expect(polledGuide()->json())->toMatchArray(['finished' => true, 'justDone' => 'Pregúntale a Humi'])
+        ->and(polledGuide()->json('justDone'))->toBeNull();
+});

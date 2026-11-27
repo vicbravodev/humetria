@@ -65,12 +65,17 @@ final class SessionGuide implements DemoGuide
         $steps = $this->catalog->for($tours);
         $passed = fn (TourStep $step): bool => $states[$step->key]->done || in_array($step->key, $session->skipped_steps, true);
         $current = array_find($steps, fn (TourStep $step): bool => ! $passed($step));
+        // The step the guide showed before, once it is done by the data (a skip is no achievement), is celebrated once.
+        $left = $session->moveGuideTo($current?->key);
+        $justDone = $left !== null && ($states[$left]->done ?? false) && ! in_array($left, $session->skipped_steps, true)
+            ? $this->catalog->step($session, $left)?->title
+            : null;
 
         return [
             'tours' => array_map(fn (TourKey $tour): array => $this->tour($tour, $steps, $passed), array_values(array_unique(array_map(fn (TourStep $step): TourKey => $step->tour, $steps), SORT_REGULAR))),
             'current' => $current === null ? null : $this->step($current, $states[$current->key], $steps, $session, $slug),
             'finished' => $current === null,
-            'justDone' => null,
+            'justDone' => $justDone,
         ];
     }
 
