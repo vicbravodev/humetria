@@ -69,6 +69,12 @@ final class DemoSession extends Model
         return self::query()->whereIn('status', self::OPEN)->first();
     }
 
+    /** The session under way: open, and ready for the audience. */
+    public static function active(): ?self
+    {
+        return self::query()->where('status', DemoSessionStatus::Active)->first();
+    }
+
     /** Its demo is ready for the audience. Task 2 passes the session's center; until then there is none. */
     public function markReady(?string $workCenterId): void
     {

@@ -9,7 +9,6 @@ use App\Models\User;
 use App\Modules\Demos\Contracts\DemoGuide;
 use App\Modules\Demos\Data\StepState;
 use App\Modules\Demos\Data\TourStep;
-use App\Modules\Demos\Enums\DemoSessionStatus;
 use App\Modules\Demos\Enums\TourKey;
 use App\Modules\Demos\Models\DemoSession;
 use App\Modules\Tenancy\Contracts\Companies;
@@ -61,7 +60,7 @@ final class SessionGuide implements DemoGuide
 
         // The poll comes from outside the company's routes: it works in the demo, the only company the presenter may enter.
         $slug = ($this->demos->isCurrent() ? $this->companies->current() : $this->companies->enter($this->demoId))->slug;
-        $tours = array_map(TourKey::from(...), $session->tours);
+        $tours = $this->catalog->toursOf($session);
         $states = $this->catalog->states($tours, $session);
         $steps = $this->catalog->for($tours);
         $passed = fn (TourStep $step): bool => $states[$step->key]->done || in_array($step->key, $session->skipped_steps, true);
@@ -94,8 +93,7 @@ final class SessionGuide implements DemoGuide
     private function session(): ?DemoSession
     {
         if ($this->session === null) {
-            $session = $this->isPresenter() ? DemoSession::current() : null;
-            $this->session = $session?->status === DemoSessionStatus::Active ? $session : false;
+            $this->session = ($this->isPresenter() ? DemoSession::active() : null) ?? false;
         }
 
         return $this->session === false ? null : $this->session;

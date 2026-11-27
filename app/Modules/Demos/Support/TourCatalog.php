@@ -86,6 +86,22 @@ final readonly class TourCatalog
         return $states;
     }
 
+    /** The step `$key` of the session's tours; null when it has none such. */
+    public function step(DemoSession $session, string $key): ?TourStep
+    {
+        return array_find($this->for($this->toursOf($session)), fn (TourStep $step): bool => $step->key === $key);
+    }
+
+    /**
+     * The tours the session shows, in its order.
+     *
+     * @return list<TourKey>
+     */
+    public function toursOf(DemoSession $session): array
+    {
+        return array_map(TourKey::from(...), $session->tours);
+    }
+
     public function state(TourStep $step, DemoSession $session): StepState
     {
         return $this->states([$step->tour], $session)[$step->key];

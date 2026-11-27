@@ -231,3 +231,81 @@ it('carries no person of the demo, only counts', function (): void {
     expect(json_encode(polledGuide()->json(), JSON_THROW_ON_ERROR))->not->toContain('Rosalinda')
         ->and(session(Impersonation::SESSION_KEY))->not->toBeNull();
 });
+
+it('skips and rewinds a step', function (): void {
+    $session = guidedSession(['nom035']);
+    presentAs();
+    Log::spy();
+
+    $this->postJson(route('demo-room.session.skip', 'base.center'))->assertOk()->assertJsonPath('current.key', 'base.people');
+
+    expect($session->refresh()->skipped_steps)->toBe(['base.center'])
+        ->and(polledGuide()->json('tours.0.done'))->toBe(1);
+    Log::shouldHaveReceived('info')->once()->with('demo.session_step_skipped', ['session_id' => $session->id, 'step' => 'base.center']);
+
+    // Skipping the evaluation's draft leaves its next steps without an evaluation to open: «Llévame» goes to the list.
+    Employee::factory()->create(['tenant_id' => $this->demo->id, 'work_center_id' => $this->center->id]);
+    $this->postJson(route('demo-room.session.skip', 'nom035.draft'))->assertOk()
+        ->assertJsonPath('current.key', 'nom035.launch')
+        ->assertJsonPath('current.href', route('tenant.campaigns.index', $this->demo));
+
+    // Rewinding takes the skip away, and the visit that did the step: the presenter goes through it again.
+    $this->postJson(route('demo-room.session.rewind', 'nom035.draft'))->assertOk()->assertJsonPath('current.key', 'nom035.draft');
+    $this->postJson(route('demo-room.session.rewind', 'base.center'))->assertOk()->assertJsonPath('current.key', 'base.center');
+    sharedGuide('tenant.work-centers.index');
+
+    expect($session->refresh()->visited)->toBe(['tenant.work-centers.index']);
+
+    $this->postJson(route('demo-room.session.rewind', 'base.center'))->assertOk()->assertJsonPath('current.key', 'base.center');
+
+    expect($session->refresh())->skipped_steps->toBe([])->visited->toBe([]);
+    Log::shouldHaveReceived('info')->with('demo.session_step_rewound', ['session_id' => $session->id, 'step' => 'base.center']);
+});
+
+it('skips each step once', function (): void {
+    $session = guidedSession(['nom035']);
+    presentAs();
+
+    $this->postJson(route('demo-room.session.skip', 'nom035.answers'))->assertOk();
+    $this->postJson(route('demo-room.session.skip', 'nom035.answers'))->assertOk();
+
+    expect($session->refresh()->skipped_steps)->toBe(['nom035.answers']);
+});
+
+it('skips nor rewinds a step the session does not have, nor without a session under way', function (string $route): void {
+    $session = guidedSession(['nom035']);
+    presentAs();
+
+    $this->postJson(route($route, 'leave.key'))->assertNotFound();
+    $this->postJson(route($route, 'nom035.nothing'))->assertNotFound();
+
+    $session->forceFill(['status' => DemoSessionStatus::Ending])->save();
+
+    $this->postJson(route($route, 'nom035.draft'))->assertNotFound();
+    expect($session->refresh()->skipped_steps)->toBe([]);
+})->with(['demo-room.session.skip', 'demo-room.session.rewind']);
+
+it('lets only the presenter skip or rewind', function (string $route): void {
+    $session = guidedSession(['nom035']);
+
+    $this->actingAs($this->owner)->postJson(route($route, 'base.center'))->assertNotFound();
+    $this->actingAs(superadmin())->postJson(route($route, 'base.center'))->assertNotFound();
+
+    expect($session->refresh()->skipped_steps)->toBe([]);
+})->with(['demo-room.session.skip', 'demo-room.session.rewind']);
+
+it('says finished when every step is done or skipped', function (): void {
+    guidedSession(['humi']);
+    presentAs();
+    sharedGuide('tenant.work-centers.index');
+    $this->postJson(route('demo-room.session.skip', 'base.people'))->assertOk()->assertJsonPath('finished', false);
+
+    $this->postJson(route('demo-room.session.skip', 'humi.ask'))->assertOk()->assertJson([
+        'tours' => [
+            ['key' => 'base', 'done' => 2, 'total' => 2],
+            ['key' => 'humi', 'title' => 'Humi', 'done' => 1, 'total' => 1],
+        ],
+        'current' => null,
+        'finished' => true,
+    ]);
+});
