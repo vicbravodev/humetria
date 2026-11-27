@@ -41,7 +41,10 @@ export default function EvaluationGuidesStep({
                                     {center.name} · {staffText(center.workers)}
                                 </span>
                                 <span className="text-sm text-muted-foreground">
-                                    {guidesReason(center.guides)}
+                                    {guidesReason(
+                                        center.guides,
+                                        center.workers,
+                                    )}
                                 </span>
                             </span>
                             <Button

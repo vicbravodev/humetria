@@ -10,7 +10,8 @@ import ConfirmDialog from '@/components/humetria/confirm-dialog';
 import { Button } from '@/components/ui/button';
 import { launchSummary } from '@/lib/campaign-launch';
 import { instrumentsText, quotasText } from '@/lib/campaigns';
-import { peopleText, staffBand } from '@/lib/evaluation';
+import { peopleText } from '@/lib/evaluation';
+import { staffReason } from '@/lib/evaluation-centers';
 import { launch } from '@/routes/tenant/campaigns';
 import { index as employees } from '@/routes/tenant/employees';
 import type { CampaignDetail, DraftContact } from '@/types';
@@ -46,8 +47,10 @@ export default function LaunchForm({
                             <strong className="font-semibold text-foreground">
                                 {instrumentsText(campaign.instruments)}
                             </strong>
-                            , porque el centro tiene{' '}
-                            {staffBand(campaign.workers ?? 0)}.
+                            {staffReason(
+                                campaign.workers ?? 0,
+                                campaign.instruments,
+                            )}
                             {campaign.sampleSize !== null &&
                                 ` La Guía III la contesta una muestra sorteada. Muestra de ${campaign.sampleSize}: ${quotasText(campaign.quotas)}.`}
                         </p>

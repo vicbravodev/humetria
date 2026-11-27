@@ -24,6 +24,9 @@ mutates(DemoNom035Guides::class);
 function sessionIn(WorkCenter $center): void
 {
     DemoSession::start(null, ['nom035'])?->markReady($center->id);
+
+    // A session that failed to open would let the negative tests pass for nothing.
+    expect(DemoSession::current()?->work_center_id)->toBe($center->id);
 }
 
 beforeEach(function (): void {
