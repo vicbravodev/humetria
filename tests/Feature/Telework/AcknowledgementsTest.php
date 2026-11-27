@@ -22,6 +22,7 @@ use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Models\TeleworkDocument;
 use App\Modules\Telework\Notifications\DocumentsToConfirm;
 use App\Modules\Telework\Notifications\PortalReminder;
+use App\Modules\Telework\Support\TeleworkWorkerSection;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -43,7 +44,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(RequestAcknowledgements::class, RequestOnPublication::class, RequestPolicyFromNewStaff::class, Acknowledge::class);
+mutates(RequestAcknowledgements::class, RequestOnPublication::class, RequestPolicyFromNewStaff::class, Acknowledge::class, SendPortalReminder::class, TeleworkWorkerSection::class);
 
 beforeEach(function (): void {
     Storage::fake(config()->string('filesystems.telework_files'));
@@ -630,8 +631,20 @@ it('keeps the document of the center a person left out of their portal, their st
     expect($titles())->toBe([$new->id])
         ->and(Acknowledgement::query()->where('employee_id', $ana->id)->where('document_id', $old->id)->whereNull('acknowledged_at')->count())->toBe(1);
 
-    $link = resolve(App\Modules\Telework\Support\TeleworkWorkerSection::class)->for(new App\Modules\WorkerAccess\Data\WorkerIdentity($this->tenant->id, $ana->id, 'Acme', 'Ana'));
+    $link = resolve(TeleworkWorkerSection::class)->for(new App\Modules\WorkerAccess\Data\WorkerIdentity($this->tenant->id, $ana->id, 'Acme', 'Ana'));
     expect($link?->pending)->toBe(1);
+});
+
+it('shows no «Su teletrabajo» in the start of a company without NOM-037, though a document still waits', function (): void {
+    Queue::fake();
+    $ana = staffer($this->center, ['email' => 'ana@acme.test']);
+    publishDocument(DocumentKind::Policy, $this->center);
+    $section = fn (): ?App\Modules\WorkerAccess\Data\WorkerSectionLink => resolve(TeleworkWorkerSection::class)->for(new App\Modules\WorkerAccess\Data\WorkerIdentity($this->tenant->id, $ana->id, 'Acme', 'Ana'));
+    expect($section()?->pending)->toBe(1);
+
+    resolve(App\Modules\Tenancy\Contracts\CompanyModules::class)->syncPlan($this->tenant->id, ['seating'], Carbon\CarbonImmutable::now(config('app.display_timezone')));
+
+    expect($section())->toBeNull();
 });
 
 it('does not let a person acknowledge the version of the center they left, though it was asked of them', function (): void {

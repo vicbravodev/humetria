@@ -15,11 +15,13 @@ use App\Modules\Telework\Enums\ReviewMethod;
 use App\Modules\Telework\Http\Controllers\EvidenceController;
 use App\Modules\Telework\Http\Controllers\PortalEvidenceController;
 use App\Modules\Telework\Http\Controllers\VisitController;
+use App\Modules\Telework\Jobs\SendPortalReminder;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Models\EvidencePhoto;
 use App\Modules\Telework\Models\EvidenceRequest;
 use App\Modules\Telework\Models\VisitAuthorization;
 use App\Modules\Telework\Models\WorkplaceReview;
+use App\Modules\Telework\Support\WorkplaceAddress;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -35,7 +37,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
-mutates(CancelVisitAuthorization::class, RequestEvidence::class, FulfillPhotoRequest::class, RequestVisitAuthorization::class, ConfirmVisitAuthorization::class, AttachVisitDocument::class, RecordVisit::class, EvidenceController::class, VisitController::class, PortalEvidenceController::class);
+mutates(CancelVisitAuthorization::class, RequestEvidence::class, FulfillPhotoRequest::class, RequestVisitAuthorization::class, ConfirmVisitAuthorization::class, AttachVisitDocument::class, RecordVisit::class, EvidenceController::class, VisitController::class, PortalEvidenceController::class, SendPortalReminder::class, WorkplaceAddress::class);
 
 beforeEach(function (): void {
     Storage::fake('telework_files');
@@ -451,7 +453,7 @@ it('queues a portal reminder for the person when photos are requested or a visit
     resolve(RequestEvidence::class)->handle($this->workplace, EvidenceKind::Photos, 'Una foto de la silla.', $this->cora->id);
     resolve(RequestVisitAuthorization::class)->handle($this->workplace, $this->cora->id);
 
-    Illuminate\Support\Facades\Queue::assertPushed(App\Modules\Telework\Jobs\SendPortalReminder::class, fn ($job): bool => $job->tenantId === $this->tenant->id && $job->employeeId === $this->employee->id && $job->userId === null && $job->delay === 120);
+    Illuminate\Support\Facades\Queue::assertPushed(SendPortalReminder::class, fn ($job): bool => $job->tenantId === $this->tenant->id && $job->employeeId === $this->employee->id && $job->userId === null && $job->delay === 120);
 });
 
 it('does not remind the person of a remote check, which the Comisión does itself', function (): void {

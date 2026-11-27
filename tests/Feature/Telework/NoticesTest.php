@@ -17,6 +17,7 @@ use App\Modules\Telework\Models\ChecklistApplication;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Models\WorkerNotice;
 use App\Modules\Telework\Models\Workplace;
+use App\Modules\Telework\Support\NoticeAccess;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -33,7 +34,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(SubmitNotice::class, PortalNoticeController::class, ReviewWorkplace::class, ReviewNotice::class, NoticeController::class);
+mutates(SubmitNotice::class, PortalNoticeController::class, ReviewWorkplace::class, ReviewNotice::class, NoticeController::class, NoticeAccess::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-03-01 12:00:00');

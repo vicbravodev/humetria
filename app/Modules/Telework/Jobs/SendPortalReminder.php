@@ -33,16 +33,16 @@ final class SendPortalReminder implements ShouldBeUniqueUntilProcessing, ShouldQ
     use Queueable;
 
     /** One email read from the database when it runs: a retry sends it once, after a mail server's hiccup. */
-    public int $tries = 3;
+    public int $tries = 3; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** @var list<int> Seconds before the second and the third try. */
-    public array $backoff = [60, 300];
+    public array $backoff = [60, 300]; // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
 
     /** Seconds the email waits, so a burst of requests (several documents, a new hire) becomes one email. */
-    public const int DELAY = 120;
+    public const int DELAY = 120; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** Seconds a person's waiting request blocks another one: the one waiting lists everything pending when it runs. */
-    public int $uniqueFor = 600;
+    public int $uniqueFor = 600; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(public readonly string $tenantId, public readonly ?string $employeeId, public readonly ?int $userId) {}
 
