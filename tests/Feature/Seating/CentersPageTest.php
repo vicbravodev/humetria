@@ -6,6 +6,7 @@ use App\Modules\Seating\Http\Controllers\SeatingController;
 use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\SeatingProfile;
 use App\Modules\Seating\Models\StandingPosition;
+use App\Modules\Seating\Support\CenterAccess;
 use App\Modules\Seating\Support\SeatingPages;
 use App\Modules\Seating\Support\VisibleCenters;
 use App\Modules\Telework\Models\CommitteeAssignment;
@@ -15,7 +16,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(SeatingController::class, SeatingPages::class, VisibleCenters::class);
+mutates(SeatingController::class, SeatingPages::class, VisibleCenters::class, CenterAccess::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['slug' => 'acme']);

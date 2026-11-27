@@ -12,6 +12,7 @@ use App\Modules\Seating\Models\PersonInput;
 use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Models\StandingPosition;
+use App\Modules\Seating\Support\AssessmentSnapshot;
 use App\Modules\Seating\Support\SuggestedMeasures;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -20,7 +21,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Database\Factories\Organization\EmployeeFactory;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(StartAssessment::class, SaveAssessmentDraft::class, FlagReassessment::class, SuggestedMeasures::class, AssessmentController::class);
+mutates(StartAssessment::class, SaveAssessmentDraft::class, FlagReassessment::class, SuggestedMeasures::class, AssessmentController::class, AssessmentSnapshot::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-03-01 12:00:00');

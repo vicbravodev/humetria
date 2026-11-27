@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 use App\Modules\Seating\Http\Controllers\PortalController;
 use App\Modules\Seating\Models\PersonInput;
+use App\Modules\Seating\Support\PortalAssessment;
 use App\Modules\Seating\Support\SeatingWorkerSection;
 use App\Modules\Tenancy\Models\Tenant;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(PortalController::class, SeatingWorkerSection::class);
+mutates(PortalController::class, SeatingWorkerSection::class, PortalAssessment::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['trade_name' => 'Acme']);

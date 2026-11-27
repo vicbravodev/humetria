@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Seating\Actions\EndAssignmentsOfPerson;
 use App\Modules\Seating\Listeners\EndOnDeactivationOrMove;
 use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\StandingPosition;
@@ -9,7 +10,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Database\Factories\Organization\EmployeeFactory;
 
-mutates(EndOnDeactivationOrMove::class);
+mutates(EndOnDeactivationOrMove::class, EndAssignmentsOfPerson::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-03-01 12:00:00');

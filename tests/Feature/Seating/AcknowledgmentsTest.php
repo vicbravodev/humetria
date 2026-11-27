@@ -12,6 +12,7 @@ use App\Modules\Seating\Models\RiskAcknowledgment;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Models\StandingPosition;
 use App\Modules\Seating\Notifications\RisksToConfirm;
+use App\Modules\Seating\Support\PortalAssessment;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -26,7 +27,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(RequestAcknowledgment::class, RequestAcknowledgmentsForCenter::class, AcknowledgeRisks::class, SendRisksToConfirm::class, PortalAcknowledgmentController::class);
+mutates(RequestAcknowledgment::class, RequestAcknowledgmentsForCenter::class, AcknowledgeRisks::class, SendRisksToConfirm::class, PortalAcknowledgmentController::class, PortalAssessment::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-03-01 12:00:00');

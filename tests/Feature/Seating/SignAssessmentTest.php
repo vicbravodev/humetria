@@ -9,6 +9,7 @@ use App\Modules\Seating\Events\RiskAssessmentSigned;
 use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Models\StandingPosition;
+use App\Modules\Seating\Support\AssessmentSnapshot;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 
-mutates(SignAssessment::class);
+mutates(SignAssessment::class, AssessmentSnapshot::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-03-01 12:00:00');
@@ -225,4 +226,12 @@ it('does not touch the assessments of another company', function (): void {
 
     $this->post(signUrl($foreign))->assertNotFound();
     $this->get(route('tenant.seating.assessments.show', [$this->tenant, $foreign->id]))->assertNotFound();
+});
+
+it('names the six agents of the area in the registry, in the order of Quinta C, and only those described', function (): void {
+    $snapshot = ['center_name' => 'Tienda', 'center_address' => '', 'person_name' => '', 'position_name' => 'Caja', 'position_tasks' => '', 'bipedestation' => '', 'continuous_minutes' => 0, 'area_conditions' => ['chemicals' => 'Ninguna', 'vibration' => 'Baja', 'temperature' => 'Templada', 'ventilation' => 'Natural', 'lighting' => 'Artificial', 'noise' => 'Moderado', 'dust' => 'Mucho']];
+
+    $area = collect(resolve(AssessmentSnapshot::class)->facts($snapshot, null, null))->firstWhere('numeral', 'III');
+
+    expect($area['value'] ?? null)->toBe('Ruido: Moderado; Iluminación: Artificial; Ventilación: Natural; Temperaturas: Templada; Vibraciones: Baja; Contaminación química: Ninguna');
 });

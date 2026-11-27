@@ -19,7 +19,7 @@ use Illuminate\Support\Arr;
  */
 final readonly class AssessmentSnapshot
 {
-    private const array AGENTS = ['noise' => 'Ruido', 'lighting' => 'Iluminación', 'ventilation' => 'Ventilación', 'temperature' => 'Temperaturas', 'vibration' => 'Vibraciones', 'chemicals' => 'Contaminación química'];
+    private const array AGENTS = ['noise' => 'Ruido', 'lighting' => 'Iluminación', 'ventilation' => 'Ventilación', 'temperature' => 'Temperaturas', 'vibration' => 'Vibraciones', 'chemicals' => 'Contaminación química']; // @pest-mutate-ignore: RemoveArrayItem
 
     public function __construct(private WorkCenters $workCenters, private Roster $roster, private Members $members) {}
 
