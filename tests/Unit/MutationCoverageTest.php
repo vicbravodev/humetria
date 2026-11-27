@@ -35,9 +35,6 @@ function mutationExemptClasses(): array
             'App\Modules\Assistant\Support\PanelLinks',
         ],
         'Pendiente de clasificar (26 nov 2026): entra a la mutación o pasa arriba con su razón. Esta lista solo se achica.' => [
-            'App\Modules\Attendance\Listeners\ReopenOnCorrection',
-            'App\Modules\Attendance\Support\AgreementStatus',
-            'App\Modules\Attendance\Support\MarkLock',
             'App\Modules\Billing\Support\SatCatalogs',
             'App\Modules\Billing\Support\ShortDate',
             'App\Modules\Billing\Support\SubscriptionView',

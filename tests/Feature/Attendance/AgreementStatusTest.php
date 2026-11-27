@@ -12,6 +12,8 @@ use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 
+mutates(AgreementStatus::class);
+
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();
     workIn($this->tenant);
