@@ -5,6 +5,9 @@
 - Cada test de lógica de dominio declara `mutates(Clase::class)`: reglas, cálculos, máquinas de estado, límites
   (15/16, 50/51), privacidad y seguridad. No se declara en controladores, FormRequests sin reglas propias, DTOs,
   migraciones, config ni enums que solo tienen etiquetas.
+- `tests/Unit/MutationCoverageTest.php` lo hace cumplir: toda clase concreta de `Actions`, `Support`, `Listeners` o `Jobs`
+  de un módulo la declara algún test en `mutates()`, o está en `mutationExemptClasses()` con su razón (o su nombre termina en
+  `Pages`, `Page` o `Template`: arma props o texto fijo). Una clase exenta que un test empieza a mutar sale de la lista.
 - `mutates()` compara por prefijo: `mutates(Tenant::class)` también muta `TenantInvitation` y `TenantMembership`.
 - Lo que PHP resuelve al compilar nunca lo marca la cobertura y saldría como "uncovered": las listas de los modelos
   (`#[Fillable]`, `$casts`, `$hidden`), las constantes (`private const int LEEWAY_SECONDS = 60;`) y los valores por omisión
