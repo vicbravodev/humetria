@@ -416,6 +416,9 @@ it('lands on the dashboard when the page asked for is not one of the company ent
     'protocol-relative' => '//evil.example/admin/alba-demo',
     'a backslash' => '/admin/alba-demo/\\evil.example',
     'climbing out' => '/admin/alba-demo/../companies',
+    'climbing out, encoded' => '/admin/alba-demo/%2e%2e/companies',
+    'climbing out, encoded in capitals' => '/admin/alba-demo/%2E%2E/companies',
+    'climbing out, half encoded' => '/admin/alba-demo/.%2E/companies',
     'the console' => '/admin/companies',
 ]);
 

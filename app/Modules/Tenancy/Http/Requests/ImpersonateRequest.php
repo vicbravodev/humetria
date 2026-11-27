@@ -46,7 +46,8 @@ final class ImpersonateRequest extends FormRequest
     {
         $to = $this->string('to')->toString();
         $inside = preg_match('#\A/admin/'.preg_quote($slug, '#').'(?:[/?]|\z)#', $to) === 1;
-        $plain = preg_match('#[\x00-\x1F\x7F\\\\]|/\.\.?(?:[/?]|\z)#', $to) === 0;
+        // A dot-segment, plain or percent-encoded in any case (`%2e`): browsers resolve both before asking.
+        $plain = preg_match('#[\x00-\x1F\x7F\\\\]|/(?:\.|%2e){1,2}(?:[/?]|\z)#i', $to) === 0;
 
         return $demo && $inside && $plain ? $to : null;
     }
