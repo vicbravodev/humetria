@@ -1,0 +1,233 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Http\Impersonation;
+use App\Modules\Campaigns\Models\Campaign;
+use App\Modules\Demos\Enums\DemoSessionStatus;
+use App\Modules\Demos\Models\DemoSession;
+use App\Modules\Organization\Models\Employee;
+use App\Modules\Tenancy\Enums\TenantRole;
+use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Models\WorkCenter;
+use Illuminate\Testing\TestResponse;
+use Inertia\Testing\AssertableInertia as Assert;
+
+/*
+ * The guide of a demo session, on the server: only the superadmin working in the demo company (as its owner or its HR,
+ * through impersonation) with a session under way gets it, in every panel page (the shared prop `demoGuide`) and from
+ * the poll of the dock. The current step is the first one neither done (by the real data) nor skipped.
+ */
+
+beforeEach(function (): void {
+    $this->demo = Tenant::factory()->demo()->create();
+    $this->owner = memberOf($this->demo, TenantRole::Owner);
+    $this->hr = memberOf($this->demo, TenantRole::Hr);
+    $this->center = WorkCenter::factory()->create(['tenant_id' => $this->demo->id]);
+});
+
+/** @param  list<string>  $tours */
+function guidedSession(array $tours = ['nom035'], DemoSessionStatus $status = DemoSessionStatus::Active): DemoSession
+{
+    return DemoSession::query()->forceCreate([
+        'tours' => $tours,
+        'status' => $status,
+        'work_center_id' => test()->center->id,
+        'started_at' => now()->subMinute(),
+        'ready_at' => now()->subMinute(),
+    ]);
+}
+
+/** The superadmin enters `$tenant` (the demo by default) through the console, as its owner or as its HR. */
+function presentAs(string $as = 'owner', ?Tenant $tenant = null): void
+{
+    test()->actingAs(superadmin())->post(route('companies.impersonate', $tenant ?? test()->demo), ['as' => $as])->assertRedirect();
+}
+
+/** The guide a panel page of the demo shares. */
+function sharedGuide(string $route = 'tenant.dashboard'): mixed
+{
+    $page = test()->get(route($route, test()->demo))->assertOk()->viewData('page');
+
+    return is_array($page) && is_array($page['props']) ? $page['props']['demoGuide'] : 'no page';
+}
+
+function polledGuide(): TestResponse
+{
+    return test()->getJson(route('demo-room.session.guide'));
+}
+
+it('polls the guide at /admin/demo/session/guide', function (): void {
+    expect(route('demo-room.session.guide', absolute: false))->toBe('/admin/demo/session/guide');
+});
+
+it('shares no guide outside the demo or without a session', function (): void {
+    presentAs();
+
+    expect(sharedGuide())->toBeNull();
+    expect(polledGuide()->getContent())->toBe('null');
+
+    foreach ([DemoSessionStatus::Preparing, DemoSessionStatus::Ending] as $status) {
+        DemoSession::query()->delete();
+        guidedSession(status: $status);
+
+        expect(sharedGuide())->toBeNull()
+            ->and(polledGuide()->assertOk()->getContent())->toBe('null');
+    }
+});
+
+it('shares no guide in a real company, even with a session under way', function (): void {
+    guidedSession();
+    $company = Tenant::factory()->create();
+    ownerOf($company);
+    presentAs(tenant: $company);
+
+    $this->get(route('tenant.dashboard', $company))->assertInertia(fn (Assert $page) => $page->where('demoGuide', null));
+    polledGuide()->assertNotFound();
+});
+
+it('shares the guide to the superadmin as owner and as HR', function (string $as): void {
+    guidedSession(['nom035']);
+    presentAs($as);
+
+    $guide = sharedGuide();
+
+    expect($guide)->toMatchArray([
+        'tours' => [
+            ['key' => 'base', 'title' => 'El centro y su gente', 'done' => 0, 'total' => 2],
+            ['key' => 'nom035', 'title' => 'NOM-035', 'done' => 0, 'total' => 6],
+        ],
+        'finished' => false,
+        'justDone' => null,
+    ])
+        ->and($guide['current'])->toBe([
+            'key' => 'base.center',
+            'tour' => 'El centro y su gente',
+            'title' => 'El centro de la sesión',
+            'todo' => 'Abre los centros de trabajo y ubica el de esta sesión.',
+            'why' => 'Todo en la plataforma parte del centro de trabajo: ahí se aplican la NOM-035, la asistencia y lo demás.',
+            'kind' => 'do',
+            'href' => route('tenant.work-centers.index', $this->demo),
+            'target' => 'work-centers-list',
+            'ask' => null,
+            'live' => null,
+            'index' => 1,
+            'total' => 2,
+        ])
+        ->and(polledGuide()->assertOk()->json())->toBe($guide);
+})->with(['owner', 'hr']);
+
+it('never shares the guide to the demo HR without impersonation, nor to support', function (): void {
+    guidedSession();
+    $this->actingAs($this->hr);
+
+    expect(sharedGuide())->toBeNull();
+    polledGuide()->assertNotFound();
+
+    auth()->logout();
+    $this->actingAs(support())->post(route('companies.impersonate', $this->demo))->assertRedirect();
+
+    expect(sharedGuide())->toBeNull();
+    polledGuide()->assertNotFound();
+});
+
+it('answers the poll 404 to whoever is not presenting, and sends guests to the login', function (): void {
+    guidedSession();
+
+    $this->getJson(route('demo-room.session.guide'))->assertUnauthorized();
+    $this->actingAs(superadmin())->getJson(route('demo-room.session.guide'))->assertNotFound();
+});
+
+it('moves to the next step when the fact happens', function (): void {
+    guidedSession(['nom035']);
+    presentAs();
+
+    expect(sharedGuide('tenant.work-centers.index')['current'])->toMatchArray(['key' => 'base.people', 'href' => route('tenant.employees.index', $this->demo)]);
+
+    Employee::factory()->create(['tenant_id' => $this->demo->id, 'work_center_id' => $this->center->id]);
+
+    expect(polledGuide()->json('current'))->toMatchArray(['key' => 'nom035.draft', 'tour' => 'NOM-035', 'index' => 1, 'total' => 6, 'href' => route('tenant.campaigns.index', $this->demo)])
+        ->and(polledGuide()->json('tours.0'))->toBe(['key' => 'base', 'title' => 'El centro y su gente', 'done' => 2, 'total' => 2]);
+
+    $campaign = Campaign::factory()->create(['tenant_id' => $this->demo->id, 'work_center_id' => $this->center->id]);
+
+    // The evaluation's own page: «Llévame» opens the draft the presenter just created.
+    expect(polledGuide()->json('current'))->toMatchArray(['key' => 'nom035.launch', 'index' => 2, 'href' => route('tenant.campaigns.show', [$this->demo, $campaign])]);
+});
+
+it('takes the presenter to the session center for the attendance steps', function (): void {
+    guidedSession(['attendance']);
+    presentAs();
+    Employee::factory()->create(['tenant_id' => $this->demo->id, 'work_center_id' => $this->center->id]);
+    DemoSession::query()->sole()->recordVisit('tenant.work-centers.index');
+
+    expect(polledGuide()->json('current'))->toMatchArray(['key' => 'attendance.mode', 'href' => route('tenant.attendance.center', [$this->demo, $this->center])]);
+});
+
+it('records the pages a step waits for only on a full visit, never from the poll nor a partial reload', function (): void {
+    $session = guidedSession(['nom035']);
+    presentAs();
+
+    polledGuide()->assertOk();
+    $this->get(route('tenant.work-centers.index', $this->demo), [
+        'X-Inertia' => 'true',
+        'X-Inertia-Partial-Component' => 'tenancy/work-centers/index',
+        'X-Inertia-Partial-Data' => 'demoGuide',
+    ]);
+
+    expect($session->refresh()->visited)->toBe([]);
+
+    // A page no step waits for is not kept.
+    sharedGuide('tenant.employees.index');
+
+    expect($session->refresh()->visited)->toBe([]);
+
+    sharedGuide('tenant.work-centers.index');
+
+    expect($session->refresh()->visited)->toBe(['tenant.work-centers.index']);
+});
+
+it('records nothing of a real company nor of a session not under way', function (): void {
+    $session = guidedSession(status: DemoSessionStatus::Preparing);
+    presentAs();
+
+    sharedGuide('tenant.work-centers.index');
+
+    expect($session->refresh()->visited)->toBe([]);
+});
+
+it('polls with a fixed number of queries', function (): void {
+    guidedSession(['nom035', 'attendance', 'engagement', 'complaints', 'leave', 'humi']);
+    presentAs();
+    polledGuide()->assertOk();
+
+    // The request's own (the account, the one behind it, the demo, the session, the company) and one read per fact. Asistencia
+    // and Vacaciones each ask WorkerAccess once: two queries repeat only when both tours are chosen.
+    $this->expectsDatabaseQueryCount(23);
+
+    polledGuide()->assertOk();
+});
+
+it('carries no person of the demo, only counts', function (): void {
+    guidedSession(['nom035']);
+    presentAs();
+    Employee::factory()->create([
+        'tenant_id' => $this->demo->id,
+        'work_center_id' => $this->center->id,
+        'name' => 'Rosalinda Persona',
+        'email' => 'rosalinda@example.com',
+    ]);
+    $this->get(route('tenant.work-centers.index', $this->demo));
+
+    $this->get(route('tenant.dashboard', $this->demo))->assertInertia(function (Assert $page): void {
+        $guide = json_encode($page->toArray()['props']['demoGuide'], JSON_THROW_ON_ERROR);
+
+        expect($guide)->not->toContain('Rosalinda')
+            ->not->toContain('rosalinda@example.com')
+            ->not->toContain($this->owner->name)
+            ->not->toContain($this->owner->email);
+    });
+
+    expect(json_encode(polledGuide()->json(), JSON_THROW_ON_ERROR))->not->toContain('Rosalinda')
+        ->and(session(Impersonation::SESSION_KEY))->not->toBeNull();
+});

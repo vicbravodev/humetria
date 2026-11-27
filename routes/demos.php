@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Demos\Http\Controllers\DemoGuideController;
 use App\Modules\Demos\Http\Controllers\DemoRequestConsoleController;
 use App\Modules\Demos\Http\Controllers\DemoRequestController;
 use App\Modules\Demos\Http\Controllers\DemoRoomController;
@@ -43,4 +44,6 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::post('admin/demo/door', [DemoRoomController::class, 'openDoor'])->name('demo-room.door.open');
     Route::delete('admin/demo/door', [DemoRoomController::class, 'closeDoor'])->name('demo-room.door.close');
     Route::post('admin/demo/kiosk', [DemoRoomController::class, 'reissueKiosk'])->name('demo-room.kiosk.reissue');
+    // The guide of the session, polled by its dock from inside the impersonated demo (DemoGuideRequest).
+    Route::get('admin/demo/session/guide', [DemoGuideController::class, 'show'])->name('demo-room.session.guide');
 });

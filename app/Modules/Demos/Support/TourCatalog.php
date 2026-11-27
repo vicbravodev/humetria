@@ -92,6 +92,19 @@ final readonly class TourCatalog
     }
 
     /**
+     * A parameter a step's page needs besides the company: the session's center, or its evaluation (read with the steps'
+     * states, not again); null when there is none yet.
+     */
+    public function parameter(string $name, DemoSession $session): ?string
+    {
+        return match ($name) {
+            'workCenter' => $session->work_center_id,
+            'campaign' => $this->nom035->campaignId($session),
+            default => null,
+        };
+    }
+
+    /**
      * The panel pages some step waits for: only these are worth recording as visited.
      *
      * @return list<string>

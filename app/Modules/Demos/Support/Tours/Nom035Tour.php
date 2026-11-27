@@ -5,15 +5,22 @@ declare(strict_types=1);
 namespace App\Modules\Demos\Support\Tours;
 
 use App\Modules\Campaigns\Contracts\CampaignActivity;
+use App\Modules\Campaigns\Data\CenterCampaignActivity;
 use App\Modules\Demos\Data\StepState;
 use App\Modules\Demos\Data\TourStep;
 use App\Modules\Demos\Enums\TourKey;
 use App\Modules\Demos\Models\DemoSession;
 
-/** NOM-035: the evaluation of the session's center, from the draft to the results and the Guía I list. */
-final readonly class Nom035Tour implements Tour
+/**
+ * NOM-035: the evaluation of the session's center, from the draft to the results and the Guía I list. The center's activity
+ * is read once and kept: the steps' states and the evaluation «Llévame» opens come from the same read.
+ */
+final class Nom035Tour implements Tour
 {
-    public function __construct(private CampaignActivity $campaigns) {}
+    /** @var array<string, CenterCampaignActivity> by center */
+    private array $activity = [];
+
+    public function __construct(private readonly CampaignActivity $campaigns) {}
 
     public function steps(): array
     {
@@ -64,7 +71,7 @@ final readonly class Nom035Tour implements Tour
             return array_fill_keys(['nom035.draft', 'nom035.launch', 'nom035.answers', 'nom035.close'], StepState::pending());
         }
 
-        $activity = $this->campaigns->atCenter($session->work_center_id);
+        $activity = $this->activity($session->work_center_id);
 
         return [
             'nom035.draft' => new StepState($activity->campaignId !== null),
@@ -72,5 +79,16 @@ final readonly class Nom035Tour implements Tour
             'nom035.answers' => Answers::state($activity->launched, $activity->invited, $activity->answered, $activity->closed),
             'nom035.close' => new StepState($activity->closed),
         ];
+    }
+
+    /** The evaluation of the session's center its pages open; null while there is none (or no center yet). */
+    public function campaignId(DemoSession $session): ?string
+    {
+        return $session->work_center_id === null ? null : $this->activity($session->work_center_id)->campaignId;
+    }
+
+    private function activity(string $workCenterId): CenterCampaignActivity
+    {
+        return $this->activity[$workCenterId] ??= $this->campaigns->atCenter($workCenterId);
     }
 }
