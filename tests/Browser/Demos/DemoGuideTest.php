@@ -224,6 +224,17 @@ it('keeps the sheet minimize button clear of the DEMO tab on a phone', function 
             JS, true);
 });
 
+it('still says the step on a phone while a dialog is open', function (): void {
+    $campaign = presentedEvaluation();
+
+    visit("/admin/alba-demo/campaigns/{$campaign->id}")->on()->mobile()
+        ->assertSeeIn(GUIDE_DOCK, 'Lanza la evaluación')
+        ->click('[aria-label="Minimizar la guía"]')
+        ->click('Lanzar e invitar a 2 personas')
+        ->assertVisible('[data-slot="guide-status"]')
+        ->assertSeeIn('[data-slot="guide-status"]', 'Lanza la evaluación');
+});
+
 it('keeps the guide when a skip is refused, and asks for it again', function (): void {
     $campaign = presentedEvaluation();
 
