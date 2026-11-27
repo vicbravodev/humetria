@@ -315,9 +315,10 @@ Medidor de 5 segmentos llenos según el nivel, más la etiqueta escrita («Riesg
 
 ### Humi y el foco de un recorrido
 
-`Humi`, `HumiAvatar` (su cara en un círculo `accent`) y el foco de los recorridos (`spotlight-tour.css`, la burbuja de
-driver.js con los tokens) viven en `components/humetria/`: los usan Humi, Primeros pasos y el guía de la demo. Ficha:
-`docs/design-system/componentes/HumiAvatar.md`.
+`Humi`, `HumiAvatar` (su cara en un círculo `accent`) y el foco de los recorridos (`spotlight-tour.css`) viven en
+`components/humetria/`: los usan Humi, Primeros pasos y el guía de la demo. Primeros pasos ilumina con la burbuja de
+driver.js vestida con los tokens; el guía de la demo, con un contorno `primary` de 3 px (`data-guide-spotlight`) que no
+tapa la página. Ficha: `docs/design-system/componentes/HumiAvatar.md`.
 
 ### Survey Shell (componente firma)
 

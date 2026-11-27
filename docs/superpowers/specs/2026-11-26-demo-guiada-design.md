@@ -1,6 +1,6 @@
 # Demo guiada: sesiones a la medida con Humi como guía
 
-Fecha: 2026-11-26 · Estado: propuesto (pendiente de aprobación de Victor)
+Fecha: 2026-11-26 · Estado: aprobado y construido (diseño aprobado el 2026-11-27; ver al final)
 
 ## Para qué y por qué
 
@@ -234,3 +234,35 @@ Rediseño alineado al design system: contenedor `flex w-full flex-col gap-8 px-4
 ## Pendiente de Victor fuera del código
 
 - Registrar y aprobar en Meta la plantilla de WhatsApp del acceso al portal (hasta entonces sale por correo).
+
+## Diseño aprobado (2026-11-27)
+
+Victor aprobó el diseño de la sala y del guía en Claude Design, sobre el design system «Humetría»:
+https://claude.ai/artifact/7U62Y59v7DMdfaJpW3qVBb. Con él aprobó cuatro decisiones:
+
+1. **«Primeros pasos» se oculta durante una sesión**: un solo guía a la vez; el guía ocupa su lugar junto a Humi.
+2. **«Seguir con N respuestas»** en lugar de «Saltar paso» en los pasos donde contesta el público: sigue con las que ya
+   llegaron. Los demás pasos conservan «Saltar paso».
+3. **Sin sesión, «Reiniciar demo» queda como tarjeta discreta** en Herramientas de la sala: empezar y terminar una
+   sesión ya reinician la demo.
+4. **Con una hoja o un diálogo abiertos, el guía se pliega a su píldora**, para no tapar el formulario.
+
+### Lo que la construcción cambió respecto de este documento
+
+- **El foco es un anillo CSS** (`data-guide-spotlight`, un contorno `primary` en `components/humetria/spotlight-tour.css`),
+  no driver.js: no tapa la página ni le quita los clics al dock, como en el diseño aprobado. Primeros pasos sigue con
+  driver.js.
+- **«Salir» del banner también vuelve a la sala** cuando el superadmin sale de la empresa demo, no solo «Volver a la
+  sala» del guía.
+- **La preparación muestra 3 fases**, no 4: reiniciar la demo, contar su historia y crear el centro de la sesión.
+- **El dock no lleva la lista de recorridos**: sigue los tableros aprobados. Su píldora dice «Guía · N de M» sobre todos
+  los pasos; el avance por recorrido vive en la sala.
+- **Clima y pulso usa una encuesta de clima**, no un pulso: el pulso sembrado sigue abierto y no deja crear otro.
+- **La tabla `demo_sessions`** guarda `tours` (no `modules`), el estado `failed` (una preparación que falló; terminarla
+  reinicia la demo), `run_id` y `ready_at`, y además las páginas visitadas y el paso en que va el guía, para celebrar
+  una sola vez el paso que se cumple.
+- Los accesos y las llaves, la encuesta de clima, las denuncias y las solicitudes de vacaciones se cuentan en toda la
+  empresa demo desde que empezó la sesión, no solo en el centro de la sesión.
+
+La operación (empezar, el guía, lo que sale por correo y WhatsApp, terminar y la tabla de fallas) está en
+`docs/operations/demo.md` §2.
