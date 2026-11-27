@@ -36,6 +36,10 @@ function mutationExemptClasses(): array
         ],
         'DTO o valor de solo constructor: no decide nada, lo arma y lo lee lógica que sí se muta.' => [
             'App\Modules\Campaigns\Support\OpenedSurvey',
+            'App\Modules\Complaints\Support\ChannelSettings',
+            'App\Modules\Complaints\Support\ComplaintInput',
+            'App\Modules\Complaints\Support\OpenedChannel',
+            'App\Modules\Complaints\Support\Receipt',
             'App\Modules\Billing\Support\UnitCost',
         ],
         'Catálogos fijos del SAT (régimen fiscal y uso del CFDI): validar el código lo fijan los tests de AccountRules, que sí se muta, y mutar cada renglón del catálogo no mide ninguna decisión.' => [
@@ -44,15 +48,10 @@ function mutationExemptClasses(): array
         'Lista fija de las herramientas de las que habla un artículo: la regla que la lee (una herramienta que no está, un artículo inválido) se muta en ArticleParser.' => [
             'App\Modules\Blog\Support\BlogTools',
         ],
-        'Pendiente de clasificar (26 nov 2026): entra a la mutación o pasa arriba con su razón. Esta lista solo se achica.' => [
-            'App\Modules\Complaints\Support\ChannelSettings',
-            'App\Modules\Complaints\Support\ComplaintInput',
-            'App\Modules\Complaints\Support\Dates',
-            'App\Modules\Complaints\Support\OpenedChannel',
+        'Texto fijo de un documento (como los que terminan en Template): lo fijan los tests del documento, no hay decisión que mutar.' => [
             'App\Modules\Complaints\Support\ProcedureModel',
-            'App\Modules\Complaints\Support\RandomCode',
-            'App\Modules\Complaints\Support\RandomReferenceSource',
-            'App\Modules\Complaints\Support\Receipt',
+        ],
+        'Pendiente de clasificar (26 nov 2026): entra a la mutación o pasa arriba con su razón. Esta lista solo se achica.' => [
             'App\Modules\Demos\Actions\ListDemoRequests',
             'App\Modules\Demos\Actions\StartDemoRun',
             'App\Modules\Demos\Jobs\PrepareDemo',

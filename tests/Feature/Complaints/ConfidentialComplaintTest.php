@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Complaints\Models\Complaint;
 use App\Modules\Complaints\Models\ComplaintChannel;
 use App\Modules\Complaints\Models\ComplaintHandler;
+use App\Modules\Complaints\Support\Dates;
 use App\Modules\Complaints\Support\TicketSigner;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -12,6 +13,8 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+
+mutates(Dates::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-20 03:30:00');
