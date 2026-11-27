@@ -28,13 +28,13 @@ function mutationExemptClasses(): array
         'Adaptador a un servicio externo (red, DNS, disco): sus tests usan el fake del contrato, y mutarlo exigiría la red.' => [
             'App\Modules\Sso\Support\DnsDomainOwnership',
         ],
-        'Pendiente de clasificar (26 nov 2026): entra a la mutación o pasa arriba con su razón. Esta lista solo se achica.' => [
-            'App\Modules\Assistant\Support\AdversarialAttempts',
-            'App\Modules\Assistant\Support\MonthlyUsage',
-            'App\Modules\Assistant\Support\PanelLinks',
+        'Lista fija de preguntas de la revisión de calidad de Humi: la lógica que las usa se muta en QualityAssistant.' => [
             'App\Modules\Assistant\Support\QualityQuestions',
-            'App\Modules\Assistant\Support\ScopeGuard',
-            'App\Modules\Assistant\Support\UntrustedText',
+        ],
+        'Arma las rutas del panel a las que enlazan las respuestas, sin decidir nada: los tests de cada herramienta fijan el enlace.' => [
+            'App\Modules\Assistant\Support\PanelLinks',
+        ],
+        'Pendiente de clasificar (26 nov 2026): entra a la mutación o pasa arriba con su razón. Esta lista solo se achica.' => [
             'App\Modules\Attendance\Listeners\ReopenOnCorrection',
             'App\Modules\Attendance\Support\AgreementStatus',
             'App\Modules\Attendance\Support\MarkLock',

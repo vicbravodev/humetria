@@ -6,9 +6,10 @@ use App\Modules\Assistant\Actions\CheckAllowance;
 use App\Modules\Assistant\Exceptions\AssistantUnavailable;
 use App\Modules\Assistant\Models\AiUsage;
 use App\Modules\Assistant\Models\TenantAiSettings;
+use App\Modules\Assistant\Support\MonthlyUsage;
 use App\Modules\Tenancy\Models\Tenant;
 
-mutates(CheckAllowance::class);
+mutates(CheckAllowance::class, MonthlyUsage::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-18 18:00:00');

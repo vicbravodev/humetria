@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Assistant\Exceptions\ScopeMismatch;
+use App\Modules\Assistant\Support\ScopeGuard;
 use App\Modules\Assistant\Tools\GetFirstSteps;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -11,7 +12,7 @@ use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
 
-mutates(GetFirstSteps::class);
+mutates(GetFirstSteps::class, ScopeGuard::class);
 
 beforeEach(function (): void {
     config(['first_steps.enabled' => true]);

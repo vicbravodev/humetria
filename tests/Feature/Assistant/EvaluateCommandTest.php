@@ -6,13 +6,14 @@ use App\Modules\Assistant\Agents\HumiAssistant;
 use App\Modules\Assistant\Console\EvaluateAssistant;
 use App\Modules\Assistant\Models\AiUsage;
 use App\Modules\Assistant\Models\ChatConversation;
+use App\Modules\Assistant\Support\AdversarialAttempts;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Laravel\Ai\Prompts\AgentPrompt;
 use Laravel\Ai\Responses\Data\ToolCall;
 
-mutates(EvaluateAssistant::class);
+mutates(EvaluateAssistant::class, AdversarialAttempts::class);
 
 beforeEach(function (): void {
     $this->a = Tenant::factory()->create();

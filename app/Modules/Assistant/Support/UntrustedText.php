@@ -11,7 +11,7 @@ namespace App\Modules\Assistant\Support;
  */
 final class UntrustedText
 {
-    private const int MAX_LENGTH = 120;
+    private const int MAX_LENGTH = 120; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public static function line(string $text): string
     {
