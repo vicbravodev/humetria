@@ -66,7 +66,7 @@ function statesOf(TourKey $tour, DemoSession $session): array
 }
 
 /** @return list<string> the keys of the steps of `$tour` already done */
-function doneOf(TourKey $tour, DemoSession $session): array
+function tourDoneOf(TourKey $tour, DemoSession $session): array
 {
     return array_keys(array_filter(statesOf($tour, $session), fn (StepState $state): bool => $state->done));
 }
@@ -85,49 +85,49 @@ function evaluationWith(Campaign $campaign, int $invited, int $answered): void
 it('marks the base steps done as the center gets its people', function (): void {
     Employee::factory()->create(['tenant_id' => $this->demo->id]);
 
-    expect(doneOf(TourKey::Base, $this->session))->toBe([]);
+    expect(tourDoneOf(TourKey::Base, $this->session))->toBe([]);
 
     $this->session->recordVisit('tenant.work-centers.index');
     Employee::factory()->create(['tenant_id' => $this->demo->id, 'work_center_id' => $this->center->id]);
     Employee::factory()->create(['tenant_id' => $this->demo->id, 'work_center_id' => $this->center->id]);
 
-    expect(doneOf(TourKey::Base, $this->session))->toBe(['base.center', 'base.people'])
+    expect(tourDoneOf(TourKey::Base, $this->session))->toBe(['base.center', 'base.people'])
         ->and(statesOf(TourKey::Base, $this->session)['base.people']->live)->toBe('2 personas en el centro');
 });
 
 it('marks each nom035 step done as the evaluation advances', function (): void {
-    expect(doneOf(TourKey::Nom035, $this->session))->toBe([]);
+    expect(tourDoneOf(TourKey::Nom035, $this->session))->toBe([]);
 
     $campaign = Campaign::factory()->create(['tenant_id' => $this->demo->id, 'work_center_id' => $this->center->id]);
 
-    expect(doneOf(TourKey::Nom035, $this->session))->toBe(['nom035.draft']);
+    expect(tourDoneOf(TourKey::Nom035, $this->session))->toBe(['nom035.draft']);
 
     $campaign->delete();
     $campaign = Campaign::factory()->active()->create(['tenant_id' => $this->demo->id, 'work_center_id' => $this->center->id]);
     evaluationWith($campaign, 5, 0);
 
-    expect(doneOf(TourKey::Nom035, $this->session))->toBe(['nom035.draft', 'nom035.launch'])
+    expect(tourDoneOf(TourKey::Nom035, $this->session))->toBe(['nom035.draft', 'nom035.launch'])
         ->and(statesOf(TourKey::Nom035, $this->session)['nom035.answers']->live)->toBe('Llegaron 0 de 5 respuestas');
 
     Participant::query()->where('campaign_id', $campaign->id)->delete();
     evaluationWith($campaign, 5, 3);
 
-    expect(doneOf(TourKey::Nom035, $this->session))->toBe(['nom035.draft', 'nom035.launch'])
+    expect(tourDoneOf(TourKey::Nom035, $this->session))->toBe(['nom035.draft', 'nom035.launch'])
         ->and(statesOf(TourKey::Nom035, $this->session)['nom035.answers']->live)->toBe('Llegaron 3 de 5 respuestas');
 
     Participant::query()->where('campaign_id', $campaign->id)->delete();
     evaluationWith($campaign, 5, 5);
 
-    expect(doneOf(TourKey::Nom035, $this->session))->toBe(['nom035.draft', 'nom035.launch', 'nom035.answers']);
+    expect(tourDoneOf(TourKey::Nom035, $this->session))->toBe(['nom035.draft', 'nom035.launch', 'nom035.answers']);
 
     $campaign->update(['status' => App\Modules\Campaigns\Enums\CampaignStatus::Closed, 'closed_at' => now()]);
     $this->session->recordVisit('tenant.campaigns.results');
 
-    expect(doneOf(TourKey::Nom035, $this->session))->toBe(['nom035.draft', 'nom035.launch', 'nom035.answers', 'nom035.close', 'nom035.results']);
+    expect(tourDoneOf(TourKey::Nom035, $this->session))->toBe(['nom035.draft', 'nom035.launch', 'nom035.answers', 'nom035.close', 'nom035.results']);
 
     $this->session->recordVisit('tenant.campaigns.screenings');
 
-    expect(doneOf(TourKey::Nom035, $this->session))->toHaveCount(6);
+    expect(tourDoneOf(TourKey::Nom035, $this->session))->toHaveCount(6);
 });
 
 it('counts the answers step done when the evaluation closes', function (int $answered): void {
@@ -149,7 +149,7 @@ it('does not count an evaluation nobody was invited to as answered', function ()
 it('does not count an evaluation of another center', function (): void {
     Campaign::factory()->closed()->create(['tenant_id' => $this->demo->id]);
 
-    expect(doneOf(TourKey::Nom035, $this->session))->toBe([]);
+    expect(tourDoneOf(TourKey::Nom035, $this->session))->toBe([]);
 });
 
 it('marks each attendance step done as the center is set up and marked', function (): void {
@@ -158,25 +158,25 @@ it('marks each attendance step done as the center is set up and marked', functio
     $mode = AttendanceCenterMode::factory()->create(['tenant_id' => $this->demo->id, 'work_center_id' => $this->center->id]);
     $this->travelBack();
 
-    expect(doneOf(TourKey::Attendance, $this->session))->toBe([]);
+    expect(tourDoneOf(TourKey::Attendance, $this->session))->toBe([]);
 
     $mode->update(['mode' => CenterMode::Company]);
     AttendanceZone::factory()->create(['tenant_id' => $this->demo->id, 'work_center_id' => $this->center->id]);
     KioskDevice::factory()->create(['tenant_id' => $this->demo->id, 'work_center_id' => $this->center->id]);
 
-    expect(doneOf(TourKey::Attendance, $this->session))->toBe(['attendance.mode', 'attendance.zone', 'attendance.kiosk']);
+    expect(tourDoneOf(TourKey::Attendance, $this->session))->toBe(['attendance.mode', 'attendance.zone', 'attendance.kiosk']);
 
     WorkerAccessLink::factory()->count(2)->create(['tenant_id' => $this->demo->id]);
     WorkerCredential::factory()->create(['tenant_id' => $this->demo->id]);
 
-    expect(doneOf(TourKey::Attendance, $this->session))->toBe(['attendance.mode', 'attendance.zone', 'attendance.kiosk', 'attendance.access', 'attendance.key'])
+    expect(tourDoneOf(TourKey::Attendance, $this->session))->toBe(['attendance.mode', 'attendance.zone', 'attendance.kiosk', 'attendance.access', 'attendance.key'])
         ->and(statesOf(TourKey::Attendance, $this->session)['attendance.access']->live)->toBe('2 accesos enviados')
         ->and(statesOf(TourKey::Attendance, $this->session)['attendance.key']->live)->toBe('1 llave creada');
 
     AttendanceMark::factory()->create(['tenant_id' => $this->demo->id, 'work_center_id' => $this->center->id]);
     $this->session->recordVisit('tenant.attendance.report');
 
-    expect(doneOf(TourKey::Attendance, $this->session))->toHaveCount(7)
+    expect(tourDoneOf(TourKey::Attendance, $this->session))->toHaveCount(7)
         ->and(statesOf(TourKey::Attendance, $this->session)['attendance.mark']->live)->toBe('1 marca en el centro');
 });
 
@@ -188,74 +188,74 @@ it('does not count what the demo had before the session', function (): void {
     LeaveRequest::factory()->approved()->create(['tenant_id' => $this->demo->id]);
     $this->travelBack();
 
-    expect(doneOf(TourKey::Attendance, $this->session))->toBe([])
-        ->and(doneOf(TourKey::Engagement, $this->session))->toBe([])
-        ->and(doneOf(TourKey::Leave, $this->session))->toBe([]);
+    expect(tourDoneOf(TourKey::Attendance, $this->session))->toBe([])
+        ->and(tourDoneOf(TourKey::Engagement, $this->session))->toBe([])
+        ->and(tourDoneOf(TourKey::Leave, $this->session))->toBe([]);
 });
 
 it('marks each engagement step done as the climate survey advances', function (): void {
-    expect(doneOf(TourKey::Engagement, $this->session))->toBe([]);
+    expect(tourDoneOf(TourKey::Engagement, $this->session))->toBe([]);
 
     $survey = Survey::factory()->create(['tenant_id' => $this->demo->id]);
 
-    expect(doneOf(TourKey::Engagement, $this->session))->toBe(['engagement.create']);
+    expect(tourDoneOf(TourKey::Engagement, $this->session))->toBe(['engagement.create']);
 
     $survey->delete();
     $survey = Survey::factory()->active()->create(['tenant_id' => $this->demo->id, 'invited' => 3]);
     Invitation::factory()->answered()->count(2)->create(['survey_id' => $survey->id]);
 
-    expect(doneOf(TourKey::Engagement, $this->session))->toBe(['engagement.create', 'engagement.launch'])
+    expect(tourDoneOf(TourKey::Engagement, $this->session))->toBe(['engagement.create', 'engagement.launch'])
         ->and(statesOf(TourKey::Engagement, $this->session)['engagement.answers']->live)->toBe('Llegaron 2 de 3 respuestas');
 
     Invitation::factory()->answered()->create(['survey_id' => $survey->id]);
     $this->session->recordVisit('tenant.climate.results');
 
-    expect(doneOf(TourKey::Engagement, $this->session))->toBe(['engagement.create', 'engagement.launch', 'engagement.answers', 'engagement.results']);
+    expect(tourDoneOf(TourKey::Engagement, $this->session))->toBe(['engagement.create', 'engagement.launch', 'engagement.answers', 'engagement.results']);
 });
 
 it('marks each complaints step done as a complaint arrives and is acknowledged', function (): void {
     $channel = ComplaintChannel::factory()->active()->create(['tenant_id' => $this->demo->id]);
 
-    expect(doneOf(TourKey::Complaints, $this->session))->toBe([]);
+    expect(tourDoneOf(TourKey::Complaints, $this->session))->toBe([]);
 
     $complaint = Complaint::factory()->create(['tenant_id' => $this->demo->id, 'channel_id' => $channel->id, 'received_on' => now('America/Mexico_City')->toDateString()]);
 
-    expect(doneOf(TourKey::Complaints, $this->session))->toBe(['complaints.receive'])
+    expect(tourDoneOf(TourKey::Complaints, $this->session))->toBe(['complaints.receive'])
         ->and(statesOf(TourKey::Complaints, $this->session)['complaints.receive']->live)->toBe('1 denuncia recibida');
 
     $complaint->update(['acknowledged_at' => now()]);
 
-    expect(doneOf(TourKey::Complaints, $this->session))->toBe(['complaints.receive', 'complaints.acknowledge']);
+    expect(tourDoneOf(TourKey::Complaints, $this->session))->toBe(['complaints.receive', 'complaints.acknowledge']);
 });
 
 it('marks each leave step done as a person asks for days and HR approves them', function (): void {
-    expect(doneOf(TourKey::Leave, $this->session))->toBe([]);
+    expect(tourDoneOf(TourKey::Leave, $this->session))->toBe([]);
 
     WorkerCredential::factory()->create(['tenant_id' => $this->demo->id]);
 
-    expect(doneOf(TourKey::Leave, $this->session))->toBe(['leave.key']);
+    expect(tourDoneOf(TourKey::Leave, $this->session))->toBe(['leave.key']);
 
     $request = LeaveRequest::factory()->create(['tenant_id' => $this->demo->id]);
 
-    expect(doneOf(TourKey::Leave, $this->session))->toBe(['leave.key', 'leave.request']);
+    expect(tourDoneOf(TourKey::Leave, $this->session))->toBe(['leave.key', 'leave.request']);
 
     $request->delete();
     LeaveRequest::factory()->approved()->create(['tenant_id' => $this->demo->id]);
     $this->session->recordVisit('tenant.vacations.balances.index');
 
-    expect(doneOf(TourKey::Leave, $this->session))->toBe(['leave.key', 'leave.request', 'leave.approve', 'leave.balance']);
+    expect(tourDoneOf(TourKey::Leave, $this->session))->toBe(['leave.key', 'leave.request', 'leave.approve', 'leave.balance']);
 });
 
 it('marks the humi step done when the presenter asked Humi', function (): void {
     $owner = memberOf($this->demo, TenantRole::Owner);
     $this->actingAs($owner);
 
-    expect(doneOf(TourKey::Humi, $this->session))->toBe([]);
+    expect(tourDoneOf(TourKey::Humi, $this->session))->toBe([]);
 
     $participant = ConversationParticipant::factory()->for($owner)->create(['tenant_id' => $this->demo->id]);
     AiUsage::factory()->create(['tenant_id' => $this->demo->id, 'participant_id' => $participant->id]);
 
-    expect(doneOf(TourKey::Humi, $this->session))->toBe(['humi.ask']);
+    expect(tourDoneOf(TourKey::Humi, $this->session))->toBe(['humi.ask']);
 });
 
 it('leaves the center steps pending while the session has no center yet', function (): void {
