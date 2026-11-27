@@ -40,11 +40,10 @@ function mutationExemptClasses(): array
         'Catálogos fijos del SAT (régimen fiscal y uso del CFDI): validar el código lo fijan los tests de AccountRules, que sí se muta, y mutar cada renglón del catálogo no mide ninguna decisión.' => [
             'App\Modules\Billing\Support\SatCatalogs',
         ],
-        'Pendiente de clasificar (26 nov 2026): entra a la mutación o pasa arriba con su razón. Esta lista solo se achica.' => [
-            'App\Modules\Blog\Support\BlogPresenter',
-            'App\Modules\Blog\Support\BlogSeo',
+        'Lista fija de las herramientas de las que habla un artículo: la regla que la lee (una herramienta que no está, un artículo inválido) se muta en ArticleParser.' => [
             'App\Modules\Blog\Support\BlogTools',
-            'App\Modules\Blog\Support\FileArticleLibrary',
+        ],
+        'Pendiente de clasificar (26 nov 2026): entra a la mutación o pasa arriba con su razón. Esta lista solo se achica.' => [
             'App\Modules\Campaigns\Support\CampaignClock',
             'App\Modules\Campaigns\Support\CampaignInstruments',
             'App\Modules\Campaigns\Support\CampaignInvitationLinks',

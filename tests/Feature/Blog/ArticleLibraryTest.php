@@ -3,11 +3,14 @@
 declare(strict_types=1);
 
 use App\Modules\Blog\Contracts\ArticleLibrary;
+use App\Modules\Blog\Support\FileArticleLibrary;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
 require_once __DIR__.'/BlogTestHelpers.php';
+
+mutates(FileArticleLibrary::class);
 
 beforeEach(fn () => Carbon::setTestNow('2026-11-20 12:00:00'));
 
