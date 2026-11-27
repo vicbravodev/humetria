@@ -246,7 +246,7 @@ it('skips and rewinds a step', function (): void {
 
     expect($session->refresh()->skipped_steps)->toBe(['base.center'])
         ->and(polledGuide()->json('tours.0.done'))->toBe(1);
-    Log::shouldHaveReceived('info')->once()->with('demo.session_step_skipped', ['session_id' => $session->id, 'step' => 'base.center']);
+    Log::shouldHaveReceived('info')->with('demo.session_step_skipped', ['session_id' => $session->id, 'step' => 'base.center'])->once();
 
     // Skipping the evaluation's draft leaves its next steps without an evaluation to open: «Llévame» goes to the list.
     Employee::factory()->create(['tenant_id' => $this->demo->id, 'work_center_id' => $this->center->id]);
@@ -362,4 +362,19 @@ it('shows the guide to a page fetched ahead without moving it nor spending what 
     // The page the presenter does open still celebrates it.
     $this->withoutHeader('Purpose');
     expect(polledGuide()->json('justDone'))->toBe('El centro de la sesión');
+});
+
+it('logs each move of the guide once, by its steps', function (): void {
+    $session = guidedSession(['nom035']);
+    presentAs();
+    Log::spy();
+
+    polledGuide();
+    polledGuide();
+    $session->recordVisit('tenant.work-centers.index');
+    polledGuide();
+
+    Log::shouldHaveReceived('info')->with('demo.session_guide_moved', ['session_id' => $session->id, 'from' => null, 'to' => 'base.center'])->once();
+    Log::shouldHaveReceived('info')->with('demo.session_guide_moved', ['session_id' => $session->id, 'from' => 'base.center', 'to' => 'base.people'])->once();
+    Log::shouldHaveReceived('info')->with('demo.session_guide_moved', Mockery::any())->twice();
 });

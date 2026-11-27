@@ -137,7 +137,13 @@ final class DemoSession extends Model
         $this->guide_step = $key;
         $this->syncOriginalAttribute('guide_step');
 
-        return $moved > 0 ? $previous : null;
+        if ($moved === 0) {
+            return null;
+        }
+
+        Log::info('demo.session_guide_moved', ['session_id' => $this->id, 'from' => $previous, 'to' => $key]);
+
+        return $previous;
     }
 
     /**
