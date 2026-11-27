@@ -13,10 +13,13 @@ use App\Modules\Leave\Models\LeavePolicy;
 use App\Modules\Leave\Models\LeavePolicyAssignment;
 use App\Modules\Leave\Models\LeavePolicyRow;
 use App\Modules\Leave\Models\LeaveSetting;
+use App\Modules\Leave\Support\PolicyVacationTerms;
 use App\Modules\Organization\Models\JobGrade;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Inertia\Testing\AssertableInertia as Assert;
+
+mutates(PolicyVacationTerms::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-03 10:00:00');

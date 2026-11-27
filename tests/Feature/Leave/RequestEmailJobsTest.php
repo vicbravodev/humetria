@@ -12,6 +12,7 @@ use App\Modules\Leave\Notifications\RequestCancelled as CancelledMail;
 use App\Modules\Leave\Notifications\RequestDecided as DecidedMail;
 use App\Modules\Leave\Notifications\RequestEscalated as EscalatedMail;
 use App\Modules\Leave\Notifications\RequestToDecide as ToDecideMail;
+use App\Modules\Leave\Support\RequestSummary;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Contracts\WorkerLinks;
@@ -20,7 +21,7 @@ use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 
-mutates(RequestToDecide::class, RequestEscalated::class, RequestDecided::class, RequestCancelled::class);
+mutates(RequestToDecide::class, RequestEscalated::class, RequestDecided::class, RequestCancelled::class, RequestSummary::class);
 
 // The three emails of a request (H05, B4): each one is a job, queued once the request is saved, that reads the request again
 // when it runs, so one that changed in between (answered, cancelled, given to another manager) tells nobody what is no
