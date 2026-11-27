@@ -6,6 +6,7 @@ use App\Models\AuditEntry;
 use App\Modules\Seating\Actions\DeclareProfile;
 use App\Modules\Seating\Enums\Sector;
 use App\Modules\Seating\Models\SeatingProfile;
+use App\Modules\Seating\Support\Today;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -14,7 +15,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-mutates(DeclareProfile::class);
+mutates(DeclareProfile::class, Today::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-03-01 12:00:00');

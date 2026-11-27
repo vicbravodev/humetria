@@ -6,6 +6,7 @@ use App\Models\AuditEntry;
 use App\Modules\Instruments\Data\RiskLevel;
 use App\Modules\Seating\Actions\SignAssessment;
 use App\Modules\Seating\Events\RiskAssessmentSigned;
+use App\Modules\Seating\Listeners\RequestOnSignature;
 use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Models\StandingPosition;
@@ -20,7 +21,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 
-mutates(SignAssessment::class, AssessmentSnapshot::class);
+mutates(SignAssessment::class, AssessmentSnapshot::class, RequestOnSignature::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-03-01 12:00:00');

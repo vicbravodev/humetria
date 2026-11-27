@@ -12,6 +12,7 @@ use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\PreventiveMeasure;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Models\StandingPosition;
+use App\Modules\Seating\Support\EvidenceStore;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -25,7 +26,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ProposeMeasure::class, SaveMeasure::class, CancelMeasure::class, MeasureController::class);
+mutates(ProposeMeasure::class, SaveMeasure::class, CancelMeasure::class, MeasureController::class, EvidenceStore::class);
 
 beforeEach(function (): void {
     Storage::fake(config()->string('filesystems.seating_files'));

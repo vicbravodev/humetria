@@ -7,6 +7,7 @@ use App\Modules\Seating\Actions\AssignPeople;
 use App\Modules\Seating\Actions\UnassignPerson;
 use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\StandingPosition;
+use App\Modules\Seating\Support\Today;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -17,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(AssignPeople::class, UnassignPerson::class);
+mutates(AssignPeople::class, UnassignPerson::class, Today::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-03-01 12:00:00');

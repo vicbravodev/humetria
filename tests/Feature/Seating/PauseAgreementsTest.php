@@ -6,6 +6,7 @@ use App\Modules\Seating\Actions\SavePauseAgreement;
 use App\Modules\Seating\Http\Controllers\PauseAgreementController;
 use App\Modules\Seating\Models\PauseAgreement;
 use App\Modules\Seating\Models\StandingPosition;
+use App\Modules\Seating\Support\EvidenceStore;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -18,7 +19,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(SavePauseAgreement::class, PauseAgreementController::class);
+mutates(SavePauseAgreement::class, PauseAgreementController::class, EvidenceStore::class);
 
 beforeEach(function (): void {
     Storage::fake(config()->string('filesystems.seating_files'));

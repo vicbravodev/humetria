@@ -8,6 +8,7 @@ use App\Modules\Seating\Actions\DraftRegulation;
 use App\Modules\Seating\Http\Controllers\RegulationController;
 use App\Modules\Seating\Models\InternalRegulation;
 use App\Modules\Seating\Models\StandingPosition;
+use App\Modules\Seating\Support\PdfStore;
 use App\Modules\Seating\Support\RegulationNotice;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -22,7 +23,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(DraftRegulation::class, AdvanceRegulation::class, RegulationController::class, RegulationNotice::class);
+mutates(DraftRegulation::class, AdvanceRegulation::class, RegulationController::class, RegulationNotice::class, PdfStore::class);
 
 beforeEach(function (): void {
     Storage::fake(config()->string('filesystems.seating_files'));

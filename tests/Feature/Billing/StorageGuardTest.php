@@ -14,7 +14,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
-mutates(LedgerStorageGuard::class);
+mutates(LedgerStorageGuard::class, SeatingFiles::class);
 
 /** A company on a plan whose storage quota is exactly `$quota` bytes, with its fake private disk. */
 function guardedCompany(int $quota): Tenant
@@ -122,6 +122,15 @@ it('gives the bytes back when the disk fails to write', function (): void {
     Storage::shouldReceive('disk')->andReturn(Mockery::mock(Illuminate\Filesystem\FilesystemAdapter::class, fn ($mock) => $mock->shouldReceive('put')->andReturn(false)));
 
     expect(fn () => resolve(FileStore::class)->put("documents/{$tenant->id}/a.pdf", str_repeat('x', 100)))->toThrow(RuntimeException::class);
+
+    expect(guardUsed($tenant))->toBe(0);
+});
+
+it('gives the bytes back when the disk of the Ley Silla evidence fails to write', function (): void {
+    $tenant = guardedCompany(1000);
+    Storage::shouldReceive('disk')->andReturn(Mockery::mock(Illuminate\Filesystem\FilesystemAdapter::class, fn ($mock) => $mock->shouldReceive('put')->andReturn(false)));
+
+    expect(fn () => resolve(SeatingFiles::class)->put("documents/{$tenant->id}/a.pdf", str_repeat('x', 100)))->toThrow(RuntimeException::class);
 
     expect(guardUsed($tenant))->toBe(0);
 });

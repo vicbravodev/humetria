@@ -7,6 +7,7 @@ use App\Modules\Seating\Actions\SaveSeat;
 use App\Modules\Seating\Http\Controllers\SeatController;
 use App\Modules\Seating\Models\Seat;
 use App\Modules\Seating\Models\StandingPosition;
+use App\Modules\Seating\Support\SeatingFiles;
 use App\Modules\Seating\Support\SeatPhotoStore;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -20,7 +21,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(SaveSeat::class, SeatPhotoStore::class, SeatController::class);
+mutates(SaveSeat::class, SeatPhotoStore::class, SeatController::class, SeatingFiles::class);
 
 beforeEach(function (): void {
     Storage::fake(config()->string('filesystems.seating_files'));
