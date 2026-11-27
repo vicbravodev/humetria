@@ -8,9 +8,9 @@ export default function RoomComplaints({ link }: { link: DemoShareLink }) {
             aria-labelledby="room-complaints"
             className="flex flex-col gap-3 card p-5"
         >
-            <h2 id="room-complaints" className="text-base font-semibold">
+            <h3 id="room-complaints" className="text-base font-semibold">
                 Canal de denuncias
-            </h2>
+            </h3>
             <RoomShareLink link={link} alt="Código QR del canal de denuncias">
                 Cualquiera del público puede enviar una denuncia, anónima o no,
                 y verla llegar al panel de RH.

@@ -20,9 +20,9 @@ export default function RoomEnter({
             aria-labelledby="room-enter"
             className="flex flex-col gap-3 card p-5"
         >
-            <h2 id="room-enter" className="text-base font-semibold">
+            <h3 id="room-enter" className="text-base font-semibold">
                 Entrar a la demo
-            </h2>
+            </h3>
             <p className="text-sm text-pretty text-muted-foreground">
                 Como dueño ves la empresa completa; como RH, lo que ve quien
                 opera el día a día. Para volver a la consola, usa «Salir».

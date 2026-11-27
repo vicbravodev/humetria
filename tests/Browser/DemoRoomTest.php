@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Demos\Contracts\DemoDoorPool;
+use App\Modules\Demos\Enums\DemoSessionStatus;
 use App\Modules\Demos\Models\DemoRun;
+use App\Modules\Demos\Models\DemoSession;
 use App\Modules\Organization\Models\Employee;
+use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Models\WorkCenter;
 use Database\Factories\Tenancy\WorkCenterFactory;
+use Illuminate\Support\Facades\Queue;
 
 $looks = [
     'light desktop' => [false, false],
@@ -133,3 +138,125 @@ it('issues the links of the time-clock screens once, each by its center with its
         ->assertPresent('img[alt="Código QR del enlace de la pantalla del checador de Oficinas Querétaro"]')
         ->assertNoJavaScriptErrors();
 });
+
+/** A script that resolves once the page shows `$text`, waiting up to 8 s for the room's poll (every 3 s). */
+function roomShows(string $text): string
+{
+    $wanted = json_encode($text, JSON_THROW_ON_ERROR);
+
+    return <<<JS
+        () => new Promise((resolve) => {
+            const start = performance.now();
+            const check = () => {
+                const seen = document.body.innerText.includes({$wanted});
+                seen || performance.now() - start > 8000 ? resolve(seen) : setTimeout(check, 100);
+            };
+            check();
+        })
+        JS;
+}
+
+/** A session for Grupo Ejemplo of NOM-035 and Asistencia, on the prepared demo's center, as `$status`. */
+function sessionInRoom(DemoSessionStatus $status): DemoSession
+{
+    $center = WorkCenter::query()->withoutGlobalScopes()->where('name', 'Oficinas Querétaro')->sole();
+
+    return DemoSession::query()->forceCreate([
+        'client_name' => 'Grupo Ejemplo',
+        'tours' => ['nom035', 'attendance'],
+        'skipped_steps' => [],
+        'visited' => ['tenant.work-centers.index'],
+        'status' => $status,
+        'work_center_id' => $status === DemoSessionStatus::Active ? $center->id : null,
+        'started_at' => now()->subMinutes(12),
+        'ready_at' => $status === DemoSessionStatus::Active ? now()->subMinutes(12) : null,
+        'ended_at' => $status === DemoSessionStatus::Failed ? now()->subMinutes(11) : null,
+    ]);
+}
+
+it('starts a session with two tours, shows it preparing, and ends it', function (): void {
+    Queue::fake();
+    signInAsSuperadmin();
+    preparedDemo();
+
+    $page = visitPage('demos/room', '/admin/demo')
+        ->assertSee('Nueva sesión')
+        ->assertSee('El centro y su gente')
+        ->assertSee('Empezar reinicia la demo de cero (unos 30 s).')
+        ->assertButtonDisabled('Empezar sesión')
+        ->fill('client_name', 'Grupo Ejemplo')
+        ->click('#tour-attendance')
+        ->click('#tour-nom035')
+        ->click('button[aria-label="Subir Asistencia"]')
+        ->assertSee('26 min')
+        ->assertSee('3 recorridos')
+        ->click('Empezar sesión')
+        ->assertSee('Preparando la sesión')
+        ->assertSee('Reiniciar la demo')
+        ->assertSee('Crear el centro «Sala · Grupo Ejemplo» y dejar lista la sala')
+        ->assertSee('Disponibles cuando la sesión esté lista.')
+        ->assertNoJavaScriptErrors();
+
+    $session = DemoSession::query()->sole();
+    expect($session->tours)->toBe(['attendance', 'nom035'])->and($session->client_name)->toBe('Grupo Ejemplo');
+
+    DemoRun::query()->where('kind', 'session')->sole()->finish();
+    $session->markReady(WorkCenter::query()->withoutGlobalScopes()->where('name', 'Oficinas Querétaro')->sole()->id);
+
+    $page->assertScript(roomShows('Entrar y seguir el guía'), true)
+        ->click('Terminar sesión')
+        ->assertSee('¿Terminar la sesión con Grupo Ejemplo?')
+        ->assertSee('Se borra todo, incluidas las personas que diste de alta: sus correos, teléfonos, respuestas, marcas y llaves. La demo vuelve a su historia de siempre.')
+        ->click('Terminar y borrar')
+        ->assertSee('Terminando la sesión')
+        ->assertNoJavaScriptErrors();
+
+    expect($session->refresh()->status)->toBe(DemoSessionStatus::Ending);
+});
+
+it('shows the session in course: each tour\'s progress, the next step and the tools', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    preparedDemo();
+    sessionInRoom(DemoSessionStatus::Active);
+
+    visitPage('demos/room', '/admin/demo', $dark, $mobile)
+        ->assertSee('Sesión en curso con Grupo Ejemplo · empezó hace 12 minutos')
+        ->assertSee('Sesión con Grupo Ejemplo')
+        ->assertSee('Da de alta al público')
+        ->assertSee('El centro y su gente, paso 2 de 2')
+        ->assertSee('1 de 2')
+        ->assertSee('0 de 6')
+        ->assertSee('Herramientas de la sala')
+        ->assertSee('La puerta')
+        ->assertDontSee('Nueva sesión')
+        ->assertDontSee('Reiniciar demo');
+})->with($looks);
+
+it('enters the demo and lands on the guide\'s step', function (): void {
+    signInAsSuperadmin();
+    $demo = preparedDemo();
+    memberOf($demo, TenantRole::Owner);
+    sessionInRoom(DemoSessionStatus::Active);
+
+    visitPage('demos/room', '/admin/demo')
+        ->click('Entrar y seguir el guía')
+        ->assertPathIs('/admin/alba-demo/employees')
+        ->assertNoJavaScriptErrors();
+});
+
+it('shows a failed session and lets it end', function (bool $mobile): void {
+    signInAsSuperadmin();
+    preparedDemo();
+    sessionInRoom(DemoSessionStatus::Failed);
+    DemoRun::query()->forceCreate(['kind' => 'session', 'status' => 'failed', 'step' => 'Sala de la sesión', 'error_class' => 'Illuminate\\Database\\QueryException', 'started_at' => now()->subMinutes(12), 'finished_at' => now()->subMinutes(11)]);
+
+    visitPage('demos/room', '/admin/demo', mobile: $mobile)
+        ->assertSee('La sesión con Grupo Ejemplo no quedó lista')
+        ->assertSee('Falló')
+        ->assertSee('Termina la sesión para dejar la demo limpia y empieza otra')
+        ->assertDontSee('Nueva sesión')
+        ->assertDontSee('Entrar y seguir el guía')
+        ->assertDontSee('Herramientas de la sala')
+        ->click('Terminar sesión')
+        ->assertSee('¿Terminar la sesión con Grupo Ejemplo?');
+})->with(['computer' => false, 'phone' => true]);
