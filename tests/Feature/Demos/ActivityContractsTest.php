@@ -231,3 +231,31 @@ describe('EngagementActivity', function (): void {
         expect(resolve(EngagementActivity::class)->since($this->since))->toEqual(new SurveyActivity(false, false, 0, 0, false));
     });
 });
+
+describe('ComplaintActivity', function (): void {
+    beforeEach(function (): void {
+        // 03:00 UTC of the 26th is 21:00 of the 25th in Mexico City: a complaint keeps only its day there, never the hour.
+        $this->since = CarbonImmutable::parse('2026-11-26 03:00:00', 'UTC');
+        $this->travelTo($this->since);
+        $this->channel = ComplaintChannel::factory()->active()->create(['tenant_id' => $this->a->id]);
+    });
+
+    it('counts only what happened after the session started, by the day a complaint keeps', function (): void {
+        Complaint::factory()->create(['tenant_id' => $this->a->id, 'channel_id' => $this->channel->id, 'received_on' => '2026-11-24']);
+        Complaint::factory()->create(['tenant_id' => $this->a->id, 'channel_id' => $this->channel->id, 'received_on' => '2026-11-25', 'acknowledged_at' => '2026-11-26 02:59:59']);
+        Complaint::factory()->create(['tenant_id' => $this->a->id, 'channel_id' => $this->channel->id, 'received_on' => '2026-11-25']);
+        Complaint::factory()->create(['tenant_id' => $this->a->id, 'channel_id' => $this->channel->id, 'received_on' => '2026-11-25', 'acknowledged_at' => '2026-11-26 03:00:00']);
+        Complaint::factory()->create(['tenant_id' => $this->a->id, 'channel_id' => $this->channel->id, 'received_on' => '2026-11-25', 'held' => true]);
+        workIn($this->a);
+
+        expect(resolve(ComplaintActivity::class)->since($this->since))->toEqual(new ComplaintCounts(3, 1))
+            ->and(resolve(ComplaintActivity::class)->since($this->since->setTimezone('America/Mexico_City')))->toEqual(new ComplaintCounts(3, 1));
+    });
+
+    it('does not read another company', function (): void {
+        Complaint::factory()->create(['tenant_id' => $this->b->id, 'received_on' => '2026-11-25', 'acknowledged_at' => '2026-11-26 04:00:00']);
+        workIn($this->a);
+
+        expect(resolve(ComplaintActivity::class)->since($this->since))->toEqual(new ComplaintCounts(0, 0));
+    });
+});
