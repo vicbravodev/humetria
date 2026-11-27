@@ -10,6 +10,7 @@ use App\Modules\Disclosure\Actions\IssuePageLink;
 use App\Modules\Disclosure\Actions\RotatePageLink;
 use App\Modules\Disclosure\Enums\PageLinkStatus;
 use App\Modules\Disclosure\Models\PageLink;
+use App\Modules\Disclosure\Support\Days;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Database\QueryException;
@@ -17,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
-mutates(IssuePageLink::class, RotatePageLink::class, DisablePageLink::class, EnablePageLink::class, ChangePageLinkExpiry::class, PageLink::class);
+mutates(IssuePageLink::class, RotatePageLink::class, DisablePageLink::class, EnablePageLink::class, ChangePageLinkExpiry::class, PageLink::class, Days::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-20 18:00:00');

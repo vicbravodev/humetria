@@ -13,6 +13,8 @@ use App\Modules\Disclosure\Http\Controllers\ContentController;
 use App\Modules\Disclosure\Models\DisseminationRecord;
 use App\Modules\Disclosure\Models\Document;
 use App\Modules\Disclosure\Models\DocumentCenter;
+use App\Modules\Disclosure\Support\DocumentTemplates;
+use App\Modules\Disclosure\Support\PublicationCenters;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -22,7 +24,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(StartContentDraft::class, PublishContent::class, ContentController::class);
+mutates(StartContentDraft::class, PublishContent::class, ContentController::class, DocumentTemplates::class, PublicationCenters::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-20 18:00:00');

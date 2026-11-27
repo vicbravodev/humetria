@@ -11,6 +11,7 @@ use App\Modules\Disclosure\Enums\DocumentStatus;
 use App\Modules\Disclosure\Events\PolicyPublished;
 use App\Modules\Disclosure\Models\Document;
 use App\Modules\Disclosure\Models\DocumentCenter;
+use App\Modules\Disclosure\Support\PublicationCenters;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -21,7 +22,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
-mutates(PublishPolicy::class);
+mutates(PublishPolicy::class, PublicationCenters::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();

@@ -7,6 +7,7 @@ use App\Modules\Disclosure\Models\DisseminationRecord;
 use App\Modules\Disclosure\Models\Document;
 use App\Modules\Disclosure\Models\DocumentCenter;
 use App\Modules\Disclosure\Support\CenterFacts;
+use App\Modules\Disclosure\Support\DeliveryStanding;
 use App\Modules\Disclosure\Support\Requirements;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -14,7 +15,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(Requirements::class, CenterFacts::class);
+mutates(Requirements::class, CenterFacts::class, DeliveryStanding::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['slug' => 'acme']);

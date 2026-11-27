@@ -11,10 +11,13 @@ use App\Modules\Disclosure\Models\DocumentCenter;
 use App\Modules\Disclosure\Models\PageLink;
 use App\Modules\Disclosure\Models\ResultPublication;
 use App\Modules\Disclosure\Support\CompanyDisclosureStanding;
+use App\Modules\Disclosure\Support\Days;
+use App\Modules\Disclosure\Support\DeliveryStanding;
+use App\Modules\Disclosure\Support\ResultsStanding;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 
-mutates(CompanyDisclosureStanding::class);
+mutates(CompanyDisclosureStanding::class, Days::class, DeliveryStanding::class, ResultsStanding::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();

@@ -7,6 +7,7 @@ use App\Modules\Disclosure\Http\Controllers\PortalPolicyController;
 use App\Modules\Disclosure\Models\Acknowledgment;
 use App\Modules\Disclosure\Models\Document;
 use App\Modules\Disclosure\Models\DocumentCenter;
+use App\Modules\Disclosure\Support\PolicyText;
 use App\Modules\Disclosure\Support\PolicyWorkerSection;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -18,7 +19,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(Acknowledge::class, PortalPolicyController::class, PolicyWorkerSection::class);
+mutates(Acknowledge::class, PortalPolicyController::class, PolicyWorkerSection::class, PolicyText::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['trade_name' => 'Acme', 'legal_name' => 'Acme Manufacturas S.A. de C.V.']);

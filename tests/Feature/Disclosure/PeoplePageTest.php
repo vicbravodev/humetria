@@ -7,6 +7,8 @@ use App\Modules\Disclosure\Actions\PublishContent;
 use App\Modules\Disclosure\Actions\PublishResults;
 use App\Modules\Disclosure\Actions\SaveWriting;
 use App\Modules\Disclosure\Enums\DocumentKind;
+use App\Modules\Disclosure\Support\PolicyText;
+use App\Modules\Disclosure\Support\ResultsStanding;
 use App\Modules\Disclosure\Support\ResultThemes;
 use App\Modules\Disclosure\Support\WorkersPages;
 use App\Modules\Disclosure\Support\Writing\Templates;
@@ -15,7 +17,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(WorkersPages::class, ResultThemes::class);
+mutates(WorkersPages::class, ResultThemes::class, PolicyText::class, ResultsStanding::class);
 
 // Rediseño v2 (board V4-Pagina-Personas): the page of the people of a center on their phone — each block of 5.7 folded with
 // its parts under their headings, and the results in plain words: who answered and what most needs attention, for the whole

@@ -7,15 +7,18 @@ use App\Modules\Disclosure\Actions\SaveDraft;
 use App\Modules\Disclosure\Actions\StartPolicyDraft;
 use App\Modules\Disclosure\Http\Controllers\DisclosureController;
 use App\Modules\Disclosure\Support\Board;
+use App\Modules\Disclosure\Support\Days;
+use App\Modules\Disclosure\Support\DeliveryStanding;
 use App\Modules\Disclosure\Support\PolicyStanding;
 use App\Modules\Disclosure\Support\Requirements;
+use App\Modules\Disclosure\Support\ResultsStanding;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(DisclosureController::class, Board::class, PolicyStanding::class, Requirements::class);
+mutates(DisclosureController::class, Board::class, PolicyStanding::class, Requirements::class, Days::class, ResultsStanding::class, DeliveryStanding::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-20 18:00:00');

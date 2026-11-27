@@ -10,6 +10,7 @@ use App\Modules\Disclosure\Support\ContentPages;
 use App\Modules\Disclosure\Support\Writing\ComplaintTemplate;
 use App\Modules\Disclosure\Support\Writing\HealthTemplate;
 use App\Modules\Disclosure\Support\Writing\PreventionTemplate;
+use App\Modules\Disclosure\Support\Writing\Sentence;
 use App\Modules\Disclosure\Support\Writing\Templates;
 use App\Modules\Disclosure\Support\Writing\ViolenceTemplate;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -19,7 +20,7 @@ use App\Support\Writing\Field;
 use App\Support\Writing\Writer;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ViolenceTemplate::class, PreventionTemplate::class, ComplaintTemplate::class, HealthTemplate::class, Templates::class, PublishContent::class, ContentPages::class);
+mutates(ViolenceTemplate::class, PreventionTemplate::class, ComplaintTemplate::class, HealthTemplate::class, Templates::class, PublishContent::class, ContentPages::class, Sentence::class);
 
 // Rediseño v2 (board V4-Difusion-Contenidos, decisión A3): the blocks of 5.7 the company tells its people (b, c, d and f) are
 // written by answering questions, with how the people will read it on their phone beside them. The health effects have no

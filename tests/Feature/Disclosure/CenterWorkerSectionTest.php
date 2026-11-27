@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Modules\Disclosure\Actions\IssuePageLink;
 use App\Modules\Disclosure\Support\CenterWorkerSection;
+use App\Modules\Disclosure\Support\PageUrl;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -12,7 +13,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\WorkerAccess\Data\WorkerIdentity;
 use Carbon\CarbonImmutable;
 
-mutates(CenterWorkerSection::class);
+mutates(CenterWorkerSection::class, PageUrl::class);
 
 // R2-employee-07: from their start, the person lands on their own center's page, not on the list of every center.
 it('opens the page of the center of the person who comes from their start, while its link is active and the company has NOM-035', function (): void {

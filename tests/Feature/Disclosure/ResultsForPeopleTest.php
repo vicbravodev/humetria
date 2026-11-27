@@ -10,6 +10,7 @@ use App\Modules\Disclosure\Actions\IssuePageLink;
 use App\Modules\Disclosure\Actions\PublishResults;
 use App\Modules\Disclosure\Actions\WithdrawResults;
 use App\Modules\Disclosure\Models\ResultPublication;
+use App\Modules\Disclosure\Support\ResultsStanding;
 use App\Modules\Results\Contracts\RiskResults;
 use App\Modules\Results\Data\AreaRisk;
 use App\Modules\Results\Data\RiskBreakdown;
@@ -24,7 +25,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(PublishResults::class, WithdrawResults::class);
+mutates(PublishResults::class, WithdrawResults::class, ResultsStanding::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-20 18:00:00');
@@ -229,6 +230,14 @@ it('titles the results by the guide: the work environment is evaluated only abov
     $token = (string) resolve(IssuePageLink::class)->handle($this->hr->id)->token();
 
     $this->get(route('workers.center', [$token, $big->id]))->assertInertia(fn (Assert $page) => $page->where('results.title', 'Resultados de la identificación y análisis de los factores de riesgo psicosocial y de la evaluación del entorno organizacional'));
+});
+
+it('titles the results of a center of exactly 50 people by Guía II: no evaluation of the work environment', function (): void {
+    $limit = WorkCenter::factory()->for($this->tenant)->create();
+    staffOf($this->tenant, $limit, 50);
+    $token = (string) resolve(IssuePageLink::class)->handle($this->hr->id)->token();
+
+    $this->get(route('workers.center', [$token, $limit->id]))->assertInertia(fn (Assert $page) => $page->where('results.title', 'Resultados de la identificación y análisis de los factores de riesgo psicosocial'));
 });
 
 it('says whether the page of the people is active, so publishing warns they have nowhere to read the results yet', function (): void {
