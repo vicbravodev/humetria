@@ -186,3 +186,48 @@ describe('WorkerAccessActivity', function (): void {
         expect(resolve(WorkerAccessActivity::class)->since($this->since))->toEqual(new AccessActivity(0, 0));
     });
 });
+
+describe('EngagementActivity', function (): void {
+    /** `$answered` invitations of `$survey` answered, and one that was not. */
+    function surveyWithAnswers(Survey $survey, int $answered): Survey
+    {
+        Invitation::factory()->answered()->count($answered)->create(['survey_id' => $survey->id]);
+        Invitation::factory()->create(['survey_id' => $survey->id]);
+
+        return $survey;
+    }
+
+    it('counts only what happened after the session started', function (): void {
+        surveyWithAnswers(Survey::factory()->closed()->create(['tenant_id' => $this->a->id]), 3);
+        workIn($this->a);
+
+        expect(resolve(EngagementActivity::class)->since($this->since))->toEqual(new SurveyActivity(false, false, 0, 0, false));
+
+        $this->travelTo($this->since);
+        $draft = Survey::factory()->pulse()->create(['tenant_id' => $this->a->id]);
+
+        expect(resolve(EngagementActivity::class)->since($this->since))->toEqual(new SurveyActivity(true, false, 0, 0, false));
+
+        $draft->delete();
+        surveyWithAnswers(Survey::factory()->pulse()->active()->create(['tenant_id' => $this->a->id, 'invited' => 5]), 2);
+
+        expect(resolve(EngagementActivity::class)->since($this->since))->toEqual(new SurveyActivity(true, true, 5, 2, false))
+            ->and(resolve(EngagementActivity::class)->since($this->since->setTimezone('America/Mexico_City'))->created)->toBeTrue();
+    });
+
+    it('tells the survey closed', function (): void {
+        $this->travelTo($this->since);
+        surveyWithAnswers(Survey::factory()->pulse()->closed()->create(['tenant_id' => $this->a->id, 'invited' => 4]), 4);
+        workIn($this->a);
+
+        expect(resolve(EngagementActivity::class)->since($this->since))->toEqual(new SurveyActivity(true, true, 4, 4, true));
+    });
+
+    it('does not read another company', function (): void {
+        $this->travelTo($this->since);
+        surveyWithAnswers(Survey::factory()->pulse()->active()->create(['tenant_id' => $this->b->id]), 2);
+        workIn($this->a);
+
+        expect(resolve(EngagementActivity::class)->since($this->since))->toEqual(new SurveyActivity(false, false, 0, 0, false));
+    });
+});
