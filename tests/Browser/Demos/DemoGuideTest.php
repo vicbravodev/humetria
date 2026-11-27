@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
 use App\Modules\Campaigns\Enums\CampaignStatus;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Demos\Enums\DemoSessionStatus;
@@ -10,6 +11,7 @@ use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use Database\Seeders\Demo\DemoRoster;
 
 /*
  * The dock of the guide: on top of every page of the demo company while the superadmin presents a session, it says what
@@ -157,4 +159,31 @@ it('leaves the owner first steps aside while the guide shows', function (): void
     visit("/admin/alba-demo/campaigns/{$campaign->id}")
         ->assertSeeIn(GUIDE_DOCK, 'Lanza la evaluación')
         ->assertNotPresent('[aria-label^="Primeros pasos"]');
+});
+
+it('opens the portal of a person of the session on this computer, for the Vacaciones tour', function (): void {
+    $demo = Tenant::factory()->demo()->create(['slug' => 'alba-demo']);
+    memberOf($demo, TenantRole::Owner);
+    User::factory()->create(['email' => DemoRoster::person(DemoRoster::HR)->email]);
+    $center = WorkCenter::factory()->create(['tenant_id' => $demo->id]);
+    Employee::factory()->create(['tenant_id' => $demo->id, 'work_center_id' => $center->id, 'name' => 'Ana Ruiz']);
+    DemoSession::query()->forceCreate([
+        'tours' => ['leave'],
+        'status' => DemoSessionStatus::Active,
+        'work_center_id' => $center->id,
+        'visited' => ['tenant.work-centers.index'],
+        'started_at' => now()->subMinute(),
+        'ready_at' => now()->subMinute(),
+    ]);
+    test()->actingAs(superadmin())->post(route('companies.impersonate', $demo), ['as' => 'owner']);
+
+    visit('/admin/alba-demo')
+        ->assertSeeIn(GUIDE_DOCK, 'Entra al portal y crea la llave')
+        ->click('#demo-portal-person')
+        ->type('[role="combobox"][aria-controls="demo-portal-person-options"]', 'ana')
+        ->assertSee('Ana Ruiz')
+        ->keys('[role="combobox"][aria-controls="demo-portal-person-options"]', 'Enter')
+        ->click('Abrir su portal')
+        ->assertScript('() => new Promise((resolve) => { const start = performance.now(); const check = () => location.pathname.startsWith("/me/alba-demo/") || performance.now() - start > 8000 ? resolve(location.pathname.startsWith("/me/alba-demo/")) : setTimeout(check, 100); check(); })', true)
+        ->assertNoJavaScriptErrors();
 });

@@ -1,9 +1,13 @@
 import GuideActions from '@/components/demos/guide-actions';
 import GuideLive from '@/components/demos/guide-live';
+import GuidePortalPicker from '@/components/demos/guide-portal-picker';
 import HumiAvatar from '@/components/humetria/humi-avatar';
 import { Badge } from '@/components/ui/badge';
 import { progressLabel } from '@/lib/demos/guide';
 import type { DemoGuideStep } from '@/types/demo-guide';
+
+// The step done on the presenter's own computer, in a person's portal (Demos\Support\Tours\LeaveTour).
+const PORTAL_STEP = 'leave.key';
 
 const LABEL =
     'text-xs font-semibold tracking-wide text-muted-foreground uppercase';
@@ -48,6 +52,7 @@ export default function GuideStep({
                 <p className={LABEL}>Por qué importa</p>
                 <p className="text-sm">{current.why}</p>
             </div>
+            {current.key === PORTAL_STEP && <GuidePortalPicker />}
             {current.ask !== null && (
                 <p className="text-meta text-muted-foreground">
                     Humi abre con la pregunta escrita: «{current.ask}»
