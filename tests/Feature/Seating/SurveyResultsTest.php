@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Modules\Campaigns\Models\Campaign;
+use App\Modules\Campaigns\Support\CompanyCenterSurveys;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Responses\Models\AnonymousResponse;
 use App\Modules\Results\Support\AnswerDistribution;
@@ -16,7 +17,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(AnswerDistribution::class, SurveyPages::class, SurveyResultsController::class);
+mutates(AnswerDistribution::class, SurveyPages::class, SurveyResultsController::class, CompanyCenterSurveys::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-02 17:00:00');
@@ -189,6 +190,20 @@ it('tells RH there is nothing to close when no survey is open', function (): voi
     closeSeatingSurvey($this->survey);
 
     $this->actingAs($this->hr)->post(route('tenant.seating.survey.close', [$this->tenant, $this->plant->id]))->assertSessionHasErrors('survey');
+});
+
+it('tells RH the survey already closed when another request closed it meanwhile', function (): void {
+    $closedMeanwhile = false;
+    Campaign::retrieved(function (Campaign $campaign) use (&$closedMeanwhile): void {
+        if (! $closedMeanwhile && $campaign->id === $this->survey->id) {
+            $closedMeanwhile = true;
+            Campaign::query()->withoutGlobalScopes()->whereKey($campaign->id)->update(['status' => 'closed', 'closed_at' => now()]);
+        }
+    });
+
+    $this->actingAs($this->hr)->post(route('tenant.seating.survey.close', [$this->tenant, $this->plant->id]))->assertSessionHasErrors(['survey' => 'La encuesta ya se cerró.']);
+
+    expect(AuditEntry::query()->where('event', 'campaign.closed')->count())->toBe(0);
 });
 
 it('lets only who manages Ley Silla close the survey, and only of a center of the company', function (): void {

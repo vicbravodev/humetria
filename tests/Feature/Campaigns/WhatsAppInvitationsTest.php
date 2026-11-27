@@ -9,6 +9,7 @@ use App\Modules\Campaigns\Enums\InvitationStatus;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Notifications\SurveyInvitation;
+use App\Modules\Campaigns\Support\CampaignInvitationLinks;
 use App\Modules\Messaging\Contracts\InvitationLinks;
 use App\Modules\Messaging\Contracts\WhatsAppGateway;
 use App\Modules\Messaging\Data\InvitationReference;
@@ -26,6 +27,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+
+mutates(CampaignInvitationLinks::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-02 17:00:00');
@@ -200,6 +203,20 @@ it('tells Messaging, when it runs, the phone, the template, the two parameters a
     $campaign->update(['status' => App\Modules\Campaigns\Enums\CampaignStatus::Closed, 'closed_at' => now()]);
     expect($links->whatsApp($participant->id))->toBeNull()
         ->and($links->whatsApp((string) Illuminate\Support\Str::uuid()))->toBeNull();
+});
+
+it('tells Messaging nothing for a person who lost their mobile or left the roster', function (): void {
+    [$campaign] = whatsAppLaunch($this->tenant, $this->plant, $this->hr, 6);
+    $participant = Participant::query()->withoutGlobalScopes()->where('campaign_id', $campaign->id)->firstOrFail();
+    $links = collect(app()->tagged(InvitationLinks::TAG))->first(fn (InvitationLinks $links): bool => $links->type() === InvitationReference::CAMPAIGN_PARTICIPANT);
+    $person = App\Modules\Organization\Models\Employee::query()->withoutGlobalScopes()->findOrFail($participant->employee_id);
+    $mobile = $person->mobile;
+    resolve(App\Modules\Tenancy\Contracts\Companies::class)->enter($this->tenant->id);
+
+    $person->update(['mobile' => null]);
+    expect($links->whatsApp($participant->id))->toBeNull();
+    $person->update(['mobile' => $mobile, 'deactivated_at' => now()]);
+    expect($links->whatsApp($participant->id))->toBeNull();
 });
 
 it('goes all the way to the gateway with the real invitation: the phone, the parameters and the participant\'s link', function (): void {

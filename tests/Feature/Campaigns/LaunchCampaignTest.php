@@ -12,6 +12,8 @@ use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Models\ParticipantInstrument;
 use App\Modules\Campaigns\Notifications\SurveyInvitation;
+use App\Modules\Campaigns\Support\CampaignInstruments;
+use App\Modules\Campaigns\Support\InvitationComposer;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -21,7 +23,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
-mutates(LaunchCampaign::class, QueueSurveyInvitations::class, DeadlineRequest::class, SurveyInvitation::class);
+mutates(LaunchCampaign::class, QueueSurveyInvitations::class, DeadlineRequest::class, SurveyInvitation::class, CampaignInstruments::class, InvitationComposer::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-02 17:00:00');
@@ -279,3 +281,30 @@ it('launches when the mail fits the quota exactly', function (): void {
 
     expect($campaign->refresh()->status)->toBe(CampaignStatus::Active);
 });
+
+it('writes the participants of a large workforce in blocks of 1,000 rows, under the parameter limit of Postgres', function (int $people, int $inserts): void {
+    $area = App\Modules\Organization\Models\Area::factory()->create(['tenant_id' => $this->tenant->id]);
+    $ids = [];
+    $rows = [];
+
+    for ($i = 0; $i < $people; $i++) {
+        $ids[] = $id = (string) Illuminate\Support\Str::uuid();
+        $rows[] = ['id' => $id, 'tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'area_id' => $area->id, 'name' => "Persona {$i}", 'gender' => 'female', 'job_title' => 'Operador', 'created_at' => now(), 'updated_at' => now()];
+    }
+
+    Illuminate\Support\Facades\DB::table('employees')->insert($rows);
+    $campaign = draftFor($this->tenant, $this->plant, $this->hr);
+    Participant::query()->withoutGlobalScopes()->where('campaign_id', $campaign->id)->delete();
+    $queries = [];
+    Illuminate\Support\Facades\DB::listen(function (Illuminate\Database\Events\QueryExecuted $query) use (&$queries): void {
+        $queries[] = $query->sql;
+    });
+
+    CampaignInstruments::enroll($campaign, array_fill_keys($ids, false));
+
+    expect(array_filter($queries, fn (string $sql): bool => str_starts_with($sql, 'insert into "campaign_participants"')))->toHaveCount($inserts)
+        ->and(Participant::query()->withoutGlobalScopes()->where('campaign_id', $campaign->id)->count())->toBe($people);
+})->with([
+    'exactly 1,000 people: one block' => [1000, 1],
+    '1,001 people: two blocks' => [1001, 2],
+]);

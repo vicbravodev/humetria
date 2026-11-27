@@ -35,6 +35,7 @@ function mutationExemptClasses(): array
             'App\Modules\Assistant\Support\PanelLinks',
         ],
         'DTO o valor de solo constructor: no decide nada, lo arma y lo lee lógica que sí se muta.' => [
+            'App\Modules\Campaigns\Support\OpenedSurvey',
             'App\Modules\Billing\Support\UnitCost',
         ],
         'Catálogos fijos del SAT (régimen fiscal y uso del CFDI): validar el código lo fijan los tests de AccountRules, que sí se muta, y mutar cada renglón del catálogo no mide ninguna decisión.' => [
@@ -44,13 +45,6 @@ function mutationExemptClasses(): array
             'App\Modules\Blog\Support\BlogTools',
         ],
         'Pendiente de clasificar (26 nov 2026): entra a la mutación o pasa arriba con su razón. Esta lista solo se achica.' => [
-            'App\Modules\Campaigns\Support\CampaignClock',
-            'App\Modules\Campaigns\Support\CampaignInstruments',
-            'App\Modules\Campaigns\Support\CampaignInvitationLinks',
-            'App\Modules\Campaigns\Support\CompanyCenterSurveys',
-            'App\Modules\Campaigns\Support\InstrumentTally',
-            'App\Modules\Campaigns\Support\InvitationComposer',
-            'App\Modules\Campaigns\Support\OpenedSurvey',
             'App\Modules\Compensation\Support\BenefitRows',
             'App\Modules\Compensation\Support\CompensationStart',
             'App\Modules\Compensation\Support\ConceptLabels',

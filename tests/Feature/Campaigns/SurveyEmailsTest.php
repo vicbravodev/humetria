@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Campaigns\Jobs\SendSurveyInvitations;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Notifications\SurveyInvitation;
+use App\Modules\Campaigns\Support\InvitationComposer;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -16,7 +17,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Notification;
 
-mutates(SurveyInvitation::class, SendSurveyInvitations::class);
+mutates(SurveyInvitation::class, SendSurveyInvitations::class, InvitationComposer::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-02 17:00:00');

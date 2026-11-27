@@ -8,6 +8,7 @@ use App\Modules\Campaigns\Jobs\SendSurveyInvitations;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Notifications\SurveyInvitation;
+use App\Modules\Campaigns\Support\InvitationComposer;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 
-mutates(QueueSurveyInvitations::class, SendSurveyInvitations::class);
+mutates(QueueSurveyInvitations::class, SendSurveyInvitations::class, InvitationComposer::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-02 17:00:00');
