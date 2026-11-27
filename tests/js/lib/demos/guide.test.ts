@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import {
     celebrationOf,
     continueLabel,
+    guideAnswer,
     guideCount,
     isDemoGuide,
     nextCelebration,
@@ -119,6 +120,24 @@ describe('continueLabel', () => {
             continueLabel({ ...answers, count: null, of: null, noun: null }),
         ).toBeNull();
         expect(continueLabel({ ...answers, kind: 'do' })).toBeNull();
+    });
+});
+
+describe('guideAnswer', () => {
+    it('takes the guide, or no guide when the server says there is none', () => {
+        expect(guideAnswer(200, guide, true)).toEqual(guide);
+        expect(guideAnswer(200, null, true)).toBeNull();
+        expect(guideAnswer(404, undefined, true)).toBeNull();
+        expect(guideAnswer(403, undefined, true)).toBeNull();
+        expect(guideAnswer(401, undefined, true)).toBeNull();
+    });
+
+    it('keeps the guide on anything else: a skip refused, a server error, a page that is not the guide', () => {
+        expect(guideAnswer(404, undefined, false)).toBeUndefined();
+        expect(guideAnswer(500, undefined, true)).toBeUndefined();
+        expect(guideAnswer(429, undefined, true)).toBeUndefined();
+        expect(guideAnswer(200, undefined, true)).toBeUndefined();
+        expect(guideAnswer(200, { tours: 'x' }, true)).toBeUndefined();
     });
 });
 

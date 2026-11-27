@@ -188,6 +188,19 @@ it('skips a step', function (): void {
     expect(DemoSession::query()->firstOrFail()->skipped_steps)->toBe(['nom035.launch']);
 });
 
+it('keeps the guide when a skip is refused, and asks for it again', function (): void {
+    $campaign = presentedEvaluation();
+
+    visit("/admin/alba-demo/campaigns/{$campaign->id}")
+        ->assertSeeIn(GUIDE_DOCK, 'Lanza la evaluación')
+        // The skip answers 404, as when its step stopped being one the session has; the guide's own poll still works.
+        ->assertScript("() => { const real = window.fetch.bind(window); window.guidePolls = 0; window.fetch = (input, init) => { const url = String(input instanceof Request ? input.url : input); if (url.includes('/skip')) { return Promise.resolve(new Response('', { status: 404 })); } if (url.endsWith('/session/guide')) { window.guidePolls += 1; } return real(input, init); }; return 'ready'; }", 'ready')
+        ->click('Saltar paso')
+        ->assertScript('() => new Promise((resolve) => { const start = performance.now(); const check = () => window.guidePolls > 0 || performance.now() - start > 2500 ? resolve(window.guidePolls > 0) : setTimeout(check, 50); check(); })', true)
+        ->assertSeeIn(GUIDE_DOCK, 'Lanza la evaluación')
+        ->assertNoJavaScriptErrors();
+});
+
 it('leaves the owner first steps aside while the guide shows', function (): void {
     config(['first_steps.enabled' => true]);
     $campaign = presentedEvaluation();

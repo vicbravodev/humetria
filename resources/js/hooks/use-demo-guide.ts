@@ -1,8 +1,8 @@
 import { usePage } from '@inertiajs/react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { xsrfToken } from '@/lib/assistant/xsrf';
 import {
-    isDemoGuide,
+    guideAnswer,
     nextCelebration,
     shownCelebration,
 } from '@/lib/demos/guide';
@@ -15,15 +15,14 @@ import type { DemoGuide } from '@/types/demo-guide';
 
 const POLL_MS = 3000;
 
-/** The guide an answer of the dock's endpoints carries: anything but a 200 with the guide (no session, a login page) is none. */
-async function guideFrom(response: Response): Promise<DemoGuide | null> {
-    if (!response.ok || response.redirected) {
-        return null;
-    }
+/** What an answer does to the guide (`guideAnswer`); undefined keeps it. Not JSON (a login page) is read as no body. */
+async function answerOf(
+    response: Response,
+    poll: boolean,
+): Promise<DemoGuide | null | undefined> {
+    const body: unknown = await response.json().catch(() => undefined);
 
-    const body: unknown = await response.json().catch(() => null);
-
-    return isDemoGuide(body) ? body : null;
+    return guideAnswer(response.redirected ? 0 : response.status, body, poll);
 }
 
 /** The line that celebrates, held while the guide stays on the step that came after it (the next poll brings none). */
@@ -39,9 +38,54 @@ function useCelebration(guide: DemoGuide | null): string | null {
 }
 
 /**
+ * The guide's requests, each numbered: only the answer of the latest one counts, so a poll that left before a skip and lands
+ * after it cannot take the dock back a step. A new page's guide supersedes them all.
+ */
+function useGuideRequests(setGuide: (guide: DemoGuide | null) => void) {
+    const latest = useRef(0);
+
+    const send = useCallback(
+        (request: () => Promise<Response>, poll: boolean): Promise<boolean> => {
+            latest.current += 1;
+            const mine = latest.current;
+
+            return request()
+                .then((response) => answerOf(response, poll))
+                .then((answer) => {
+                    if (mine === latest.current && answer !== undefined) {
+                        setGuide(answer);
+                    }
+
+                    return answer !== undefined;
+                })
+                .catch(() => false);
+        },
+        [setGuide],
+    );
+
+    const poll = useCallback(
+        () =>
+            send(
+                () =>
+                    fetch(guideRoute.url(), {
+                        headers: { Accept: 'application/json' },
+                    }),
+                true,
+            ),
+        [send],
+    );
+
+    const supersede = useCallback(() => {
+        latest.current += 1;
+    }, []);
+
+    return { send, poll, supersede };
+}
+
+/**
  * The guide of the demo session: the page's (every full visit brings it fresh) and, while the dock is open, its own poll
  * every 3 s with fetch, never a partial reload (one would run the page's controller again, and some write to the audit
- * trail). `skip` moves on from the current step with the guide the server answers.
+ * trail). `skip` moves on from the current step with the guide the server answers; refused, it asks for the guide again.
  */
 export function useDemoGuide(polling: boolean): {
     guide: DemoGuide | null;
@@ -51,6 +95,7 @@ export function useDemoGuide(polling: boolean): {
     const shared = usePage().props.demoGuide;
     const [guide, setGuide] = useState(shared);
     const [seen, setSeen] = useState(shared);
+    const { send, poll, supersede } = useGuideRequests(setGuide);
 
     if (shared !== seen) {
         setSeen(shared);
@@ -60,42 +105,40 @@ export function useDemoGuide(polling: boolean): {
     const active = guide !== null;
 
     useEffect(() => {
+        // A new page's guide supersedes any answer still on its way.
+        supersede();
+
         if (!active || !polling) {
             return;
         }
 
-        // A new page's guide supersedes a poll still on its way: it would bring the guide back a step.
-        const controller = new AbortController();
-        const timer = window.setInterval(() => {
-            fetch(guideRoute.url(), {
-                headers: { Accept: 'application/json' },
-                signal: controller.signal,
-            })
-                .then(guideFrom)
-                .then(setGuide)
-                .catch(() => undefined);
-        }, POLL_MS);
+        const timer = window.setInterval(() => void poll(), POLL_MS);
 
-        return () => {
-            window.clearInterval(timer);
-            controller.abort();
-        };
-    }, [active, polling, shared]);
+        return () => window.clearInterval(timer);
+    }, [active, polling, shared, poll, supersede]);
 
-    const skip = useCallback((step: string) => {
-        const xsrf = xsrfToken(document.cookie);
+    const skip = useCallback(
+        (step: string) => {
+            const xsrf = xsrfToken(document.cookie);
 
-        fetch(skipRoute.url(step), {
-            method: 'POST',
-            headers: {
-                Accept: 'application/json',
-                ...(xsrf === null ? {} : { 'X-XSRF-TOKEN': xsrf }),
-            },
-        })
-            .then(guideFrom)
-            .then(setGuide)
-            .catch(() => undefined);
-    }, []);
+            void send(
+                () =>
+                    fetch(skipRoute.url(step), {
+                        method: 'POST',
+                        headers: {
+                            Accept: 'application/json',
+                            ...(xsrf === null ? {} : { 'X-XSRF-TOKEN': xsrf }),
+                        },
+                    }),
+                false,
+            ).then((taken) => {
+                if (!taken) {
+                    void poll();
+                }
+            });
+        },
+        [send, poll],
+    );
 
     return { guide, celebration: useCelebration(guide), skip };
 }

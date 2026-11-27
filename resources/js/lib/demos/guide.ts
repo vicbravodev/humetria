@@ -130,3 +130,24 @@ export function isDemoGuide(value: unknown): value is DemoGuide {
         orString(value['justDone'])
     );
 }
+
+// The poll's answers that mean the session is over for this person: signed out, no longer presenting, no session.
+const GONE = [401, 403, 404];
+
+/**
+ * What an answer of the dock's endpoints does to the guide: the guide it brings; null (no guide) for a 200 whose body is a
+ * literal null, or for a poll the server refuses (`GONE`); undefined (keep the guide on screen) for anything else, so a skip
+ * refused because its step just got done, a server error or a page that is not the guide never hides it mid-demo.
+ * `body` is undefined when the answer was not JSON.
+ */
+export function guideAnswer(
+    status: number,
+    body: unknown,
+    poll: boolean,
+): DemoGuide | null | undefined {
+    if (status === 200) {
+        return body === null ? null : isDemoGuide(body) ? body : undefined;
+    }
+
+    return poll && GONE.includes(status) ? null : undefined;
+}
