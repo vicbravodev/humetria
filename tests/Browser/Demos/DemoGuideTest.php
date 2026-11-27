@@ -208,6 +208,22 @@ it('closes the sheet on a phone when the veil around it is tapped', function ():
         ->assertPresent('[aria-controls="demo-guide"]');
 });
 
+it('keeps the sheet minimize button clear of the DEMO tab on a phone', function (): void {
+    $campaign = presentedEvaluation();
+
+    visit("/admin/alba-demo/campaigns/{$campaign->id}")->on()->mobile()
+        ->assertSeeIn(GUIDE_DOCK, 'Lanza la evaluación')
+        ->assertScript(<<<'JS'
+            () => {
+                const button = document.querySelector('[aria-label="Minimizar la guía"]').getBoundingClientRect();
+                const tab = document.querySelector('[data-slot="demo-mark"]').getBoundingClientRect();
+
+                // Clear of the band the tab runs down, at whatever height the sheet reaches.
+                return button.right <= tab.left;
+            }
+            JS, true);
+});
+
 it('keeps the guide when a skip is refused, and asks for it again', function (): void {
     $campaign = presentedEvaluation();
 
