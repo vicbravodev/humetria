@@ -378,3 +378,19 @@ it('logs each move of the guide once, by its steps', function (): void {
     Log::shouldHaveReceived('info')->with('demo.session_guide_moved', ['session_id' => $session->id, 'from' => 'base.center', 'to' => 'base.people'])->once();
     Log::shouldHaveReceived('info')->with('demo.session_guide_moved', Mockery::any())->twice();
 });
+
+it('logs a rewind only when it takes something back', function (): void {
+    $session = guidedSession(['nom035']);
+    presentAs();
+    Log::spy();
+
+    $this->postJson(route('demo-room.session.rewind', 'base.people'))->assertOk();
+    Log::shouldNotHaveReceived('info', ['demo.session_step_rewound', Mockery::any()]);
+
+    $this->postJson(route('demo-room.session.skip', 'base.people'))->assertOk();
+    $this->postJson(route('demo-room.session.rewind', 'base.people'))->assertOk();
+    $this->postJson(route('demo-room.session.rewind', 'base.people'))->assertOk();
+
+    expect($session->refresh()->skipped_steps)->toBe([]);
+    Log::shouldHaveReceived('info')->with('demo.session_step_rewound', ['session_id' => $session->id, 'step' => 'base.people'])->once();
+});

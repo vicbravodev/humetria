@@ -27,9 +27,17 @@ final readonly class RewindDemoStep
             return false;
         }
 
-        // jsonb's «-» takes a string out of an array, wherever it is; a step without a visit takes nothing out of visited.
-        DB::update('UPDATE demo_sessions SET skipped_steps = skipped_steps - ?, visited = visited - ? WHERE id = ?', [$key, $step->visit ?? '', $session->id]);
-        Log::info('demo.session_step_rewound', ['session_id' => $session->id, 'step' => $key]);
+        // jsonb's «-» takes a string out of an array, wherever it is; a step without a visit takes nothing out of visited. Only a
+        // row that holds the skip or the visit is touched, so a rewind that takes nothing back is not logged.
+        $visit = $step->visit ?? '';
+        $rewound = DB::update(
+            'UPDATE demo_sessions SET skipped_steps = skipped_steps - ?, visited = visited - ? WHERE id = ? AND (skipped_steps @> jsonb_build_array(?::text) OR visited @> jsonb_build_array(?::text))',
+            [$key, $visit, $session->id, $key, $visit],
+        );
+
+        if ($rewound > 0) {
+            Log::info('demo.session_step_rewound', ['session_id' => $session->id, 'step' => $key]);
+        }
 
         return true;
     }
