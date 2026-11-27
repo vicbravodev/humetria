@@ -9,12 +9,13 @@ use App\Modules\Organization\Models\Employee;
 use App\Modules\Responses\Models\TraumaScreening;
 use App\Modules\Results\Http\Controllers\ScreeningController;
 use App\Modules\Results\Models\ScreeningReferral;
+use App\Modules\Results\Support\ScreeningReferrals;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ScreeningController::class);
+mutates(ScreeningController::class, ScreeningReferrals::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['slug' => 'acme']);
