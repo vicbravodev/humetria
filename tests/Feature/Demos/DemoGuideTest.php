@@ -111,6 +111,9 @@ it('shares the guide to the superadmin as owner and as HR', function (string $as
             'target' => 'work-centers-list',
             'ask' => null,
             'live' => null,
+            'count' => null,
+            'of' => null,
+            'noun' => null,
             'index' => 1,
             'total' => 2,
         ])

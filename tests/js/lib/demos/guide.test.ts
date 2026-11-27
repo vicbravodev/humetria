@@ -5,7 +5,6 @@ import {
     continueLabel,
     guideCount,
     isDemoGuide,
-    liveCount,
     nextCelebration,
     progressLabel,
     shownCelebration,
@@ -24,6 +23,9 @@ const launch: DemoGuideStep = {
     target: 'launch-evaluation',
     ask: null,
     live: null,
+    count: null,
+    of: null,
+    noun: null,
     index: 2,
     total: 6,
 };
@@ -35,6 +37,9 @@ const answers: DemoGuideStep = {
     kind: 'watch',
     target: 'evaluation-progress',
     live: 'Llegaron 3 de 5 respuestas',
+    count: 3,
+    of: 5,
+    noun: 'respuestas',
     index: 3,
 };
 
@@ -92,50 +97,27 @@ describe('guideCount', () => {
     });
 });
 
-describe('liveCount', () => {
-    it('reads the answers that came in out of those invited', () => {
-        expect(liveCount('Llegaron 3 de 5 respuestas')).toEqual({
-            count: 3,
-            total: 5,
-            noun: 'respuestas',
-        });
-        expect(liveCount('Llegó 1 de 5 respuestas')).toEqual({
-            count: 1,
-            total: 5,
-            noun: 'respuesta',
-        });
-    });
-
-    it('reads a count without a total', () => {
-        expect(liveCount('4 marcas en el centro')).toEqual({
-            count: 4,
-            total: null,
-            noun: 'marcas',
-        });
-    });
-
-    it('reads nothing from a sentence without a count', () => {
-        expect(liveCount(null)).toBeNull();
-        expect(liveCount('El centro aún no tiene zona.')).toBeNull();
-    });
-});
-
 describe('continueLabel', () => {
     it('moves on with what came in, on a step the audience does', () => {
         expect(continueLabel(answers)).toBe('Seguir con 3 respuestas');
+        expect(continueLabel({ ...answers, count: 1, noun: 'respuesta' })).toBe(
+            'Seguir con 1 respuesta',
+        );
         expect(
-            continueLabel({ ...answers, live: 'Llegó 1 de 5 respuestas' }),
-        ).toBe('Seguir con 1 respuesta');
-        expect(
-            continueLabel({ ...answers, live: '4 marcas en el centro' }),
-        ).toBe('Seguir con 4 marcas');
+            continueLabel({
+                ...answers,
+                count: 4,
+                of: null,
+                noun: 'marcas en el centro',
+            }),
+        ).toBe('Seguir con 4 marcas en el centro');
     });
 
-    it('skips when nothing came in, nothing is told or the presenter acts', () => {
+    it('skips when nothing came in, nothing is counted or the presenter acts', () => {
+        expect(continueLabel({ ...answers, count: 0 })).toBeNull();
         expect(
-            continueLabel({ ...answers, live: 'Llegaron 0 de 5 respuestas' }),
+            continueLabel({ ...answers, count: null, of: null, noun: null }),
         ).toBeNull();
-        expect(continueLabel({ ...answers, live: null })).toBeNull();
         expect(continueLabel({ ...answers, kind: 'do' })).toBeNull();
     });
 });
@@ -179,6 +161,9 @@ describe('isDemoGuide', () => {
         expect(isDemoGuide({ ...guide, current: { key: 'x' } })).toBe(false);
         expect(
             isDemoGuide({ ...guide, current: { ...launch, kind: 'other' } }),
+        ).toBe(false);
+        expect(
+            isDemoGuide({ ...guide, current: { ...answers, count: '3' } }),
         ).toBe(false);
         expect(isDemoGuide({ ...guide, tours: [{ key: 'x' }] })).toBe(false);
     });

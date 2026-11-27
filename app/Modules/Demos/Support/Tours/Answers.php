@@ -28,6 +28,6 @@ final class Answers
         $verb = $answered === 1 ? 'Llegó' : 'Llegaron';
         $noun = $invited === 1 ? 'respuesta' : 'respuestas';
 
-        return new StepState($done, "{$verb} {$answered} de {$invited} {$noun}");
+        return new StepState($done, "{$verb} {$answered} de {$invited} {$noun}", $answered, $invited, $answered === 1 ? 'respuesta' : 'respuestas');
     }
 }

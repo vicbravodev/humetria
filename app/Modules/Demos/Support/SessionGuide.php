@@ -136,6 +136,9 @@ final class SessionGuide implements DemoGuide
             'target' => $step->target,
             'ask' => $step->ask,
             'live' => $state->live,
+            'count' => $state->count,
+            'of' => $state->of,
+            'noun' => $state->noun,
             'index' => $index === false ? 1 : $index + 1,
             'total' => count($own),
         ];

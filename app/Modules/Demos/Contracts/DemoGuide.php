@@ -9,7 +9,7 @@ namespace App\Modules\Demos\Contracts;
  * its HR, through impersonation. Nobody else, not even the demo's own people, ever gets it.
  *
  * @phpstan-type GuideTour array{key: string, title: string, done: int, total: int}
- * @phpstan-type GuideStep array{key: string, tour: string, title: string, todo: string, why: string, kind: string, href: string, target: string|null, ask: string|null, live: string|null, index: int, total: int}
+ * @phpstan-type GuideStep array{key: string, tour: string, title: string, todo: string, why: string, kind: string, href: string, target: string|null, ask: string|null, live: string|null, count: int|null, of: int|null, noun: string|null, index: int, total: int}
  * @phpstan-type Guide array{tours: list<GuideTour>, current: GuideStep|null, finished: bool, justDone: string|null}
  */
 interface DemoGuide

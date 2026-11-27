@@ -23,3 +23,13 @@ it('tells nothing live while nobody was invited', function (): void {
     expect(Answers::state(true, 0, 0, false))->toEqual(new StepState(false, null))
         ->and(Answers::state(true, 0, 0, true))->toEqual(new StepState(true, null));
 });
+
+it('gives the guide the count apart from the sentence: how many answered, of how many, and the noun for that count', function (int $invited, int $answered, string $noun): void {
+    $state = Answers::state(true, $invited, $answered, false);
+
+    expect([$state->count, $state->of, $state->noun])->toBe([$answered, $invited, $noun]);
+})->with([
+    'none of five' => [5, 0, 'respuestas'],
+    'one of five' => [5, 1, 'respuesta'],
+    'three of five' => [5, 3, 'respuestas'],
+]);

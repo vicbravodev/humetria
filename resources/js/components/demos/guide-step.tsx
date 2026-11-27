@@ -45,7 +45,11 @@ export default function GuideStep({
             {current.live !== null && (
                 <div className="flex flex-col gap-1">
                     <p className={LABEL}>Qué está pasando</p>
-                    <GuideLive live={current.live} />
+                    <GuideLive
+                        live={current.live}
+                        count={current.count}
+                        of={current.of}
+                    />
                 </div>
             )}
             <div className="flex flex-col gap-1 rounded-lg bg-muted p-3">

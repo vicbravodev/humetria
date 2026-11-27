@@ -18,6 +18,10 @@ export type DemoGuideStep = {
     target: string | null;
     ask: string | null;
     live: string | null;
+    /** What `live` counts, out of how many (when it says so), and the noun for that count: «3», «5», «respuestas». */
+    count: number | null;
+    of: number | null;
+    noun: string | null;
     index: number;
     total: number;
 };

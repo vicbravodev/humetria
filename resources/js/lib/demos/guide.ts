@@ -29,36 +29,14 @@ export function guideCount(guide: DemoGuide): string {
     return `${Math.min(done + (guide.finished ? 0 : 1), total)} de ${total}`;
 }
 
-/**
- * The count in a step's live sentence («Llegaron 3 de 5 respuestas», «4 marcas en el centro»), with its noun said for that
- * count. ponytail: it reads the server's fixed copy (Demos\Support\Tours); a new live sentence shape needs a case here.
- */
-export function liveCount(
-    live: string | null,
-): { count: number; total: number | null; noun: string } | null {
-    const found = live?.match(/(\d+)(?: de (\d+))? (\p{L}+)/u);
-
-    if (found === null || found === undefined) {
-        return null;
-    }
-
-    const count = Number(found[1]);
-    const noun = found[3] ?? '';
-
-    return {
-        count,
-        total: found[2] === undefined ? null : Number(found[2]),
-        noun: count === 1 ? noun.replace(/s$/u, '') : noun,
-    };
-}
-
 /** «Seguir con 3 respuestas»: on a step the audience does, moving on with what already came in; null when there is none. */
 export function continueLabel(current: DemoGuideStep): string | null {
-    const live = current.kind === 'watch' ? liveCount(current.live) : null;
-
-    return live === null || live.count === 0
+    return current.kind !== 'watch' ||
+        current.count === null ||
+        current.count === 0 ||
+        current.noun === null
         ? null
-        : `Seguir con ${live.count} ${live.noun}`;
+        : `Seguir con ${current.count} ${current.noun}`;
 }
 
 /** The line that celebrates: the end of the session, or the step just done; null when there is nothing to celebrate. */
@@ -116,6 +94,10 @@ function orString(value: unknown): boolean {
     return value === null || typeof value === 'string';
 }
 
+function orNumber(value: unknown): boolean {
+    return value === null || typeof value === 'number';
+}
+
 function isTour(value: unknown): boolean {
     return (
         isRecord(value) &&
@@ -130,7 +112,10 @@ function isStep(value: unknown): boolean {
         hasStrings(value, ['key', 'tour', 'title', 'todo', 'why', 'href']) &&
         hasNumbers(value, ['index', 'total']) &&
         (value['kind'] === 'do' || value['kind'] === 'watch') &&
-        [value['target'], value['ask'], value['live']].every(orString)
+        [value['target'], value['ask'], value['live'], value['noun']].every(
+            orString,
+        ) &&
+        [value['count'], value['of']].every(orNumber)
     );
 }
 
