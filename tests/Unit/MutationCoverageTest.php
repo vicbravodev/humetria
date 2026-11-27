@@ -77,11 +77,6 @@ function mutationExemptClasses(): array
             'App\Modules\Leave\Support\EmployeeLock',
         ],
         'Pendiente de clasificar (26 nov 2026): entra a la mutación o pasa arriba con su razón. Esta lista solo se achica.' => [
-            'App\Modules\Messaging\Listeners\MarkMailSent',
-            'App\Modules\Messaging\Support\DeliveryFailures',
-            'App\Modules\Messaging\Support\MailDeliveryStash',
-            'App\Modules\Messaging\Support\MetaStatus',
-            'App\Modules\Messaging\Support\TemplateExport',
             'App\Modules\Results\Support\ResultsClock',
             'App\Modules\Results\Support\RiskLevels',
             'App\Modules\Results\Support\SuppressionResult',
