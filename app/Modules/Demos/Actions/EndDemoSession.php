@@ -8,7 +8,6 @@ use App\Actions\RecordAudit;
 use App\Modules\Demos\Enums\DemoSessionStatus;
 use App\Modules\Demos\Models\DemoSession;
 use App\Modules\Tenancy\Contracts\DemoCompanies;
-use Illuminate\Support\Facades\Log;
 
 /**
  * Ends the open session: it goes to «ending» and the demo resets, wiping whatever the audience left; ResetDemo marks it
@@ -29,18 +28,26 @@ final readonly class EndDemoSession
         }
 
         $was = $session->status;
-        // Before the reset is queued: it may finish, and look for the session ending, before this returns.
-        $session->forceFill(['status' => DemoSessionStatus::Ending])->save();
+
+        // Before the reset is queued: it may finish, and look for the session ending, before this returns. A session
+        // another request just moved to ending is that request's to end.
+        $moved = $was !== DemoSessionStatus::Ending && $session->markEnding();
+
+        if ($was !== DemoSessionStatus::Ending && ! $moved) {
+            return 'busy';
+        }
+
         $outcome = $this->runs->handle('reset');
 
         if ($outcome !== 'started') {
-            $session->forceFill(['status' => $was])->save();
+            if ($moved) {
+                $session->undoEnding($was);
+            }
 
             return $outcome;
         }
 
         $this->audit->handle('demo.session_ended', $session, ['tenant_id' => $this->demos->id()]);
-        Log::info('demo.session_ending', ['session_id' => $session->id]);
 
         return $outcome;
     }

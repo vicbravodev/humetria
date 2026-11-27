@@ -84,6 +84,29 @@ final class DemoSession extends Model
         }
     }
 
+    /**
+     * Its end starts: from the status it was read with to «ending». False when it already was ending or another request
+     * moved it first, so only the request that moved it may give it back (undoEnding).
+     */
+    public function markEnding(): bool
+    {
+        if ($this->status === DemoSessionStatus::Ending || ! $this->moveFrom($this->status, ['status' => DemoSessionStatus::Ending])) {
+            return false;
+        }
+
+        Log::info('demo.session_ending', ['session_id' => $this->id]);
+
+        return true;
+    }
+
+    /** Its reset could not start: back to `$was`, only while still ending (a reset that finished meanwhile keeps it ended). */
+    public function undoEnding(DemoSessionStatus $was): void
+    {
+        if ($this->moveFrom(DemoSessionStatus::Ending, ['status' => $was])) {
+            Log::info('demo.session_ending_undone', ['session_id' => $this->id, 'status' => $was->value]);
+        }
+    }
+
     public function markEnded(): void
     {
         $this->forceFill(['status' => DemoSessionStatus::Ended, 'ended_at' => now()])->save();

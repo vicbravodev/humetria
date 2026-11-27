@@ -15,6 +15,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\TimeoutExceededException;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 
 /*
@@ -287,6 +288,32 @@ it('keeps the session as it was when the demo is busy and cannot reset', functio
         ->and(DB::table('audit_entries')->where('event', 'demo.session_ended')->count())->toBe(0);
 });
 
+it('leaves the end to the request that moved the session first', function (): void {
+    Queue::fake();
+    $session = openSession();
+    // Another click moves it to ending right after this one read it.
+    DemoSession::retrieved(fn () => DB::table('demo_sessions')->where('status', 'active')->update(['status' => 'ending']));
+
+    $this->actingAs(superadmin())
+        ->delete(route('demo-room.session.end'))
+        ->assertSessionHas('inertia.flash_data.toast.type', 'error');
+
+    expect($session->refresh()->status)->toBe(DemoSessionStatus::Ending)
+        ->and(DemoRun::query()->count())->toBe(0)
+        ->and(DB::table('audit_entries')->where('event', 'demo.session_ended')->count())->toBe(0);
+});
+
+it('keeps an ending session ending when its second try cannot reset', function (): void {
+    $session = openSession(DemoSessionStatus::Ending);
+    DemoRun::start('reset');
+    Log::spy();
+
+    $this->actingAs(superadmin())->delete(route('demo-room.session.end'));
+
+    expect($session->refresh()->status)->toBe(DemoSessionStatus::Ending);
+    Log::shouldNotHaveReceived('info', ['demo.session_ending_undone', Mockery::any()]);
+});
+
 it('keeps the session as it was when the queue cannot take the reset', function (): void {
     Queue::shouldReceive('connection')->andThrow(new RuntimeException('Connection refused [redis-long]'));
     $session = openSession();
@@ -296,6 +323,36 @@ it('keeps the session as it was when the queue cannot take the reset', function 
         ->assertSessionHas('inertia.flash_data.toast', ['type' => 'error', 'message' => 'No se pudo encolar la preparación: inténtalo de nuevo en unos minutos.']);
 
     expect($session->refresh()->status)->toBe(DemoSessionStatus::Active);
+});
+
+it('moves the session to ending once, logging it with its id', function (): void {
+    $session = openSession();
+    $stale = DemoSession::query()->findOrFail($session->id);
+    Log::spy();
+
+    expect($session->markEnding())->toBeTrue()
+        ->and($session->status)->toBe(DemoSessionStatus::Ending)
+        ->and($stale->markEnding())->toBeFalse()
+        ->and($session->markEnding())->toBeFalse()
+        ->and($session->refresh()->status)->toBe(DemoSessionStatus::Ending);
+    Log::shouldHaveReceived('info')->with('demo.session_ending', ['session_id' => $session->id])->once();
+});
+
+it('gives the session its status back only while it is still ending', function (): void {
+    $session = openSession();
+    $session->markEnding();
+    $late = DemoSession::query()->findOrFail($session->id);
+    $late->markEnded();
+
+    $session->undoEnding(DemoSessionStatus::Active);
+
+    expect($session->refresh()->status)->toBe(DemoSessionStatus::Ended);
+
+    $other = openSession();
+    $other->markEnding();
+    $other->undoEnding(DemoSessionStatus::Active);
+
+    expect($other->refresh()->status)->toBe(DemoSessionStatus::Active);
 });
 
 describe('the preparation of a session', function (): void {
