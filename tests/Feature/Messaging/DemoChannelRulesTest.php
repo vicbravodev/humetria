@@ -3,10 +3,14 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Billing\Models\UsageCounter;
+use App\Modules\Billing\Models\UsageEvent;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Notifications\SurveyInvitation;
+use App\Modules\Messaging\Contracts\WhatsAppGateway;
 use App\Modules\Messaging\Support\ChannelRules;
+use App\Modules\Messaging\Support\FakeWhatsAppGateway;
 use App\Modules\Messaging\Support\RecipientHash;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -113,4 +117,20 @@ it('keeps WhatsApp closed in the demo while its channel is off', function (): vo
     demoLaunch($tenant, $hr, $plant);
 
     expect(demoChannelsSent())->toBe(['publico0@example.test' => ['mail'], 'publico1@example.test' => ['mail']]);
+});
+
+it('lets the demo send mail and WhatsApp without a billed plan and without counting them', function (): void {
+    $gateway = new FakeWhatsAppGateway;
+    app()->instance(WhatsAppGateway::class, $gateway);
+    [$tenant, $hr, $plant, $staff] = demoChannelsCompany();
+    // Someone of the audience who gave only their number: WhatsApp is the only way to reach them.
+    $staff[1]->update(['email' => null]);
+
+    $campaign = demoLaunch($tenant, $hr, $plant);
+
+    expect(Participant::query()->withoutGlobalScopes()->where('campaign_id', $campaign->id)->pluck('invitation_status')->map->value->all())->toBe(['sent', 'sent'])
+        ->and($gateway->sent())->toHaveCount(2)
+        ->and(UsageEvent::query()->where('tenant_id', $tenant->id)->count())->toBe(0)
+        ->and(UsageCounter::query()->where('tenant_id', $tenant->id)->sum('reserved'))->toEqual(0)
+        ->and(UsageCounter::query()->where('tenant_id', $tenant->id)->sum('used'))->toEqual(0);
 });

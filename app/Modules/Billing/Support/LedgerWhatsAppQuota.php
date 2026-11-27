@@ -10,6 +10,7 @@ use App\Modules\Billing\Data\MessagePrice;
 use App\Modules\Billing\Exceptions\WhatsAppQuotaExceeded;
 use App\Modules\Tenancy\Contracts\CompanyChannels;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
+use App\Modules\Tenancy\Contracts\DemoCompanies;
 use App\Support\SupportContact;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Log;
@@ -22,6 +23,7 @@ final readonly class LedgerWhatsAppQuota implements WhatsAppQuota
         private CounterHold $hold,
         private CompanyChannels $channels,
         private MessagingCost $costs,
+        private DemoCompanies $demos,
     ) {}
 
     public function price(): MessagePrice
@@ -38,6 +40,11 @@ final readonly class LedgerWhatsAppQuota implements WhatsAppQuota
         }
 
         $tenantId = $this->tenant->id();
+
+        // The demo has no plan and is never billed (docs/operations/demo.md §5): its audience gets WhatsApp, held from nothing.
+        if ($this->demos->isDemo($tenantId)) {
+            return;
+        }
 
         // Unlike mail, a company with no plan has no WhatsApp: its quota is zero.
         $limit = min(
