@@ -29,7 +29,8 @@ El detalle que no hace falta en cada sesión vive en `docs/` y se lee cuando toc
   corre lo que tu cambio afecta), Pint y PHPStan. Nunca la suite completa tras cada cambio.
 - **La verificación completa es el CI** (job `ci` de `.github/workflows/tests.yml`, que espera a `build` —el frontend, una vez—,
   `checks`, `tests` en 3 shards, `coverage` —une los shards y aplica el 90 %—, `browser` en 4 shards y `ssr`; los shards se
-  reparten por tiempo con `tests/.pest/shards.json`, ver `docs/testing.md`). Terminado = CI en verde y cobertura ≥ 90%
+  reparten por tiempo con `tests/.pest/shards.json`, que se escribe con los tiempos del CI y nunca con `--update-shards`:
+  `docs/testing.md`, «Los shards»). `main` solo entra por PR con `ci` en verde (ruleset). Terminado = CI en verde y cobertura ≥ 90%
   (Unit/Feature y Vitest); no se baja el umbral.
   `composer ci:check` repite el CI en local: solo si el dueño lo pide o para reproducir un fallo del CI.
 - Un cambio que solo trae documentación que nadie lee (`docs/`, `.md` de la raíz) se salta el CI y el deploy

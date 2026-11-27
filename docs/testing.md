@@ -154,16 +154,42 @@ Los jobs corren en paralelo; `ci`, el check obligatorio, espera a todos:
 | `changes` | Decide si el cambio necesita el pipeline (`scripts/ci-code-changed.sh`). |
 | `build` | Construye el frontend una vez (`npm run build:ssr`) y lo sube como artefacto `assets`: `public/build`, `bootstrap/ssr` y los archivos de Wayfinder. |
 | `checks` | Auditoría, Pint, PHPStan, `vp check`, tsc y Vitest. No construye: genera Wayfinder con `wayfinder:generate --with-form`. |
-| `tests` (3 shards) | Unit y Feature con PCOV; cada shard guarda su cobertura (`--coverage-php`). |
+| `tests` (3 shards) | Unit y Feature con PCOV; cada shard guarda su cobertura (`--coverage-php`) y sus tiempos (`timings-tests-N`). |
 | `coverage` | Junta la cobertura de los shards (`scripts/coverage-merge.php`, con el merger de php-code-coverage) y aplica el 90 % (`scripts/coverage-min.php`). |
-| `browser` (4 shards) | Pest Browser. Si falla, sube las capturas (`tests/Browser/Screenshots`) como artefacto. |
+| `browser` (4 shards) | Pest Browser; guarda sus tiempos (`timings-browser-N`). Si falla, sube las capturas (`tests/Browser/Screenshots`) como artefacto. |
 | `ssr` | El bundle SSR con un Node real (usa el del job `build`: `SSR_PREBUILT=true`) y la imagen `ssr` con Docker. |
 
-- Los shards se reparten por **tiempo** con `tests/.pest/shards.json` (Pest: `--shard` usa los tiempos de cada clase).
-  Un archivo de prueba nuevo sin tiempo va por turno y Pest avisa que el archivo está viejo; se regenera de vez en cuando,
-  con la suite completa en verde: `php artisan test --update-shards --parallel --processes=4 --exclude-testsuite=Ssr`
-  (con `artisan test`: el servidor de Playwright lo arranca él). Los tiempos son de una Mac; en CI cambian las magnitudes, no
-  las proporciones.
+## Los shards
+
+Un shard dura lo que duran sus pruebas, y la corrida, lo que dura el shard más lento: un reparto disparejo es tiempo perdido
+y, si un shard pasa sus 30 min, una corrida roja (sale como «cancelled»). Pest reparte por **tiempo** con
+`tests/.pest/shards.json`: de mayor a menor, cada clase al shard con menos carga. Un archivo nuevo sin tiempo va por turno y
+Pest avisa que el archivo está viejo.
+
+- **Los tiempos salen del CI, no de una Mac.** Cada shard guarda su JUnit (`--log-junit`) como artefacto `timings-*` por
+  30 días. Para actualizar el archivo, con la última corrida verde de `main`:
+
+  ```bash
+  gh run download "$(gh run list --workflow tests.yml --branch main --status success --limit 1 --json databaseId -q '.[0].databaseId')" -p 'timings-*' -D /tmp/timings
+  php scripts/shard-timings.php tests/.pest/shards.json /tmp/timings/*/*.xml
+  ```
+
+- **Nunca con `--update-shards` de Pest.** Reescribe el archivo entero con una sola corrida, y una corrida de Browser y Feature
+  a la vez mide su pelea por la CPU, no las pruebas: el 17 nov 2026 le dio 1270 s a `DemoStoriesTest` (tarda 146 s), Pest
+  la dejó casi sola en un shard y los otros dos cargaron 7000 pruebas cada uno, hasta el timeout. `scripts/shard-timings.php`
+  conserva las clases que los reportes no traen: se puede medir una suite sin perder la otra.
+- Se actualiza cuando un shard tarda notablemente más que los otros, o cuando Pest avisa de muchos archivos nuevos.
+
+## El runner
+
+- `ubuntu-latest` de GitHub: **4 vCPU y 16 GB en un repo público; 2 vCPU y 7 GB en uno privado.** Con `--parallel` Pest abre
+  un proceso por núcleo, así que pasar el repo a privado duplica el tiempo de cada shard (pasó el 26 nov 2026: de ~16 a
+  ~28 min). En privado, además, los minutos salen del crédito del plan.
+- Las pruebas esperan a Postgres más que a la CPU (~40 % de uso en la historia de la demo): Postgres corre en el mismo runner.
+- `main` está protegido con un ruleset: solo entra por PR y con `ci` en verde; nadie empuja directo ni reescribe su historia.
+
+## Lo demás
+
 - Postgres en CI vive en un tmpfs y con `fsync`, `synchronous_commit` y `full_page_writes` apagados (la acción `setup`):
   la base muere con el job.
 - Los navegadores de Playwright se guardan en caché por la versión de Playwright.
