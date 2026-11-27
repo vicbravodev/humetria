@@ -159,3 +159,30 @@ describe('AttendanceActivity', function (): void {
         expect(resolve(AttendanceActivity::class)->atCenter($theirs->id, $this->since))->toEqual(new CenterAttendanceActivity(false, 0, 0, 0));
     });
 });
+
+describe('WorkerAccessActivity', function (): void {
+    it('counts only what happened after the session started', function (): void {
+        WorkerAccessLink::factory()->create(['tenant_id' => $this->a->id]);
+        WorkerCredential::factory()->create(['tenant_id' => $this->a->id]);
+        $this->travelTo($this->since);
+        $reissued = WorkerAccessLink::factory()->create(['tenant_id' => $this->a->id]);
+        WorkerAccessLink::factory()->create(['tenant_id' => $this->a->id, 'employee_id' => $reissued->employee_id]);
+        WorkerAccessLink::factory()->create(['tenant_id' => $this->a->id]);
+        WorkerAccessLink::factory()->requested()->create(['tenant_id' => $this->a->id]);
+        WorkerCredential::factory()->create(['tenant_id' => $this->a->id]);
+        WorkerCredential::factory()->create(['tenant_id' => $this->a->id, 'revoked_at' => now()]);
+        workIn($this->a);
+
+        expect(resolve(WorkerAccessActivity::class)->since($this->since))->toEqual(new AccessActivity(2, 1))
+            ->and(resolve(WorkerAccessActivity::class)->since($this->since->setTimezone('America/Mexico_City')))->toEqual(new AccessActivity(2, 1));
+    });
+
+    it('does not read another company', function (): void {
+        $this->travelTo($this->since);
+        WorkerAccessLink::factory()->create(['tenant_id' => $this->b->id]);
+        WorkerCredential::factory()->create(['tenant_id' => $this->b->id]);
+        workIn($this->a);
+
+        expect(resolve(WorkerAccessActivity::class)->since($this->since))->toEqual(new AccessActivity(0, 0));
+    });
+});

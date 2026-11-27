@@ -8,6 +8,7 @@ use App\Modules\Messaging\Contracts\InvitationLinks;
 use App\Modules\Messaging\Events\WhatsAppMessageFailed;
 use App\Modules\Organization\Events\EmployeeDeactivated;
 use App\Modules\WorkerAccess\Contracts\DeviceKeySignatures;
+use App\Modules\WorkerAccess\Contracts\WorkerAccessActivity;
 use App\Modules\WorkerAccess\Contracts\WorkerCredentials;
 use App\Modules\WorkerAccess\Contracts\WorkerInvitations;
 use App\Modules\WorkerAccess\Contracts\WorkerKeys;
@@ -20,6 +21,7 @@ use App\Modules\WorkerAccess\Listeners\RevokeOnDeactivation;
 use App\Modules\WorkerAccess\Support\CeremonyKeys;
 use App\Modules\WorkerAccess\Support\CeremonySignatures;
 use App\Modules\WorkerAccess\Support\CompanyDeviceKeySignatures;
+use App\Modules\WorkerAccess\Support\CompanyWorkerAccessActivity;
 use App\Modules\WorkerAccess\Support\CompanyWorkerCredentials;
 use App\Modules\WorkerAccess\Support\LinkInvitations;
 use App\Modules\WorkerAccess\Support\RequestWorkerSession;
@@ -43,6 +45,7 @@ final class WorkerAccessServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(WorkerSignatures::class, CeremonySignatures::class);
+        $this->app->bind(WorkerAccessActivity::class, CompanyWorkerAccessActivity::class);
         $this->app->bind(WorkerKeys::class, CeremonyKeys::class);
         $this->app->bind(DeviceKeySignatures::class, CompanyDeviceKeySignatures::class);
         $this->app->bind(WorkerCredentials::class, CompanyWorkerCredentials::class);
