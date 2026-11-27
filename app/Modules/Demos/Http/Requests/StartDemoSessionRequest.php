@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace App\Modules\Demos\Http\Requests;
 
+use App\Modules\Demos\Enums\TourKey;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rules\Enum;
 
 /** Starts a demo session: the superadmin only; the client's name, optional, and the tours to show, in their order. */
 final class StartDemoSessionRequest extends FormRequest
 {
-    /** The tours one may choose; «base» is not among them: it always goes first. */
-    private const array TOURS = ['nom035', 'attendance', 'engagement', 'complaints', 'leave', 'humi'];
+    /** No line breaks nor control characters, as TenantRules::SINGLE_LINE (internal to Tenancy, so repeated here). */
+    private const string SINGLE_LINE = 'regex:/\A[^\x00-\x1F\x7F]*\z/u';
 
     public function authorize(): bool
     {
@@ -22,14 +24,17 @@ final class StartDemoSessionRequest extends FormRequest
     }
 
     /**
-     * @return array<string, list<string>>
+     * @return array<string, list<string|Enum>>
      */
     public function rules(): array
     {
+        // The tours one may choose; «base» is not among them: it always goes first.
+        $choosable = count(TourKey::cases()) - 1;
+
         return [
-            'client_name' => ['nullable', 'string', 'max:80'],
-            'tours' => ['required', 'array', 'list', 'min:1', 'max:'.count(self::TOURS)],
-            'tours.*' => ['required', 'string', 'distinct', 'in:'.implode(',', self::TOURS)],
+            'client_name' => ['nullable', 'string', 'max:80', self::SINGLE_LINE],
+            'tours' => ['required', 'array', 'list', 'min:1', 'max:'.$choosable],
+            'tours.*' => ['required', 'string', 'distinct', (new Enum(TourKey::class))->except(TourKey::Base)],
         ];
     }
 

@@ -198,6 +198,7 @@ it('validates the tours and the client name', function (array $body, string $fie
     'more than six' => [['tours' => ['nom035', 'attendance', 'engagement', 'complaints', 'leave', 'humi', 'nom035']], 'tours'],
     'not a list' => [['tours' => ['a' => 'nom035']], 'tours'],
     'a client name of 81' => [['client_name' => str_repeat('a', 81)], 'client_name'],
+    'a client name of two lines' => [['client_name' => "Grupo\nEjemplo"], 'client_name'],
 ]);
 
 it('accepts the six tours and a client name of 80', function (): void {
