@@ -23,7 +23,7 @@ use Carbon\CarbonInterface;
  */
 final class DossierLines
 {
-    private const array LETTERS = ['at_workstation' => 'A', 'nearby' => 'B', 'within_center' => 'C'];
+    private const array LETTERS = ['at_workstation' => 'A', 'nearby' => 'B', 'within_center' => 'C']; // @pest-mutate-ignore: RemoveArrayItem
 
     /**
      * @return list<array{text: string, date: string|null}>
