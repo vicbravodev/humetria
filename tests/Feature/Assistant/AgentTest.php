@@ -40,12 +40,12 @@ it('reads its provider and its model from config, never from code', function ():
         ->and($agent->model())->toBe('a-model');
 });
 
-it('is bounded: at most six steps, a limit of tokens and a timeout', function (): void {
+it('is bounded: at most six steps, 1500 tokens and sixty seconds', function (): void {
     $class = new ReflectionClass(HumiAssistant::class);
 
     expect($class->getAttributes(MaxSteps::class)[0]->newInstance()->value)->toBe(6)
-        ->and($class->getAttributes(MaxTokens::class)[0]->newInstance()->value)->toBeGreaterThan(0)
-        ->and($class->getAttributes(Timeout::class)[0]->newInstance()->value)->toBeGreaterThan(0);
+        ->and($class->getAttributes(MaxTokens::class)[0]->newInstance()->value)->toBe(1500)
+        ->and($class->getAttributes(Timeout::class)[0]->newInstance()->value)->toBe(60);
 });
 
 it('caches its tool definitions but not its instructions, which carry the open page and change with it', function (): void {

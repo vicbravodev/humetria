@@ -29,9 +29,9 @@ use Laravel\Ai\Promptable;
  */
 // Only the tools are cached: the instructions carry the open page, so they change with it and would be written, never read.
 #[CacheToolDefinitions]
-#[MaxSteps(6)]
-#[MaxTokens(1500)]
-#[Timeout(60)]
+#[MaxSteps(6)] // @pest-mutate-ignore: DecrementInteger,IncrementInteger
+#[MaxTokens(1500)] // @pest-mutate-ignore: DecrementInteger,IncrementInteger
+#[Timeout(60)] // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 final class HumiAssistant implements Agent, HasMiddleware, HasTools, RemembersConversationsContract
 {
     use Promptable, RemembersConversations;
