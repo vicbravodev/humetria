@@ -8,6 +8,7 @@ use App\Modules\Leave\Enums\EntryKind;
 use App\Modules\Leave\Enums\PolicyScope;
 use App\Modules\Leave\Enums\Tranche;
 use App\Modules\Leave\Enums\WorkWeek;
+use App\Modules\Leave\Listeners\GrantOnHire;
 use App\Modules\Leave\Models\LeaveEntitlement;
 use App\Modules\Leave\Models\LeaveEntry;
 use App\Modules\Leave\Models\LeavePolicy;
@@ -25,7 +26,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Log;
 
-mutates(GrantEntitlement::class, GrantEntitlements::class);
+mutates(GrantEntitlement::class, GrantEntitlements::class, GrantOnHire::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();

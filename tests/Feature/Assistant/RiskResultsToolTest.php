@@ -5,9 +5,13 @@ declare(strict_types=1);
 use App\Models\AuditEntry;
 use App\Modules\Assistant\Tools\GetRiskResults;
 use App\Modules\Campaigns\Contracts\CampaignRecords;
+use App\Modules\Campaigns\Data\CampaignRecord;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Responses\Models\AnonymousResponse;
+use App\Modules\Results\Contracts\RiskResults;
+use App\Modules\Results\Data\AreaResult;
+use App\Modules\Results\Data\RiskBreakdown;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -90,6 +94,31 @@ it('says how many areas stay hidden and lists those shown', function (): void {
     expect(array_column($areas, 'label'))->toBe(['Producción'])
         ->and($card['note'])->toBe('2 áreas no se muestran por separado porque tienen pocas respuestas.');
 });
+
+it('shows at most forty rows and says when it left some out', function (int $areas, int $shown, bool $truncated): void {
+    app()->instance(RiskResults::class, new readonly class($areas) implements RiskResults
+    {
+        public function __construct(private int $areas) {}
+
+        public function forCampaign(CampaignRecord $campaign, ?string $areaId = null): RiskBreakdown
+        {
+            return new RiskBreakdown(RiskBreakdown::AVAILABLE, 5, [5, 0, 0, 0, 0], areas: array_map(fn (int $n): AreaResult => new AreaResult((string) Str::uuid(), "Área {$n}", 5, [5, 0, 0, 0, 0]), range(1, $this->areas)));
+        }
+
+        public function areaGroups(CampaignRecord $campaign): array
+        {
+            return [];
+        }
+    });
+
+    $card = toolCard(GetRiskResults::class, $this->scope, ['campaign_id' => $this->closed->id]);
+
+    expect($card['rows'])->toHaveCount($shown)
+        ->and($card['truncated'])->toBe($truncated);
+})->with([
+    'the final score and 39 areas' => [39, 40, false],
+    'the final score and 40 areas' => [40, 40, true],
+]);
 
 it('gives no result while the evaluation is open or for a Guía I campaign, and says why', function (): void {
     $open = Campaign::factory()->active()->create(['tenant_id' => $this->a->id, 'work_center_id' => WorkCenter::factory()->create(['tenant_id' => $this->a->id])->id]);

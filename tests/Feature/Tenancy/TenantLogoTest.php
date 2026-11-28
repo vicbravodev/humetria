@@ -7,11 +7,12 @@ use App\Modules\Tenancy\Actions\SetTenantLogo;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Data\CompanyLogo;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Support\LogoBounds;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
-mutates(SetTenantLogo::class, RemoveTenantLogo::class);
+mutates(SetTenantLogo::class, RemoveTenantLogo::class, LogoBounds::class);
 
 beforeEach(function (): void {
     Storage::fake('public');
@@ -174,3 +175,42 @@ it('does not trim a logo that already reaches its edges', function (): void {
 
     expect(storedLogoSize($this->tenant))->toBe([200, 80]);
 });
+
+/** An image of the given size with a filled box: background and mark as [red, green, blue, alpha (0 opaque, 127 clear)]. */
+function logoImage(int $width, int $height, array $background, array $mark, array $box): GdImage
+{
+    $image = imagecreatetruecolor($width, $height);
+    imagealphablending($image, false);
+    imagesavealpha($image, true);
+    imagefill($image, 0, 0, (int) imagecolorallocatealpha($image, ...$background));
+    imagefilledrectangle($image, ...[...$box, (int) imagecolorallocatealpha($image, ...$mark)]);
+
+    return $image;
+}
+
+it('finds the mark with a breathing room of 3 % of its longest side', function (): void {
+    // The mark spans x 150–249 and y 80–119: 99 px wide, so 3 px of room on every side.
+    expect(LogoBounds::of(logoImage(400, 200, [255, 255, 255, 0], [20, 60, 160, 0], [150, 80, 249, 119])))
+        ->toBe(['x' => 147, 'y' => 77, 'width' => 106, 'height' => 46]);
+});
+
+it('searches a logo wider than 400 px on a copy 400 px wide, and gives the box in the logo\'s own pixels', function (): void {
+    expect(LogoBounds::of(logoImage(800, 400, [255, 255, 255, 0], [20, 60, 160, 0], [300, 160, 499, 239])))
+        ->toBe(['x' => 294, 'y' => 154, 'width' => 212, 'height' => 92]);
+});
+
+it('takes a color up to 32 away from a plain background as background, and 33 away as the mark', function (array $mark, array $box): void {
+    expect(LogoBounds::of(logoImage(400, 200, [255, 255, 255, 0], $mark, [150, 80, 249, 119])))->toBe($box);
+})->with([
+    '32 away' => [[223, 223, 223, 0], ['x' => 0, 'y' => 0, 'width' => 400, 'height' => 200]],
+    '33 away in red' => [[222, 255, 255, 0], ['x' => 147, 'y' => 77, 'width' => 106, 'height' => 46]],
+    '33 away in green' => [[255, 222, 255, 0], ['x' => 147, 'y' => 77, 'width' => 106, 'height' => 46]],
+    '33 away in blue' => [[255, 255, 222, 0], ['x' => 147, 'y' => 77, 'width' => 106, 'height' => 46]],
+]);
+
+it('takes a pixel of alpha 110 or more as empty, and 109 as the mark', function (int $alpha, array $box): void {
+    expect(LogoBounds::of(logoImage(400, 200, [0, 0, 0, 127], [20, 60, 160, $alpha], [150, 80, 249, 119])))->toBe($box);
+})->with([
+    'alpha 110' => [110, ['x' => 0, 'y' => 0, 'width' => 400, 'height' => 200]],
+    'alpha 109' => [109, ['x' => 147, 'y' => 77, 'width' => 106, 'height' => 46]],
+]);

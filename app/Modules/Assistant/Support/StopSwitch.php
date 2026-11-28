@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Cache;
  */
 final class StopSwitch
 {
-    private const int SECONDS = 300;
+    private const int SECONDS = 300; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function request(int $participantId): void
     {

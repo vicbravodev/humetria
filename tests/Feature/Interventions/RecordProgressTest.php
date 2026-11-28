@@ -7,13 +7,14 @@ use App\Modules\Interventions\Actions\RecordProgress;
 use App\Modules\Interventions\Enums\ActionStatus;
 use App\Modules\Interventions\Models\ProgramAction;
 use App\Modules\Interventions\Models\ProgressEntry;
+use App\Modules\Interventions\Support\ProgramClock;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
-mutates(RecordProgress::class, CancelAction::class);
+mutates(RecordProgress::class, CancelAction::class, ProgramClock::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-20 18:00:00');

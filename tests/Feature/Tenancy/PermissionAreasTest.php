@@ -7,6 +7,8 @@ use App\Modules\Tenancy\Support\PermissionAreas;
 use App\Modules\Tenancy\Support\PermissionCatalog;
 use Spatie\Permission\Models\Role;
 
+mutates(PermissionAreas::class);
+
 /**
  * The areas of the roles screen (one access level per area, plus a few extras) are written once in
  * tests/Fixtures/permissions/areas.json; resources/js/lib/permission-areas.ts draws them and tests/js/lib/permission-areas.test.ts

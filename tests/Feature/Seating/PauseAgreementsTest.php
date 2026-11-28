@@ -6,6 +6,7 @@ use App\Modules\Seating\Actions\SavePauseAgreement;
 use App\Modules\Seating\Http\Controllers\PauseAgreementController;
 use App\Modules\Seating\Models\PauseAgreement;
 use App\Modules\Seating\Models\StandingPosition;
+use App\Modules\Seating\Support\EvidenceStore;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -18,7 +19,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(SavePauseAgreement::class, PauseAgreementController::class);
+mutates(SavePauseAgreement::class, PauseAgreementController::class, EvidenceStore::class);
 
 beforeEach(function (): void {
     Storage::fake(config()->string('filesystems.seating_files'));
@@ -140,4 +141,13 @@ it('refuses in the database zero pauses or zero minutes', function (): void {
     foreach ($attempts as $constraint => $attempt) {
         expect(fn () => DB::transaction($attempt))->toThrow(QueryException::class, $constraint);
     }
+});
+
+it('leaves no evidence behind when the agreement cannot be saved', function (): void {
+    PauseAgreement::saving(fn () => throw new RuntimeException('database down'));
+    $this->actingAs($this->hr);
+
+    $this->post(agreementUrl(), agreementForm(['evidence' => UploadedFile::fake()->createWithContent('acta.pdf', "%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF")]))->assertServerError();
+
+    expect(Storage::disk(config()->string('filesystems.seating_files'))->allFiles())->toBe([]);
 });

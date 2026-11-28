@@ -24,6 +24,7 @@ use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Tests\Support\OfflineDeliveries;
@@ -185,6 +186,12 @@ describe('marking it incorrect', function (): void {
             ->and(AttendanceMark::query()->where('corrects_mark_id', $delivery->mark_id)->count())->toBe(0);
     })->with([null, '   ', 'No.', 'Cuat']);
 
+    it('takes a note of exactly 5 characters', function (): void {
+        $delivery = OfflineDeliveries::accepted($this->ana, '2026-11-02 09:00');
+
+        expect(review($delivery->mark_id ?? '', ReviewDecision::Incorrect, 'Cinco', '2026-11-02 09:20')->note)->toBe('Cinco');
+    });
+
     it('refuses a time that leaves the day out of order and leaves no review behind', function (): void {
         AttendanceMark::factory()->create([
             'tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_center_id' => $this->plant->id,
@@ -254,6 +261,21 @@ describe('verifying several', function (): void {
         Event::assertDispatchedTimes(OfflineMarkReviewed::class, 3);
     });
 
+    it('skips a mark corrected between finding it pending and verifying it', function (): void {
+        $mark = AttendanceMark::query()->findOrFail(OfflineDeliveries::accepted($this->ana, '2026-11-02 09:00')->mark_id);
+        $raced = false;
+        // RH corrects it in another tab right after this page found it pending.
+        DB::listen(function (Illuminate\Database\Events\QueryExecuted $query) use ($mark, &$raced): void {
+            if (! $raced && str_contains($query->sql, 'attendance_mark_reviews')) {
+                $raced = true;
+                AttendanceMark::factory()->correcting($mark)->create(['reason' => 'Corregida en otra pestaña.']);
+            }
+        });
+
+        expect(verifyMany([$mark->id]))->toBe(['verified' => 0, 'skipped' => 1])
+            ->and(MarkReview::query()->count())->toBe(0);
+    });
+
     it('skips what is already reviewed, what changed, and what is not of the company', function (): void {
         $fresh = OfflineDeliveries::accepted($this->ana, '2026-11-02 09:00')->mark_id ?? '';
         $reviewed = OfflineDeliveries::accepted($this->ana, '2026-11-03 09:00')->mark_id ?? '';
@@ -278,5 +300,9 @@ describe('verifying several', function (): void {
 
     it('takes at most 25 marks', function (): void {
         expect(fn () => verifyMany(array_map(fn (int $n): string => (string) fake()->uuid(), range(1, 26))))->toThrow(InvalidArgumentException::class);
+    });
+
+    it('takes a page of 25 marks', function (): void {
+        expect(verifyMany(array_map(fn (int $n): string => (string) fake()->uuid(), range(1, 25))))->toBe(['verified' => 0, 'skipped' => 25]);
     });
 });

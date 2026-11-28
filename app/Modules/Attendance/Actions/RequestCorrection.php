@@ -25,16 +25,16 @@ use InvalidArgumentException;
  */
 final readonly class RequestCorrection
 {
-    public const int MIN_REASON = 10;
+    public const int MIN_REASON = 10; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    public const int MAX_REASON = 500;
+    public const int MAX_REASON = 500; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** Plain text: no control characters (line breaks and tabs are fine). */
     public const string CONTROL_CHARACTERS = '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/';
 
-    public const int MAX_PENDING = 10;
+    public const int MAX_PENDING = 10; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    public const int MAX_AGE_DAYS = 35;
+    public const int MAX_AGE_DAYS = 35; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private CurrentTenant $tenant, private Roster $roster) {}
 

@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\WorkerAccess\Actions\RegisterCredential;
 use App\Modules\WorkerAccess\Contracts\WorkerKeys;
 use App\Modules\WorkerAccess\Data\CredentialData;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
+use App\Modules\WorkerAccess\Support\CeremonyKeys;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Log;
 use Tests\Support\SoftAuthenticator;
+
+mutates(RegisterCredential::class, CeremonyKeys::class);
 
 beforeEach(function (): void {
     config(['fortify.passkeys.relying_party_id' => 'localhost', 'fortify.passkeys.allowed_origins' => ['http://localhost']]);

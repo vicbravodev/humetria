@@ -12,6 +12,8 @@ use App\Modules\Messaging\Http\Controllers\MetaWebhookController;
 use App\Modules\Messaging\Models\Delivery;
 use App\Modules\Messaging\Models\DeliveryEvent;
 use App\Modules\Messaging\Models\WebhookEvent;
+use App\Modules\Messaging\Support\DeliveryFailures;
+use App\Modules\Messaging\Support\MetaStatus;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
 use App\Modules\Tenancy\Models\Tenant;
 use Database\Factories\Messaging\DeliveryFactory;
@@ -19,7 +21,7 @@ use Database\Factories\Messaging\WebhookEventFactory;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 
-mutates(MetaWebhookController::class, HandleMetaEvents::class, ReplayOrphanEvents::class);
+mutates(MetaWebhookController::class, HandleMetaEvents::class, ReplayOrphanEvents::class, DeliveryFailures::class, MetaStatus::class);
 
 beforeEach(function (): void {
     config(['whatsapp.app_secrets' => [META_SECRET], 'whatsapp.verify_token' => 'the-verify-token', 'messaging.recipient_keys' => [1 => base64_encode('a-key')]]);

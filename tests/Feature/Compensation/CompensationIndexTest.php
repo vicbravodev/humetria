@@ -7,14 +7,16 @@ use App\Modules\Compensation\Models\GradeSalary;
 use App\Modules\Compensation\Models\SalaryOverride;
 use App\Modules\Compensation\Models\Scenario;
 use App\Modules\Compensation\Models\WorkRiskPremium;
+use App\Modules\Compensation\Support\CompensationStart;
 use App\Modules\Compensation\Support\ContractStatus;
+use App\Modules\Compensation\Support\ScenarioRows;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Models\JobGrade;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ContractStatus::class);
+mutates(ContractStatus::class, CompensationStart::class, ScenarioRows::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-04 10:00:00');

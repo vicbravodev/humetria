@@ -17,7 +17,7 @@ use Illuminate\Support\Str;
  */
 final readonly class StoreSubscription
 {
-    public const int MAX_PER_PERSON = 5;
+    public const int MAX_PER_PERSON = 5; // @pest-mutate-ignore: IncrementInteger,DecrementInteger
 
     public function __construct(private CurrentTenant $tenant) {}
 

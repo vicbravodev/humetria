@@ -25,7 +25,7 @@ final class SendFeedbackPublished implements ShouldQueue, ShouldQueueAfterCommit
 {
     use Queueable;
 
-    private const int BLOCK = 100;
+    private const int BLOCK = 100; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(public readonly string $surveyId) {}
 

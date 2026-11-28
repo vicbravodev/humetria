@@ -12,6 +12,7 @@ use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\PreventiveMeasure;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Models\StandingPosition;
+use App\Modules\Seating\Support\EvidenceStore;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -25,7 +26,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ProposeMeasure::class, SaveMeasure::class, CancelMeasure::class, MeasureController::class);
+mutates(ProposeMeasure::class, SaveMeasure::class, CancelMeasure::class, MeasureController::class, EvidenceStore::class);
 
 beforeEach(function (): void {
     Storage::fake(config()->string('filesystems.seating_files'));
@@ -245,4 +246,25 @@ it('says on the plan whether every medium or high assessment has its measure, an
 
     PreventiveMeasure::factory()->create($where + ['assessment_id' => $high->id, 'position_id' => null]);
     $this->get($url)->assertInertia(fn (Assert $page) => $page->where('measuresRule', ['state' => 'met', 'count' => 0]));
+});
+
+it('leaves no evidence behind when the measure cannot be saved', function (): void {
+    $measure = PreventiveMeasure::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'position_id' => $this->position->id]);
+    PreventiveMeasure::saving(fn () => throw new RuntimeException('database down'));
+    $this->actingAs($this->hr);
+
+    $this->put(route('tenant.seating.measures.update', [$this->tenant, $measure->id]), ['status' => 'done', 'evidence' => evidencePdf()])->assertServerError();
+
+    expect(Storage::disk(config()->string('filesystems.seating_files'))->allFiles())->toBe([]);
+});
+
+it('cancels a measure once: cancelling it again changes and logs nothing', function (): void {
+    $measure = PreventiveMeasure::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'position_id' => $this->position->id]);
+    resolve(CancelMeasure::class)->handle($measure);
+    Log::spy();
+
+    resolve(CancelMeasure::class)->handle($measure->fresh() ?? $measure);
+
+    Log::shouldNotHaveReceived('info');
+    expect($measure->fresh()?->status->value)->toBe('cancelled');
 });

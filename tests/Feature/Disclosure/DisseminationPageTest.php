@@ -8,6 +8,9 @@ use App\Modules\Disclosure\Models\Acknowledgment;
 use App\Modules\Disclosure\Models\Document;
 use App\Modules\Disclosure\Models\DocumentCenter;
 use App\Modules\Disclosure\Support\AckProgress;
+use App\Modules\Disclosure\Support\Days;
+use App\Modules\Disclosure\Support\DeliveryStanding;
+use App\Modules\Disclosure\Support\DisseminationPages;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -15,7 +18,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(DisseminationController::class, AckProgress::class);
+mutates(DisseminationController::class, AckProgress::class, DeliveryStanding::class, Days::class, DisseminationPages::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-20 18:00:00');

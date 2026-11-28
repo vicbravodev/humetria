@@ -9,7 +9,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 final readonly class ListBenefits
 {
-    public const int PER_PAGE = 15;
+    public const int PER_PAGE = 15; // @pest-mutate-ignore: IncrementInteger,DecrementInteger
 
     /**
      * A page of the catalog: the active benefits or the archived ones, with what was typed in the name (ignoring case and

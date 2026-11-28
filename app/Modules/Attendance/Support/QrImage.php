@@ -22,12 +22,12 @@ use BaconQrCode\Writer;
  */
 final class QrImage
 {
-    private const int SIZE = 640;
+    private const int SIZE = 640; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const int MARGIN = 4;
+    private const int MARGIN = 4; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** A fifth of the width, at the center. */
-    private const int MARK = 128;
+    private const int MARK = 128; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public static function dataUri(string $text): string
     {

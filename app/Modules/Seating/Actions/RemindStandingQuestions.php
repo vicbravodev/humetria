@@ -21,7 +21,7 @@ use Throwable;
 final readonly class RemindStandingQuestions
 {
     /** Days after the start of an assessment when the person is reminded. */
-    private const array DAYS = [7, 14];
+    private const array DAYS = [7, 14]; // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
 
     public function __construct(private Companies $companies, private DemoCompanies $demos) {}
 

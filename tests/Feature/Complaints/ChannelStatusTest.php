@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\AuditEntry;
+use App\Modules\Complaints\Actions\RecordEvidenceExport;
+use App\Modules\Complaints\Actions\RecordEvidenceView;
 use App\Modules\Complaints\Models\Complaint;
 use App\Modules\Complaints\Models\ComplaintChannel;
 use App\Modules\Complaints\Models\ComplaintHandler;
@@ -11,9 +13,10 @@ use App\Modules\Complaints\Support\ComplaintStatistics;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ComplaintStatistics::class, ChannelStatusPages::class);
+mutates(ComplaintStatistics::class, ChannelStatusPages::class, RecordEvidenceExport::class, RecordEvidenceView::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-20 18:00:00');
@@ -151,6 +154,18 @@ it('records that the evidence was printed', function (): void {
     $this->actingAs($this->owner)->post(route('tenant.complaints.evidence.export', $this->tenant))->assertRedirect(route('tenant.complaints.evidence', $this->tenant));
 
     expect(AuditEntry::query()->where('event', 'complaint_channel.evidence_exported')->count())->toBe(1);
+});
+
+it('logs and audits each reading and each print of the evidence on the channel, with nothing of a case', function (): void {
+    Log::spy();
+
+    $this->actingAs($this->owner)->get(route('tenant.complaints.evidence', $this->tenant))->assertOk();
+    $this->actingAs($this->owner)->post(route('tenant.complaints.evidence.export', $this->tenant));
+
+    expect(AuditEntry::query()->where('event', 'complaint_channel.evidence_viewed')->sole()->subject_id)->toBe($this->channel->id)
+        ->and(AuditEntry::query()->where('event', 'complaint_channel.evidence_exported')->sole()->subject_id)->toBe($this->channel->id);
+    Log::shouldHaveReceived('info')->with('complaints.evidence_viewed', ['channel_id' => $this->channel->id])->once();
+    Log::shouldHaveReceived('info')->with('complaints.evidence_exported', ['channel_id' => $this->channel->id])->once();
 });
 
 it('keeps the evidence and the summary to the people who manage the channel', function (TenantRole $role): void {

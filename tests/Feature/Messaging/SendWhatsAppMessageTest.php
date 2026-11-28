@@ -17,6 +17,7 @@ use App\Modules\Messaging\Jobs\SendWhatsAppMessage;
 use App\Modules\Messaging\Models\Delivery;
 use App\Modules\Messaging\Models\DeliveryEvent;
 use App\Modules\Messaging\Models\Pause;
+use App\Modules\Messaging\Support\DeliveryFailures;
 use App\Modules\Messaging\Support\FakeWhatsAppGateway;
 use App\Modules\Messaging\Support\RecipientHash;
 use App\Modules\Tenancy\Contracts\CurrentTenant;
@@ -29,7 +30,7 @@ use Illuminate\Queue\Middleware\RateLimited;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 
-mutates(SendWhatsAppMessage::class, ReconcileUnknown::class);
+mutates(SendWhatsAppMessage::class, ReconcileUnknown::class, DeliveryFailures::class);
 
 final class SendJobStubLinks implements InvitationLinks
 {

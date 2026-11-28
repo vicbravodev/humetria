@@ -151,3 +151,50 @@ it('pages the centers, the columns of the matrix, ten at a time', function (): v
 
     matrix()->assertInertia(fn (Assert $page) => $page->where('centers.total', 12)->has('centers.data', 10));
 });
+
+it('names each of the six things in plain words, with what it is about before anything is written', function (): void {
+    $this->actingAs($this->hr);
+
+    matrix()->assertInertia(fn (Assert $page) => $page
+        ->where('items', fn ($items): bool => collect($items)->map(fn (array $item): array => [$item['label'], $item['caption']])->all() === [
+            ['Política de prevención', 'La declaración de tus compromisos, por escrito'],
+            ['Cómo presentar una queja', 'Por dónde presentar una queja o denuncia'],
+            ['Medidas contra la violencia laboral', 'Qué se considera violencia, qué pasa al denunciar y cómo se protege a quien denuncia'],
+            ['Medidas de prevención y control', 'Lo que hace la empresa para prevenir: capacitación, cargas de trabajo, pausas'],
+            ['Posibles alteraciones a la salud', 'Hay un borrador de Humetría. Revísalo con un médico antes de publicar'],
+            ['Resultados de la evaluación', 'Un resumen sin datos de áreas pequeñas'],
+        ]));
+});
+
+it('tells the next thing to write, in the order of the board, with how many questions it asks and where it goes', function (array $before, string $item, string $title, string $text): void {
+    $this->actingAs($this->hr);
+    resolve(IssuePageLink::class)->handle($this->hr->id);
+    foreach ($before as $kind) {
+        publishedTo($kind, [$this->north, $this->south]);
+    }
+
+    matrix()->assertInertia(fn (Assert $page) => $page
+        ->where('next.item', $item)
+        ->where('next.title', $title)
+        ->where('next.text', $text));
+})->with([
+    'the policy' => [[], 'a', 'Escribe tu política de prevención', '6 preguntas con opciones. Al terminar se publica en tus 2 centros y llega a tus personas para que confirmen que la leyeron.'],
+    'how to complain' => [[DocumentKind::Policy], 'd', 'Escribe cómo presentar una queja', '1 pregunta con opciones. Al terminar se publica en la página de tus 2 centros, junto a tu canal de quejas cuando lo abras.'],
+    'the measures against violence' => [[DocumentKind::Policy, DocumentKind::ComplaintMechanism], 'b', 'Escribe las medidas contra la violencia laboral', '4 preguntas con opciones. Al terminar se publica en la página de tus 2 centros. Puedes cambiarlo cuando quieras; las versiones anteriores se guardan.'],
+    'the prevention measures' => [[DocumentKind::Policy, DocumentKind::ComplaintMechanism, DocumentKind::ViolenceMeasures], 'c', 'Escribe las medidas de prevención y control', '3 preguntas con opciones. Al terminar se publica en la página de tus 2 centros. Puedes cambiarlo cuando quieras; las versiones anteriores se guardan.'],
+    'the health effects, a draft with no questions' => [[DocumentKind::Policy, DocumentKind::ComplaintMechanism, DocumentKind::ViolenceMeasures, DocumentKind::PreventionMeasures], 'f', 'Revisa el borrador de las alteraciones a la salud', 'Es un borrador de Humetría. Revísalo con un médico antes de publicarlo en tus 2 centros.'],
+]);
+
+it('has no next step once the six things are ready in every center', function (): void {
+    // The plant of twenty is set aside: in the one of three people the results do not apply (num. 2 a).
+    $this->north->update(['archived_at' => now()]);
+    $this->actingAs($this->hr);
+    resolve(IssuePageLink::class)->handle($this->hr->id);
+    foreach ([DocumentKind::Policy, DocumentKind::ComplaintMechanism, DocumentKind::ViolenceMeasures, DocumentKind::PreventionMeasures, DocumentKind::HealthEffects] as $kind) {
+        publishedTo($kind, [$this->south]);
+    }
+
+    matrix()->assertInertia(fn (Assert $page) => $page
+        ->where('progress', ['ready' => 6, 'total' => 6, 'minutes' => 0])
+        ->where('next', null));
+});

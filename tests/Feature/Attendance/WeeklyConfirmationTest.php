@@ -15,9 +15,12 @@ use App\Modules\Attendance\Enums\WeekStatus;
 use App\Modules\Attendance\Events\WeekConfirmed;
 use App\Modules\Attendance\Events\WeekDisputed;
 use App\Modules\Attendance\Exceptions\WeekRejected;
+use App\Modules\Attendance\Listeners\ReopenOnCorrection;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceSchedule;
 use App\Modules\Attendance\Models\WeeklyConfirmation;
+use App\Modules\Attendance\Support\MarkLock;
+use App\Modules\Attendance\Support\PersonTimezone;
 use App\Modules\Attendance\Support\WeekDigest;
 use App\Modules\Attendance\Support\WeekPeriod;
 use App\Modules\Leave\Models\LeaveHoliday;
@@ -36,7 +39,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 
-mutates(ConfirmWeek::class, DisputeWeek::class, ReopenWeeks::class, CloseDays::class);
+mutates(ConfirmWeek::class, DisputeWeek::class, ReopenWeeks::class, CloseDays::class, PersonTimezone::class, MarkLock::class, ReopenOnCorrection::class);
 
 const LAST_WEEK = '2026-11-02';
 
@@ -204,6 +207,10 @@ describe('disputing', function (): void {
         expect(fn () => disputeWeek($this, $reason))->toThrow(InvalidArgumentException::class);
         expect(WeeklyConfirmation::query()->count())->toBe(0);
     })->with(['empty' => [''], 'blank' => ['          '], 'too short' => ['No es así']]);
+
+    it('takes a reason of exactly 10 characters', function (): void {
+        expect(disputeWeek($this, 'No es así.')->reason)->toBe('No es así.');
+    });
 
     it('lets the person dispute a week they had confirmed', function (): void {
         workedOn($this, '2026-11-03');

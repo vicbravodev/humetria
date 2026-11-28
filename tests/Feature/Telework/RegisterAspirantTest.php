@@ -33,7 +33,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(RegisterAspirant::class, AddWorkplace::class, RequestChecklist::class, TeleworkerController::class);
+mutates(RegisterAspirant::class, AddWorkplace::class, RequestChecklist::class, TeleworkerController::class, SendPortalInvitation::class);
 
 beforeEach(function (): void {
     Notification::fake();

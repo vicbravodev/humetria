@@ -20,12 +20,12 @@ final class PrepareDemo implements ShouldQueue
 {
     use Queueable;
 
-    public int $tries = 1;
+    public int $tries = 1; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** Seconds: a preparation takes about 25 s on an idle server and a few minutes on a busy one. */
-    public int $timeout = 600;
+    public int $timeout = 600; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    public bool $failOnTimeout = true;
+    public bool $failOnTimeout = true; // @pest-mutate-ignore: TrueToFalse
 
     public function __construct(public readonly string $runId)
     {

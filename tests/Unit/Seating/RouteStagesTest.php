@@ -78,3 +78,11 @@ it('does not take a stage as done while its requirements have nothing registered
     expect($progress->done)->toBe([true, true, true, false, true, true])
         ->and($progress->status)->toBe('acuerda pausas y medidas');
 });
+
+it('ranks a requirement by its stage and then its place in it, and leaves one outside the route after every stage', function (): void {
+    expect(RouteStages::rank('r1'))->toBe(0)
+        ->and(RouteStages::rank('r6'))->toBe(102)
+        ->and(RouteStages::rank('r9'))->toBe(203)
+        ->and(RouteStages::rank('r13'))->toBe(501)
+        ->and(RouteStages::rank('r14'))->toBe(600);
+});

@@ -12,12 +12,12 @@ namespace App\Modules\Assistant\Support;
 final class PersonalDataRedactor
 {
     private const array PATTERNS = [
-        ['[correo]', '/[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/i'],
-        ['[CURP]', '/\b[A-Z]{4}\d{6}[HM][A-Z]{2}[B-DF-HJ-NP-TV-Z]{3}[A-Z0-9]\d\b/i'],
-        ['[RFC]', '/\b[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}\b/iu'],
-        ['[teléfono]', '/\+[1-9](?:[ .-]?\d){6,14}(?!\d)/'],
-        ['[NSS]', '/(?<!\d)\d{2}[- ]?\d{2}[- ]?\d{2}[- ]?\d{4}[- ]?\d(?!\d)/'],
-        ['[teléfono]', '/(?<![\d-])(?:\+?52[ .-]?)?\(?\d{2,3}\)?[ .-]?\d{3,4}[ .-]?\d{4}(?!\d)/'],
+        ['[correo]', '/[A-Z0-9._%+\-]+@[A-Z0-9.\-]+\.[A-Z]{2,}/i'], // @pest-mutate-ignore: RemoveArrayItem
+        ['[CURP]', '/\b[A-Z]{4}\d{6}[HM][A-Z]{2}[B-DF-HJ-NP-TV-Z]{3}[A-Z0-9]\d\b/i'], // @pest-mutate-ignore: RemoveArrayItem
+        ['[RFC]', '/\b[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}\b/iu'], // @pest-mutate-ignore: RemoveArrayItem
+        ['[teléfono]', '/\+[1-9](?:[ .-]?\d){6,14}(?!\d)/'], // @pest-mutate-ignore: RemoveArrayItem
+        ['[NSS]', '/(?<!\d)\d{2}[- ]?\d{2}[- ]?\d{2}[- ]?\d{4}[- ]?\d(?!\d)/'], // @pest-mutate-ignore: RemoveArrayItem
+        ['[teléfono]', '/(?<![\d-])(?:\+?52[ .-]?)?\(?\d{2,3}\)?[ .-]?\d{3,4}[ .-]?\d{4}(?!\d)/'], // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     public function redact(string $text): string

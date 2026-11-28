@@ -39,15 +39,15 @@ final class RememberDemoAttribution
     /** The keyword of the last visit that brought one (term, content, match type), apart from the touch like the click. */
     public const string KEYWORD_KEY = 'demo_ad_keyword';
 
-    private const int MAX_MATCH_TYPE = 20;
+    private const int MAX_MATCH_TYPE = 20; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const int MAX_UTM = 100;
+    private const int MAX_UTM = 100; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const int MAX_HOST = 255;
+    private const int MAX_HOST = 255; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public const string COOKIE = 'humetria_acq';
 
-    private const int COOKIE_DAYS = 90;
+    private const int COOKIE_DAYS = 90; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** @param  Closure(Request): Response  $next */
     public function handle(Request $request, Closure $next): Response

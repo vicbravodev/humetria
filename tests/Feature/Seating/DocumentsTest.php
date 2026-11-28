@@ -7,6 +7,7 @@ use App\Modules\Seating\Actions\RecordAssessmentInMinutes;
 use App\Modules\Seating\Http\Controllers\DocumentController;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Models\SeatingDocument;
+use App\Modules\Seating\Support\PdfStore;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(PublishDocument::class, RecordAssessmentInMinutes::class, DocumentController::class);
+mutates(PublishDocument::class, RecordAssessmentInMinutes::class, DocumentController::class, PdfStore::class);
 
 beforeEach(function (): void {
     Storage::fake(config()->string('filesystems.seating_files'));
@@ -182,4 +183,13 @@ it('refuses in the database an unknown kind', function (): void {
     SeatingDocument::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id]);
 
     expect(fn () => DB::transaction(fn () => DB::table('seating_documents')->update(['kind' => 'poem'])))->toThrow(QueryException::class, 'seating_documents_kind_known');
+});
+
+it('leaves no file behind when the document cannot be saved', function (): void {
+    SeatingDocument::saving(fn () => throw new RuntimeException('database down'));
+    $this->actingAs($this->hr);
+
+    $this->post(documentsUrl(), documentForm())->assertServerError();
+
+    expect(Storage::disk(config()->string('filesystems.seating_files'))->allFiles())->toBe([]);
 });

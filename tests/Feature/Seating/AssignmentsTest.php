@@ -7,6 +7,7 @@ use App\Modules\Seating\Actions\AssignPeople;
 use App\Modules\Seating\Actions\UnassignPerson;
 use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\StandingPosition;
+use App\Modules\Seating\Support\Today;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -15,9 +16,10 @@ use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(AssignPeople::class, UnassignPerson::class);
+mutates(AssignPeople::class, UnassignPerson::class, Today::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-03-01 12:00:00');
@@ -116,7 +118,7 @@ it('answers 404 when ending an assignment that is already over or is not found',
     $this->actingAs($this->hr);
 
     $this->delete(route('tenant.seating.assignments.destroy', [$this->tenant, $over->id]))->assertNotFound();
-    $this->delete(route('tenant.seating.assignments.destroy', [$this->tenant, (string) Illuminate\Support\Str::uuid()]))->assertNotFound();
+    $this->delete(route('tenant.seating.assignments.destroy', [$this->tenant, (string) Str::uuid()]))->assertNotFound();
     expect($over->fresh()?->ends_on?->toDateString())->toBe('2026-02-01');
 });
 
@@ -159,4 +161,19 @@ it('pages the people of a position on the server', function (): void {
             ->where('people.data.0', fn ($row) => array_keys($row->toArray()) === ['assignmentId', 'employeeId', 'name', 'area', 'startsOn']));
     $this->get(route('tenant.seating.positions.show', [$this->tenant, $this->position->id, 'page' => 2]))
         ->assertInertia(fn (Assert $page) => $page->has('people.data', 2));
+});
+
+it('tells who assigns that a person already holds another position when a request at the same time placed them first', function (): void {
+    $other = StandingPosition::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'name' => 'Empacador']);
+    // The other request writes Ana into another position between this one's check and its insert.
+    PositionAssignment::creating(function () use ($other): void {
+        if (DB::table('position_assignments')->where('employee_id', $this->ana->id)->doesntExist()) {
+            DB::table('position_assignments')->insert(['id' => (string) Str::uuid(), 'tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'position_id' => $other->id, 'starts_on' => '2026-03-01', 'created_at' => now(), 'updated_at' => now()]);
+        }
+    });
+    $this->actingAs($this->hr);
+
+    assign([$this->ana->id])->assertSessionHasErrors(['employee_ids' => 'Una de estas personas ya tiene otro puesto.']);
+
+    expect(PositionAssignment::query()->where('position_id', $this->position->id)->exists())->toBeFalse();
 });

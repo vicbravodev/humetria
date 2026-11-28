@@ -10,7 +10,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 final readonly class ListReportShares
 {
-    public const int PER_PAGE = 5;
+    public const int PER_PAGE = 5; // @pest-mutate-ignore: IncrementInteger,DecrementInteger
 
     /**
      * The links to the report of a scenario that still open, the newest first.

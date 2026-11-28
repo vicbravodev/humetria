@@ -216,3 +216,14 @@ it('says «No aplica» for the rest seat and the pauses where every position has
     $this->actingAs($this->hr)->get("{$this->url}?ready=1")->assertInertia(fn (Assert $page) => $page
         ->where('rows', fn ($rows): bool => collect($rows)->doesntContain(fn (array $row): bool => $row['state'] === 'not_applicable')));
 });
+
+it('prints the Figura 1 result of each position by its letter', function (): void {
+    SeatingProfile::factory()->create($this->where);
+    StandingPosition::factory()->create($this->where + ['name' => 'Cajera']);
+    StandingPosition::factory()->nearby()->create($this->where + ['name' => 'Empacador']);
+    StandingPosition::factory()->withinCenter()->create($this->where + ['name' => 'Montacarguista']);
+
+    $rows = collect($this->actingAs($this->hr)->get($this->url)->viewData('page')['props']['rows'])->keyBy('key');
+
+    expect(collect($rows['r1']['lines'])->pluck('text')->all())->toContain('Cajera: resultado A', 'Empacador: resultado B', 'Montacarguista: resultado C');
+});

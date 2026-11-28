@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 use App\Modules\Compensation\Actions\ArchiveScenario;
 use App\Modules\Compensation\Actions\DuplicateScenario;
+use App\Modules\Compensation\Actions\ListScenarios;
 use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\ContractTerm;
 use App\Modules\Compensation\Models\GradeSalary;
 use App\Modules\Compensation\Models\Scenario;
+use App\Modules\Compensation\Support\ScenarioEditor;
+use App\Modules\Compensation\Support\ScenarioRows;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Models\JobGrade;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -16,7 +19,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ArchiveScenario::class, DuplicateScenario::class);
+mutates(ArchiveScenario::class, DuplicateScenario::class, ListScenarios::class, ScenarioEditor::class, ScenarioRows::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-04 10:00:00');

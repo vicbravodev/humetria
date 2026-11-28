@@ -275,6 +275,16 @@ describe('the request in view', function (): void {
             ->where('detail.day.date', '2026-11-11')->where('detail.day.marks', [])->where('detail.day.asked', ['type' => 'end', 'time' => '15:00', 'nextDay' => false]));
     });
 
+    it('pulls an end to a start up to a minute short of a day before it, not a whole day', function (string $local, string $date): void {
+        queued($this->ana, null, MarkType::End, $local, 0, 'Olvidé mi salida.');
+        $this->actingAs($this->hr);
+
+        openRequest()->assertInertia(fn (AssertableInertia $page) => $page->where('detail.day.date', $date));
+    })->with([
+        '23 hours and 59 minutes after the start' => ['2026-11-11 09:19', '2026-11-10'],
+        '24 hours after the start' => ['2026-11-11 09:20', '2026-11-11'],
+    ]);
+
     it('tells whether the day ends complete once approved: with its end, or a start still open', function (string $type, string $local, ?bool $correcting, string $after): void {
         queued($this->ana, $correcting === true ? $this->start : null, MarkType::from($type), $local);
         $this->actingAs($this->hr);

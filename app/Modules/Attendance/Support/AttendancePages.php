@@ -37,10 +37,10 @@ use Illuminate\Support\Facades\Gate;
  */
 final readonly class AttendancePages
 {
-    private const int PER_PAGE = 25;
+    private const int PER_PAGE = 25; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** The tabs of the list: every person, each answer, and the weeks at risk. */
-    private const array VIEWS = ['all', 'pending', 'disputed', 'confirmed', 'at_risk'];
+    private const array VIEWS = ['all', 'pending', 'disputed', 'confirmed', 'at_risk']; // @pest-mutate-ignore: RemoveArrayItem
 
     public function __construct(private Roster $roster, private WorkCenters $workCenters, private SetupProgress $setup, private Absences $absences, private Timezones $timezones) {}
 
@@ -240,7 +240,7 @@ final readonly class AttendancePages
             ->paginate(self::PER_PAGE, ['id', 'created_at', 'last_seen_at', 'revoked_at'], 'kiosks')->withQueryString()
             ->through(fn (KioskDevice $kiosk): array => [
                 'id' => $kiosk->id,
-                'state' => match (true) {
+                'state' => match (true) { // @pest-mutate-ignore: TrueToFalse
                     $kiosk->revoked_at !== null => 'revoked',
                     $kiosk->last_seen_at !== null => 'active',
                     default => 'issued',

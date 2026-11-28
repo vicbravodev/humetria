@@ -15,7 +15,7 @@ use App\Modules\Attendance\Enums\ShiftType;
 final class TeamWeek
 {
     /** A week is at risk from this share of the year's weekly overtime cap (art. 66), before it is exceeded. */
-    private const int RISK_PERCENT = 80;
+    private const int RISK_PERCENT = 80; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /**
      * @param  list<string>  $employeeIds

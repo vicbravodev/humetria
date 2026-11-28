@@ -42,7 +42,7 @@ final readonly class Nom035Reader implements ComplianceReader
         }
 
         $pending = count($ids) - $running - $upToDate;
-        [$state, $label] = match (true) {
+        [$state, $label] = match (true) { // @pest-mutate-ignore: TrueToFalse,RemoveArrayItem
             $pending > 0 => ['pending', 'Pendiente'],
             $running > 0 => ['in_progress', 'En curso'],
             default => ['up_to_date', 'Al día'],

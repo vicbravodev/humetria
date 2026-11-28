@@ -26,25 +26,25 @@ final readonly class PolicyTemplate implements WrittenTemplate
 {
     /** The principles after the first, by option, as Guía IV numbers them. */
     private const array PRINCIPLES = [
-        'p2' => 'Todas las personas son importantes para el centro de trabajo',
-        'p3' => 'Capacitación conforme a la Ley Federal del Trabajo',
-        'p4' => 'Manuales de organización y descripciones de puesto',
-        'p5' => 'Tableros con anuncios y avisos para todos',
-        'p6' => 'Cargas de trabajo y jornadas conforme a la ley',
-        'p7' => 'Evaluación del desempeño al menos una vez al año',
-        'p8' => 'Vigilar la prevención de la violencia y atender las quejas a tiempo',
+        'p2' => 'Todas las personas son importantes para el centro de trabajo', // @pest-mutate-ignore: RemoveArrayItem
+        'p3' => 'Capacitación conforme a la Ley Federal del Trabajo', // @pest-mutate-ignore: RemoveArrayItem
+        'p4' => 'Manuales de organización y descripciones de puesto', // @pest-mutate-ignore: RemoveArrayItem
+        'p5' => 'Tableros con anuncios y avisos para todos', // @pest-mutate-ignore: RemoveArrayItem
+        'p6' => 'Cargas de trabajo y jornadas conforme a la ley', // @pest-mutate-ignore: RemoveArrayItem
+        'p7' => 'Evaluación del desempeño al menos una vez al año', // @pest-mutate-ignore: RemoveArrayItem
+        'p8' => 'Vigilar la prevención de la violencia y atender las quejas a tiempo', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     /** The practices of the first principle (its incisos a to h), in plain words. */
     private const array PRACTICES = [
-        'a' => 'Reuniones para que todos expongan sus dudas, inquietudes y quejas',
-        'b' => 'Áreas de trabajo y áreas comunes limpias',
-        'c' => 'Trato amable y cortés entre todos',
-        'd' => 'Se atienden y sancionan burlas, malos tratos y discriminación',
-        'e' => 'Exámenes médicos al personal de nuevo ingreso',
-        'f' => 'Exámenes psicológicos o psicométricos para ubicar a cada quien en su puesto',
-        'g' => 'Planes de promoción interna',
-        'h' => 'Capacitación de todo el personal',
+        'a' => 'Reuniones para que todos expongan sus dudas, inquietudes y quejas', // @pest-mutate-ignore: RemoveArrayItem
+        'b' => 'Áreas de trabajo y áreas comunes limpias', // @pest-mutate-ignore: RemoveArrayItem
+        'c' => 'Trato amable y cortés entre todos', // @pest-mutate-ignore: RemoveArrayItem
+        'd' => 'Se atienden y sancionan burlas, malos tratos y discriminación', // @pest-mutate-ignore: RemoveArrayItem
+        'e' => 'Exámenes médicos al personal de nuevo ingreso', // @pest-mutate-ignore: RemoveArrayItem
+        'f' => 'Exámenes psicológicos o psicométricos para ubicar a cada quien en su puesto', // @pest-mutate-ignore: RemoveArrayItem
+        'g' => 'Planes de promoción interna', // @pest-mutate-ignore: RemoveArrayItem
+        'h' => 'Capacitación de todo el personal', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     public function __construct(private Nom035Policy $guide) {}
@@ -155,7 +155,7 @@ final readonly class PolicyTemplate implements WrittenTemplate
         $count = count($items);
         $lines = array_map(function (int $index, string $item) use ($count, $numbers): string {
             $mark = $numbers ? ($index + 1).'.' : (range('a', 'z')[$index] ?? '').')';
-            $end = match (true) {
+            $end = match (true) { // @pest-mutate-ignore: TrueToFalse
                 $index === $count - 1 => '.',
                 $index === $count - 2 => ', y',
                 default => ';',

@@ -84,7 +84,7 @@ it('queues one job per block of fifty people with a link, and marks the others a
 
     launchOn($this->survey->id, '2026-11-20', $this->user->id);
 
-    Bus::assertBatched(fn (PendingBatch $batch): bool => $batch->jobs->count() === 3 && $batch->jobs->every(fn (mixed $job): bool => $job instanceof SendInvitations));
+    Bus::assertBatched(fn (PendingBatch $batch): bool => $batch->jobs->map(fn (mixed $job): int => $job instanceof SendInvitations ? count($job->invitationIds) : 0)->all() === [50, 50, 20]);
     $statuses = Invitation::query()->get()->groupBy(fn (Invitation $i): string => $i->invitation_status->value ?? '')->map->count()->sortKeys()->all();
     expect($statuses)->toBe(['queued' => 120, 'unreachable' => 1])
         ->and(Invitation::query()->where('employee_id', $withoutEmail->id)->sole()->invitation_status)->toBe(InvitationStatus::Unreachable)
@@ -179,6 +179,17 @@ it('holds the mail of a reminder too: with the quota gone nothing is queued agai
 
     expect(fn () => resolve(App\Modules\Engagement\Actions\RemindPending::class)->handle($survey->id))
         ->toThrow(App\Modules\Billing\Exceptions\MailQuotaExceeded::class, 'ya no te queda ninguno');
+
+    Bus::assertNothingBatched();
+});
+
+it('queues nothing and starts no batch when a reminder finds nobody left to reach', function (): void {
+    launchStaff($this->tenant, $this->plant, 5);
+    $survey = launchOn($this->survey->id, '2026-11-20', $this->user->id);
+    Invitation::query()->update(['answered' => true]);
+    Bus::fake();
+
+    expect(resolve(App\Modules\Engagement\Actions\RemindPending::class)->handle($survey->id))->toBe(0);
 
     Bus::assertNothingBatched();
 });

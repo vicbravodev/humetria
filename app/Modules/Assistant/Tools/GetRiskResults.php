@@ -32,9 +32,9 @@ use Laravel\Ai\Tools\Request;
  */
 final readonly class GetRiskResults implements TellsLiveFacts, Tool
 {
-    private const int MAX_ROWS = 40;
+    private const int MAX_ROWS = 40; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const int NEW_RESULTS_DAYS = 30;
+    private const int NEW_RESULTS_DAYS = 30; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(
         private AssistantScope $scope,

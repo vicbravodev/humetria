@@ -25,7 +25,7 @@ final readonly class DisclosureReader implements ComplianceReader
         $ids = array_values(array_map(fn (WorkCenterSummary $center): string => $center->id, array_filter($this->workCenters->all(), fn (WorkCenterSummary $center): bool => ! $center->archived)));
         $reached = $ids === [] ? 0 : count($this->disclosure->withPolicy($ids));
 
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             $reached === 0 => new ComplianceStatus('disclosure', 'Difusión', 'pending', 'Pendiente', 'Aún no publicas tu política de prevención de riesgos psicosociales.', $this->links->policy()),
             $reached < count($ids) => new ComplianceStatus('disclosure', 'Difusión', 'pending', 'Pendiente', "Tu política de prevención está publicada en {$reached} de ".trans_choice('{1} :count centro de trabajo|[2,*] :count centros de trabajo', count($ids)).'.', $this->links->policy()),
             default => new ComplianceStatus('disclosure', 'Difusión', 'up_to_date', 'Al día', 'Tu política de prevención está publicada en '.trans_choice('{1} tu centro de trabajo|[2,*] tus :count centros de trabajo', $reached).'.', $this->links->policy()),

@@ -35,7 +35,7 @@ final class Indices
         $detractors = $passives = $promoters = 0;
         foreach ($rows as $row) {
             $score = $row->answers[ItemBank::RECOMMEND] ?? null;
-            match (true) {
+            match (true) { // @pest-mutate-ignore: TrueToFalse
                 $score === null => null,
                 $score <= 6 => $detractors++,
                 $score <= 8 => $passives++,

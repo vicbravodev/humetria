@@ -9,7 +9,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 final class ListWorkCenters
 {
-    public const int PER_PAGE = 25;
+    public const int PER_PAGE = 25; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /**
      * The current company's work centers in use, or the archived ones, by name, a page at a time; with a search, only

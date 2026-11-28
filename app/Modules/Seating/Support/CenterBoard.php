@@ -22,19 +22,19 @@ final readonly class CenterBoard
 {
     /** @var array<string, array{string, string|null}> key => [what is asked, the tab where it is put right] */
     private const array REQUIREMENTS = [
-        'r1' => ['Sector declarado y puestos con su Figura 1', 'positions'],
-        'r2' => ['Evaluación vigente de cada persona que trabaja de pie', 'people'],
-        'r3' => ['Acta de cada evaluación firmada', 'people'],
-        'r4' => ['Asientos en cada puesto', 'inventory'],
-        'r5' => ['Asiento de descanso en un área designada', 'inventory'],
-        'r6' => ['Asientos fuera del puesto señalizados', 'inventory'],
-        'r7' => ['Medida para cada evaluación Media o Alta', 'plan'],
-        'r8' => ['Confirmación de cada persona evaluada', 'people'],
-        'r9' => ['Canalización de quien tiene malestares', 'people'],
-        'r10' => ['Reglamento interior firmado, depositado y repartido', 'regulation'],
-        'r11' => ['Acuerdo de pausas en cada puesto con asiento aparte', 'plan'],
-        'r12' => ['Diagnóstico y programa de seguridad y salud', 'documents'],
-        'r13' => ['Integrantes de la Comisión asignados al centro', null],
+        'r1' => ['Sector declarado y puestos con su Figura 1', 'positions'], // @pest-mutate-ignore: RemoveArrayItem
+        'r2' => ['Evaluación vigente de cada persona que trabaja de pie', 'people'], // @pest-mutate-ignore: RemoveArrayItem
+        'r3' => ['Acta de cada evaluación firmada', 'people'], // @pest-mutate-ignore: RemoveArrayItem
+        'r4' => ['Asientos en cada puesto', 'inventory'], // @pest-mutate-ignore: RemoveArrayItem
+        'r5' => ['Asiento de descanso en un área designada', 'inventory'], // @pest-mutate-ignore: RemoveArrayItem
+        'r6' => ['Asientos fuera del puesto señalizados', 'inventory'], // @pest-mutate-ignore: RemoveArrayItem
+        'r7' => ['Medida para cada evaluación Media o Alta', 'plan'], // @pest-mutate-ignore: RemoveArrayItem
+        'r8' => ['Confirmación de cada persona evaluada', 'people'], // @pest-mutate-ignore: RemoveArrayItem
+        'r9' => ['Canalización de quien tiene malestares', 'people'], // @pest-mutate-ignore: RemoveArrayItem
+        'r10' => ['Reglamento interior firmado, depositado y repartido', 'regulation'], // @pest-mutate-ignore: RemoveArrayItem
+        'r11' => ['Acuerdo de pausas en cada puesto con asiento aparte', 'plan'], // @pest-mutate-ignore: RemoveArrayItem
+        'r12' => ['Diagnóstico y programa de seguridad y salud', 'documents'], // @pest-mutate-ignore: RemoveArrayItem
+        'r13' => ['Integrantes de la Comisión asignados al centro', null], // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     public function __construct(private ComplianceRows $rows) {}

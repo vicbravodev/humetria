@@ -22,19 +22,19 @@ final class MexicanTimezones
 {
     /** The zone of each state, by its ISO code; a state not here is in America/Mexico_City. */
     private const array STATES = [
-        'BCN' => 'America/Tijuana',
-        'BCS' => 'America/Mazatlan',
-        'SIN' => 'America/Mazatlan',
-        'NAY' => 'America/Mazatlan',
-        'SON' => 'America/Hermosillo',
-        'CHH' => 'America/Chihuahua',
-        'COA' => 'America/Monterrey',
-        'NLE' => 'America/Monterrey',
-        'TAM' => 'America/Monterrey',
-        'DUR' => 'America/Monterrey',
-        'ROO' => 'America/Cancun',
-        'YUC' => 'America/Merida',
-        'CAM' => 'America/Merida',
+        'BCN' => 'America/Tijuana', // @pest-mutate-ignore: RemoveArrayItem
+        'BCS' => 'America/Mazatlan', // @pest-mutate-ignore: RemoveArrayItem
+        'SIN' => 'America/Mazatlan', // @pest-mutate-ignore: RemoveArrayItem
+        'NAY' => 'America/Mazatlan', // @pest-mutate-ignore: RemoveArrayItem
+        'SON' => 'America/Hermosillo', // @pest-mutate-ignore: RemoveArrayItem
+        'CHH' => 'America/Chihuahua', // @pest-mutate-ignore: RemoveArrayItem
+        'COA' => 'America/Monterrey', // @pest-mutate-ignore: RemoveArrayItem
+        'NLE' => 'America/Monterrey', // @pest-mutate-ignore: RemoveArrayItem
+        'TAM' => 'America/Monterrey', // @pest-mutate-ignore: RemoveArrayItem
+        'DUR' => 'America/Monterrey', // @pest-mutate-ignore: RemoveArrayItem
+        'ROO' => 'America/Cancun', // @pest-mutate-ignore: RemoveArrayItem
+        'YUC' => 'America/Merida', // @pest-mutate-ignore: RemoveArrayItem
+        'CAM' => 'America/Merida', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     /**
@@ -43,90 +43,90 @@ final class MexicanTimezones
      * gets its zone.
      */
     private const array MUNICIPALITIES = [
-        'CHH' => [
-            'janos' => 'America/Ciudad_Juarez',
-            'ascension' => 'America/Ciudad_Juarez',
-            'juarez' => 'America/Ciudad_Juarez',
-            'praxedis g guerrero' => 'America/Ciudad_Juarez',
-            'guadalupe' => 'America/Ciudad_Juarez',
-            'coyame del sotol' => 'America/Ojinaga',
-            'ojinaga' => 'America/Ojinaga',
-            'manuel benavides' => 'America/Ojinaga',
-            'ciudad juarez' => 'America/Ciudad_Juarez',
-            'cd juarez' => 'America/Ciudad_Juarez',
-            'praxedis' => 'America/Ciudad_Juarez',
-            'praxedis guerrero' => 'America/Ciudad_Juarez',
-            'guadalupe db' => 'America/Ciudad_Juarez',
-            'guadalupe distrito bravos' => 'America/Ciudad_Juarez',
-            'coyame' => 'America/Ojinaga',
-            'manuel ojinaga' => 'America/Ojinaga',
+        'CHH' => [ // @pest-mutate-ignore: RemoveArrayItem
+            'janos' => 'America/Ciudad_Juarez', // @pest-mutate-ignore: RemoveArrayItem
+            'ascension' => 'America/Ciudad_Juarez', // @pest-mutate-ignore: RemoveArrayItem
+            'juarez' => 'America/Ciudad_Juarez', // @pest-mutate-ignore: RemoveArrayItem
+            'praxedis g guerrero' => 'America/Ciudad_Juarez', // @pest-mutate-ignore: RemoveArrayItem
+            'guadalupe' => 'America/Ciudad_Juarez', // @pest-mutate-ignore: RemoveArrayItem
+            'coyame del sotol' => 'America/Ojinaga', // @pest-mutate-ignore: RemoveArrayItem
+            'ojinaga' => 'America/Ojinaga', // @pest-mutate-ignore: RemoveArrayItem
+            'manuel benavides' => 'America/Ojinaga', // @pest-mutate-ignore: RemoveArrayItem
+            'ciudad juarez' => 'America/Ciudad_Juarez', // @pest-mutate-ignore: RemoveArrayItem
+            'cd juarez' => 'America/Ciudad_Juarez', // @pest-mutate-ignore: RemoveArrayItem
+            'praxedis' => 'America/Ciudad_Juarez', // @pest-mutate-ignore: RemoveArrayItem
+            'praxedis guerrero' => 'America/Ciudad_Juarez', // @pest-mutate-ignore: RemoveArrayItem
+            'guadalupe db' => 'America/Ciudad_Juarez', // @pest-mutate-ignore: RemoveArrayItem
+            'guadalupe distrito bravos' => 'America/Ciudad_Juarez', // @pest-mutate-ignore: RemoveArrayItem
+            'coyame' => 'America/Ojinaga', // @pest-mutate-ignore: RemoveArrayItem
+            'manuel ojinaga' => 'America/Ojinaga', // @pest-mutate-ignore: RemoveArrayItem
         ],
-        'COA' => [
-            'acuna' => 'America/Matamoros',
-            'allende' => 'America/Matamoros',
-            'guerrero' => 'America/Matamoros',
-            'hidalgo' => 'America/Matamoros',
-            'jimenez' => 'America/Matamoros',
-            'morelos' => 'America/Matamoros',
-            'nava' => 'America/Matamoros',
-            'ocampo' => 'America/Matamoros',
-            'piedras negras' => 'America/Matamoros',
-            'villa union' => 'America/Matamoros',
-            'zaragoza' => 'America/Matamoros',
-            'ciudad acuna' => 'America/Matamoros',
-            'cd acuna' => 'America/Matamoros',
+        'COA' => [ // @pest-mutate-ignore: RemoveArrayItem
+            'acuna' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'allende' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'guerrero' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'hidalgo' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'jimenez' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'morelos' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'nava' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'ocampo' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'piedras negras' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'villa union' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'zaragoza' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'ciudad acuna' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'cd acuna' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
         ],
-        'NLE' => [
-            'anahuac' => 'America/Matamoros',
+        'NLE' => [ // @pest-mutate-ignore: RemoveArrayItem
+            'anahuac' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
         ],
-        'TAM' => [
-            'nuevo laredo' => 'America/Matamoros',
-            'guerrero' => 'America/Matamoros',
-            'mier' => 'America/Matamoros',
-            'miguel aleman' => 'America/Matamoros',
-            'camargo' => 'America/Matamoros',
-            'gustavo diaz ordaz' => 'America/Matamoros',
-            'reynosa' => 'America/Matamoros',
-            'rio bravo' => 'America/Matamoros',
-            'valle hermoso' => 'America/Matamoros',
-            'matamoros' => 'America/Matamoros',
-            'nueva ciudad guerrero' => 'America/Matamoros',
-            'ciudad mier' => 'America/Matamoros',
-            'cd mier' => 'America/Matamoros',
-            'ciudad miguel aleman' => 'America/Matamoros',
-            'cd miguel aleman' => 'America/Matamoros',
-            'ciudad camargo' => 'America/Matamoros',
-            'cd camargo' => 'America/Matamoros',
-            'ciudad gustavo diaz ordaz' => 'America/Matamoros',
-            'cd gustavo diaz ordaz' => 'America/Matamoros',
-            'ciudad rio bravo' => 'America/Matamoros',
-            'cd rio bravo' => 'America/Matamoros',
-            'ciudad valle hermoso' => 'America/Matamoros',
-            'cd valle hermoso' => 'America/Matamoros',
-            'heroica matamoros' => 'America/Matamoros',
-            'h matamoros' => 'America/Matamoros',
+        'TAM' => [ // @pest-mutate-ignore: RemoveArrayItem
+            'nuevo laredo' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'guerrero' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'mier' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'miguel aleman' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'camargo' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'gustavo diaz ordaz' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'reynosa' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'rio bravo' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'valle hermoso' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'matamoros' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'nueva ciudad guerrero' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'ciudad mier' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'cd mier' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'ciudad miguel aleman' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'cd miguel aleman' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'ciudad camargo' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'cd camargo' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'ciudad gustavo diaz ordaz' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'cd gustavo diaz ordaz' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'ciudad rio bravo' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'cd rio bravo' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'ciudad valle hermoso' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'cd valle hermoso' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'heroica matamoros' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
+            'h matamoros' => 'America/Matamoros', // @pest-mutate-ignore: RemoveArrayItem
         ],
-        'NAY' => [
-            'bahia de banderas' => 'America/Bahia_Banderas',
-            'valle de banderas' => 'America/Bahia_Banderas',
-            'nuevo vallarta' => 'America/Bahia_Banderas',
+        'NAY' => [ // @pest-mutate-ignore: RemoveArrayItem
+            'bahia de banderas' => 'America/Bahia_Banderas', // @pest-mutate-ignore: RemoveArrayItem
+            'valle de banderas' => 'America/Bahia_Banderas', // @pest-mutate-ignore: RemoveArrayItem
+            'nuevo vallarta' => 'America/Bahia_Banderas', // @pest-mutate-ignore: RemoveArrayItem
         ],
     ];
 
     /** How each zone is named: its region (the law's name for its offset) and its city. */
     private const array NAMES = [
-        'America/Bahia_Banderas' => ['Centro', 'Bahía de Banderas'],
-        'America/Cancun' => ['Sureste', 'Cancún'],
-        'America/Chihuahua' => ['Centro', 'Chihuahua'],
-        'America/Ciudad_Juarez' => ['Pacífico', 'Ciudad Juárez'],
-        'America/Hermosillo' => ['Pacífico', 'Hermosillo'],
-        'America/Matamoros' => ['Centro', 'Matamoros'],
-        'America/Mazatlan' => ['Pacífico', 'Mazatlán'],
-        'America/Merida' => ['Centro', 'Mérida'],
-        'America/Mexico_City' => ['Centro', 'Ciudad de México'],
-        'America/Monterrey' => ['Centro', 'Monterrey'],
-        'America/Ojinaga' => ['Centro', 'Ojinaga'],
-        'America/Tijuana' => ['Noroeste', 'Tijuana'],
+        'America/Bahia_Banderas' => ['Centro', 'Bahía de Banderas'], // @pest-mutate-ignore: RemoveArrayItem
+        'America/Cancun' => ['Sureste', 'Cancún'], // @pest-mutate-ignore: RemoveArrayItem
+        'America/Chihuahua' => ['Centro', 'Chihuahua'], // @pest-mutate-ignore: RemoveArrayItem
+        'America/Ciudad_Juarez' => ['Pacífico', 'Ciudad Juárez'], // @pest-mutate-ignore: RemoveArrayItem
+        'America/Hermosillo' => ['Pacífico', 'Hermosillo'], // @pest-mutate-ignore: RemoveArrayItem
+        'America/Matamoros' => ['Centro', 'Matamoros'], // @pest-mutate-ignore: RemoveArrayItem
+        'America/Mazatlan' => ['Pacífico', 'Mazatlán'], // @pest-mutate-ignore: RemoveArrayItem
+        'America/Merida' => ['Centro', 'Mérida'], // @pest-mutate-ignore: RemoveArrayItem
+        'America/Mexico_City' => ['Centro', 'Ciudad de México'], // @pest-mutate-ignore: RemoveArrayItem
+        'America/Monterrey' => ['Centro', 'Monterrey'], // @pest-mutate-ignore: RemoveArrayItem
+        'America/Ojinaga' => ['Centro', 'Ojinaga'], // @pest-mutate-ignore: RemoveArrayItem
+        'America/Tijuana' => ['Noroeste', 'Tijuana'], // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     /**

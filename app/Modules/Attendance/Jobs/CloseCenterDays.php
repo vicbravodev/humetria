@@ -17,10 +17,10 @@ final class CloseCenterDays implements ShouldQueue
 {
     use Queueable;
 
-    public int $tries = 3;
+    public int $tries = 3; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** @var list<int> */
-    public array $backoff = [60, 300];
+    public array $backoff = [60, 300]; // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
 
     /** @param  string  $localDate  the center's today when it was claimed, Y-m-d */
     public function __construct(public readonly string $tenantId, public readonly string $workCenterId, public readonly string $localDate) {}

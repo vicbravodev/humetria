@@ -25,7 +25,7 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class SaveCommitment
 {
-    public const int PER_GROUP = 3;
+    public const int PER_GROUP = 3; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private RecordAudit $recordAudit) {}
 

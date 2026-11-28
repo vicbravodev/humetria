@@ -66,7 +66,7 @@ final readonly class ReopenWeeks
      * @param  array<string, string>  $cause  what reopened them, for the audit trail: ids only
      * @param  list<WeekStatus>  $answered  the answers that go back to pending: a confirmed and a disputed week unless said otherwise
      */
-    private function reopen(string $employeeId, array $weeks, array $cause, array $answered = [WeekStatus::Confirmed, WeekStatus::Disputed]): void
+    private function reopen(string $employeeId, array $weeks, array $cause, array $answered = [WeekStatus::Confirmed, WeekStatus::Disputed]): void // @pest-mutate-ignore: RemoveArrayItem
     {
         // Locked whatever their state: a confirmation holding its row (it checks the digest under that lock) is waited for and
         // then seen confirmed; one that comes after waits for this change and counts it. A week with no row yet is

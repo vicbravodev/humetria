@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Notifications\Actions\ForgetSubscriptions;
 use App\Modules\Notifications\Actions\StoreSubscription;
 use App\Modules\Notifications\Models\PushSubscription;
 use App\Modules\Tenancy\Models\Tenant;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Minishlink\WebPush\VAPID;
 
-mutates(StoreSubscription::class);
+mutates(StoreSubscription::class, ForgetSubscriptions::class);
 
 /*
  * The person allows the notices on their phone: the page sends what the browser gave (`subscription.toJSON()`), with their session

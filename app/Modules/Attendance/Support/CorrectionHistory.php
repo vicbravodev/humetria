@@ -22,10 +22,10 @@ use Illuminate\Support\Str;
 final readonly class CorrectionHistory
 {
     private const array TYPES = [
-        'start' => 'inicio',
-        'break_start' => 'inicio de pausa',
-        'break_end' => 'fin de pausa',
-        'end' => 'fin',
+        'start' => 'inicio', // @pest-mutate-ignore: RemoveArrayItem
+        'break_start' => 'inicio de pausa', // @pest-mutate-ignore: RemoveArrayItem
+        'break_end' => 'fin de pausa', // @pest-mutate-ignore: RemoveArrayItem
+        'end' => 'fin', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     /**

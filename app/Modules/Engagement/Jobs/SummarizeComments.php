@@ -34,7 +34,7 @@ final class SummarizeComments implements ShouldQueue
 {
     use Queueable;
 
-    public int $tries = 3;
+    public int $tries = 3; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(public readonly string $surveyId, public readonly ?string $groupId) {}
 

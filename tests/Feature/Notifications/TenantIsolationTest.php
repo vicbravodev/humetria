@@ -13,6 +13,8 @@ use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Queue;
 use Minishlink\WebPush\VAPID;
 
+mutates(ForgetSubscriptions::class);
+
 /*
  * Company A reads, deletes and notifies none of company B's subscriptions, by query, by address and by event.
  */

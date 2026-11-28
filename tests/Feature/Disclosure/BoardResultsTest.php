@@ -9,12 +9,15 @@ use App\Modules\Disclosure\Models\DisseminationRecord;
 use App\Modules\Disclosure\Models\Document;
 use App\Modules\Disclosure\Models\DocumentCenter;
 use App\Modules\Disclosure\Models\PageLink;
+use App\Modules\Disclosure\Support\ResultsStanding;
 use App\Modules\Results\Contracts\RiskResults;
 use App\Modules\Results\Data\RiskBreakdown;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Inertia\Testing\AssertableInertia as Assert;
+
+mutates(ResultsStanding::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-20 18:00:00');

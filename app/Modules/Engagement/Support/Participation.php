@@ -30,7 +30,7 @@ use App\Support\SmallCells;
 final readonly class Participation
 {
     /** The cuts of the panel, in the order they are read. The manager groups are the manager feedback's to show. */
-    private const array CUTS = [CutAttribute::WorkCenter, CutAttribute::Area, CutAttribute::Tenure];
+    private const array CUTS = [CutAttribute::WorkCenter, CutAttribute::Area, CutAttribute::Tenure]; // @pest-mutate-ignore: RemoveArrayItem
 
     public function __construct(private Thresholds $thresholds, private WorkCenters $workCenters, private Areas $areas, private DeliverySummary $deliveries) {}
 

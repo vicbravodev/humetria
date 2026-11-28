@@ -13,10 +13,11 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Models\TenantModule;
 use App\Modules\Tenancy\Support\CompanyRoles;
+use App\Modules\Tenancy\Support\PermissionGroups;
 use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(MemberController::class);
+mutates(MemberController::class, PermissionGroups::class);
 
 // «Permisos adicionales»: what a person has besides their role, by the owner.
 beforeEach(function (): void {

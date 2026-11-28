@@ -8,6 +8,7 @@ use App\Actions\RecordAudit;
 use App\Modules\Sso\Contracts\DomainOwnership;
 use App\Modules\Sso\Models\SsoDomain;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -32,7 +33,8 @@ final readonly class VerifySsoDomain
         }
 
         try {
-            $domain->update(['verified_at' => now()]);
+            // Its own transaction (a savepoint inside another): the violation must not abort the caller's.
+            DB::transaction(fn (): bool => $domain->update(['verified_at' => now()]));
         } catch (UniqueConstraintViolationException) {
             // Another company proved it in the same instant: the database keeps one.
             return false;

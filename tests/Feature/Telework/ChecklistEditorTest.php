@@ -17,6 +17,7 @@ use App\Modules\Telework\Http\Controllers\ChecklistController;
 use App\Modules\Telework\Models\Checklist;
 use App\Modules\Telework\Models\ChecklistQuestion;
 use App\Modules\Telework\Support\ChecklistAccess;
+use App\Modules\Telework\Support\ChecklistOrder;
 use App\Modules\Telework\Support\Coverage;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -26,7 +27,7 @@ use Illuminate\Support\Facades\Log;
 use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(AddQuestion::class, UpdateQuestion::class, RemoveQuestion::class, MoveQuestion::class, PublishChecklist::class, StartChecklistDraft::class, Coverage::class, ChecklistController::class, ChecklistAccess::class);
+mutates(AddQuestion::class, UpdateQuestion::class, RemoveQuestion::class, MoveQuestion::class, PublishChecklist::class, StartChecklistDraft::class, Coverage::class, ChecklistController::class, ChecklistAccess::class, ChecklistOrder::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();

@@ -40,12 +40,15 @@ final class InvitationComposer
     /** Which email a person gets: a reminder to whoever already has their link, otherwise the one the kind of campaign asks for. */
     public static function emailFor(Campaign $campaign, bool $reminder): SurveyEmail
     {
-        return match (true) {
-            $campaign->kind === CampaignKind::Nom035Trauma => SurveyEmail::Trauma,
-            $campaign->kind === CampaignKind::SeatingSurvey => SurveyEmail::Seating,
-            $reminder => SurveyEmail::Reminder,
-            default => SurveyEmail::Invitation,
-        };
+        if ($campaign->kind === CampaignKind::Nom035Trauma) {
+            return SurveyEmail::Trauma;
+        }
+
+        if ($campaign->kind === CampaignKind::SeatingSurvey) {
+            return SurveyEmail::Seating;
+        }
+
+        return $reminder ? SurveyEmail::Reminder : SurveyEmail::Invitation;
     }
 
     /** `$participant` comes with its pending guides loaded (`instruments`). */

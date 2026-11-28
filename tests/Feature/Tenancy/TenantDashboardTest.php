@@ -217,6 +217,27 @@ it('lists what falls due this week: the evaluations that close in the next seven
         ->assertInertia(fn (Assert $page) => $page->where('week', [['day' => 'Mié 4 nov', 'text' => 'cierra la evaluación NOM-035 de Oficinas Monterrey']]));
 });
 
+it('shows five centers to a page, five urgent things and five closings of the week', function (): void {
+    $owner = ownerOf($this->tenant);
+    $channel = ComplaintChannel::factory()->forTenant($this->tenant->id)->active()->create(['acknowledge_within_days' => 2]);
+
+    foreach (range(1, 6) as $day) {
+        $center = WorkCenter::factory()->for($this->tenant)->create(['name' => "Centro {$day}"]);
+        Campaign::factory()->active('2026-10-3'.($day % 2).' 12:00:00')->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $center->id]);
+        $complaint = Complaint::factory()->create(['tenant_id' => $this->tenant->id, 'channel_id' => $channel->id, 'received_on' => '2026-10-'.(22 + $day)]);
+        ComplaintAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'complaint_id' => $complaint->id, 'user_id' => $owner->id]);
+    }
+
+    $this->actingAs($owner)
+        ->get(route('tenant.dashboard', $this->tenant))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('centers.total', 6)
+            ->where('centers.per_page', 5)
+            ->has('centers.data', 5)
+            ->has('urgencies', 5)
+            ->has('week', 5));
+});
+
 it('never carries an answer to the panel', function (): void {
     $plant = WorkCenter::factory()->for($this->tenant)->create();
     $closed = Campaign::factory()->closed()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $plant->id]);

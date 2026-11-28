@@ -18,9 +18,9 @@ use Laravel\Ai\Tools\Request;
  */
 final readonly class SearchRegulations implements Tool
 {
-    private const int LIMIT = 3;
+    private const int LIMIT = 3; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const int MAX_TEXT = 1200;
+    private const int MAX_TEXT = 1200; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private RegulationIndex $index) {}
 

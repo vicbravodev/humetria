@@ -8,6 +8,7 @@ use App\Modules\Seating\Notifications\SeatingDigest;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Data\CompanySummary;
+use App\Modules\Tenancy\Enums\TenantType;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
@@ -83,4 +84,9 @@ it('does not leave the id of a company without the attendance module in the cont
     $this->get("a/{$without->slug}/probe")->assertNotFound();
 
     expect(Illuminate\Support\Facades\Context::get('tenant_id'))->toBeNull();
+});
+
+it('says a union account is a union and a company is not', function (): void {
+    expect((new CompanySummary('t', 'Sindicato', 'sindicato', false, type: TenantType::Union))->isUnion())->toBeTrue()
+        ->and((new CompanySummary('t', 'Acme', 'acme', false))->isUnion())->toBeFalse();
 });

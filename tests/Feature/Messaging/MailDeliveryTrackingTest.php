@@ -5,9 +5,11 @@ declare(strict_types=1);
 use App\Modules\Messaging\Contracts\TracksDelivery;
 use App\Modules\Messaging\Data\InvitationReference;
 use App\Modules\Messaging\Enums\DeliveryStatus;
+use App\Modules\Messaging\Listeners\MarkMailSent;
 use App\Modules\Messaging\Listeners\OpenMailDelivery;
 use App\Modules\Messaging\Listeners\StampMailDelivery;
 use App\Modules\Messaging\Models\Delivery;
+use App\Modules\Messaging\Support\MailDeliveryStash;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -15,7 +17,7 @@ use Illuminate\Support\Facades\Notification as NotificationFacade;
 use Illuminate\Support\Str;
 use Symfony\Component\Mailer\SentMessage;
 
-mutates(OpenMailDelivery::class, StampMailDelivery::class);
+mutates(OpenMailDelivery::class, StampMailDelivery::class, MarkMailSent::class, MailDeliveryStash::class);
 
 final class TrackedTestNotification extends Notification implements TracksDelivery
 {

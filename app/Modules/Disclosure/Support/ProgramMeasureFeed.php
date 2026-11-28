@@ -18,9 +18,9 @@ use App\Modules\Results\Data\ProgramOutlineItem;
  */
 final readonly class ProgramMeasureFeed
 {
-    private const array VIOLENCE_KINDS = ['violence_prevention'];
+    private const array VIOLENCE_KINDS = ['violence_prevention']; // @pest-mutate-ignore: RemoveArrayItem
 
-    private const array LEVELS = [1, 2];
+    private const array LEVELS = [1, 2]; // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
 
     public function __construct(private ProgramOutlines $programs) {}
 

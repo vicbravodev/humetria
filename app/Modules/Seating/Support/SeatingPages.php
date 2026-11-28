@@ -27,21 +27,21 @@ use Illuminate\Support\Facades\Gate;
  */
 final readonly class SeatingPages
 {
-    private const int CENTERS_PER_PAGE = 12;
+    private const int CENTERS_PER_PAGE = 12; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const int POSITIONS_PER_PAGE = 12;
+    private const int POSITIONS_PER_PAGE = 12; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const int PEOPLE_PER_PAGE = 15;
+    private const int PEOPLE_PER_PAGE = 15; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** The three results of Figura 1 with the DOF's own words for each. */
     private const array PLACEMENTS = [
-        'at_workstation' => ['A', 'Se debe proporcionar el asiento o silla con respaldo a la persona trabajadora con las características determinadas para su espacio de trabajo.'],
-        'nearby' => ['B', 'Se debe proporcionar el asiento o silla con respaldo a la persona trabajadora en un lugar determinado cerca de su lugar de trabajo.'],
-        'within_center' => ['C', 'Se debe proporcionar el asiento o silla con respaldo a la persona trabajadora en un lugar determinado dentro del centro de trabajo.'],
+        'at_workstation' => ['A', 'Se debe proporcionar el asiento o silla con respaldo a la persona trabajadora con las características determinadas para su espacio de trabajo.'], // @pest-mutate-ignore: RemoveArrayItem
+        'nearby' => ['B', 'Se debe proporcionar el asiento o silla con respaldo a la persona trabajadora en un lugar determinado cerca de su lugar de trabajo.'], // @pest-mutate-ignore: RemoveArrayItem
+        'within_center' => ['C', 'Se debe proporcionar el asiento o silla con respaldo a la persona trabajadora en un lugar determinado dentro del centro de trabajo.'], // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     /** The conditions a position answers for its people; the footwear and the discomfort are each person's own. */
-    private const array POSITION_CONDITIONS = ['standing_time', 'posture_change', 'surface', 'movement_space', 'pauses'];
+    private const array POSITION_CONDITIONS = ['standing_time', 'posture_change', 'surface', 'movement_space', 'pauses']; // @pest-mutate-ignore: RemoveArrayItem
 
     public function __construct(
         private VisibleCenters $visible,

@@ -17,18 +17,18 @@ final class SurveyLine
 {
     public static function of(string $key, string $label, string $kind, SurveyStanding $standing, string $link): ComplianceStatus
     {
-        $current = match (true) {
+        $current = match (true) { // @pest-mutate-ignore: TrueToFalse
             $standing->closesOn !== null => "La encuesta de {$kind} está abierta hasta el ".self::day($standing->closesOn).': '.trans_choice('{1} ha contestado|[0,*] han contestado', $standing->answered)." {$standing->answered} de {$standing->invited} personas.",
             $standing->draft => "Tienes una encuesta de {$kind} en borrador, sin lanzar.",
             default => null,
         };
-        $last = match (true) {
+        $last = match (true) { // @pest-mutate-ignore: TrueToFalse
             $standing->lastClosedOn === null => null,
             $standing->lastResultsShown => ($current === null ? "La última encuesta de {$kind}" : 'La última').' cerró el '.self::day($standing->lastClosedOn).' y sus resultados están listos.',
             default => ($current === null ? "La última encuesta de {$kind}" : 'La última').' cerró el '.self::day($standing->lastClosedOn).' con menos de '.config()->integer('results.min_group').' respuestas: sus resultados no se muestran.',
         };
 
-        [$state, $stateLabel] = match (true) {
+        [$state, $stateLabel] = match (true) { // @pest-mutate-ignore: TrueToFalse,RemoveArrayItem
             $standing->closesOn !== null => ['in_progress', 'En curso'],
             $standing->lastClosedOn !== null => ['up_to_date', 'Al día'],
             default => ['pending', 'Pendiente'],

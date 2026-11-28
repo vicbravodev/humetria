@@ -18,6 +18,7 @@ use Database\Factories\Seating\RiskAssessmentFactory;
 use Database\Factories\Seating\SeatFactory;
 use Database\Factories\Seating\SeatReportFactory;
 use Database\Factories\Seating\StandingPositionFactory;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Log;
 
 mutates(ScheduleSeatingChecks::class, SeatingAlerts::class, AssessmentTerm::class);
@@ -188,4 +189,22 @@ it('counts only the data of its own center and company', function (): void {
     workIn($this->tenant);
 
     expect(alerts()['reports'])->toBe(0);
+});
+
+it('checks the other companies even when one of them fails, and reports the failure', function (): void {
+    Exceptions::fake();
+    $mine = signedAt(holder()->id, '2025-01-01 12:00:00');
+    // The broken company goes first, so it cannot keep the one after it from its check.
+    $broken = Tenant::factory()->create(['id' => '00000000-0000-4000-8000-000000000001']);
+    $inBroken = RiskAssessmentFactory::new()->signed()->create(['tenant_id' => $broken->id, 'signed_at' => '2025-01-01 12:00:00']);
+    RiskAssessment::retrieved(function (RiskAssessment $assessment) use ($inBroken): void {
+        if (($assessment->getAttributes()['id'] ?? null) === $inBroken->id) {
+            throw new RuntimeException('boom');
+        }
+    });
+    workIn($this->tenant);
+
+    expect(resolve(ScheduleSeatingChecks::class)->handle())->toBe(1)
+        ->and($mine->fresh()?->reassessment_due)->toBeTrue();
+    Exceptions::assertReported(fn (RuntimeException $failure): bool => $failure->getMessage() === 'boom');
 });

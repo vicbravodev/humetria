@@ -211,7 +211,11 @@ describe('rejecting', function (): void {
 
         expect(fn () => resolveAs($request, false, $note))->toThrow(InvalidArgumentException::class)
             ->and($request->fresh()?->status)->toBe(CorrectionStatus::Pending);
-    })->with([null, '   ', 'No.']);
+    })->with([null, '   ', 'No.', 'Cuat']);
+
+    it('takes a note of exactly 5 characters', function (): void {
+        expect(resolveAs(anaRequest($this->start, MarkType::Start, '2026-11-02 09:00'), false, 'Cinco')->status)->toBe(CorrectionStatus::Rejected);
+    });
 });
 
 describe('telling it', function (): void {

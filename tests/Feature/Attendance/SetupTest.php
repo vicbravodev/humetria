@@ -76,6 +76,12 @@ describe('the road to the first mark', function (): void {
         ]);
     });
 
+    it('lists at most five of the pending centers, and counts them all', function (): void {
+        WorkCenter::factory()->count(4)->for($this->tenant)->create();
+
+        expect(setupProps()['centers'])->pending->toHaveCount(5)->total->toBe(6)->done->toBe(0);
+    });
+
     it('is ready with a zone and a screen that shows the code, not one revoked nor one opened and never seen', function (): void {
         AttendanceZone::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]);
         KioskDevice::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id, 'activated_at' => now(), 'last_seen_at' => now(), 'revoked_at' => now()]);

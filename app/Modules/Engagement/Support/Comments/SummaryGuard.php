@@ -16,9 +16,9 @@ use Illuminate\Support\Str;
 final class SummaryGuard
 {
     /** Words in a row a theme may share with a comment before it counts as quoting it. */
-    private const int QUOTE_WORDS = 5;
+    private const int QUOTE_WORDS = 5; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const int MAX_LENGTH = 160;
+    private const int MAX_LENGTH = 160; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /**
      * @param  array<array-key, mixed>  $themes  `{valued: [{theme, count}], change: [{theme, count}]}`

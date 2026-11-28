@@ -11,13 +11,14 @@ use App\Modules\Campaigns\Http\Controllers\CampaignController;
 use App\Modules\Campaigns\Http\Requests\CreateEvaluationRequest;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
+use App\Modules\Campaigns\Support\CampaignInstruments;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Support\Facades\Log;
 
-mutates(CreateEvaluationDraft::class, DrawSample::class, DeleteDraft::class, CampaignController::class, CreateEvaluationRequest::class);
+mutates(CreateEvaluationDraft::class, DrawSample::class, DeleteDraft::class, CampaignController::class, CreateEvaluationRequest::class, CampaignInstruments::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();

@@ -98,7 +98,11 @@ describe('resolving', function (): void {
     it('requires a note of at least 10 characters', function (string $note): void {
         expect(fn () => resolveDispute($this, $note))->toThrow(InvalidArgumentException::class);
         expect($this->week->fresh()?->status)->toBe(WeekStatus::Disputed);
-    })->with(['empty' => [''], 'blank' => ['            '], 'too short' => ['Ya quedó']]);
+    })->with(['empty' => [''], 'blank' => ['            '], 'too short' => ['Ya quedó'], 'nine characters' => ['Corregida']]);
+
+    it('takes a note of exactly 10 characters', function (): void {
+        expect(resolveDispute($this, 'Corregido.')->status)->toBe(WeekStatus::Pending);
+    });
 
     it('accepts only a member of the company', function (): void {
         $stranger = memberOf(Tenant::factory()->create(), TenantRole::Hr);

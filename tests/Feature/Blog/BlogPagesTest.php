@@ -2,10 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Modules\Blog\Support\BlogPresenter;
+use App\Modules\Blog\Support\BlogSeo;
 use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
 
 require_once __DIR__.'/BlogTestHelpers.php';
+
+mutates(BlogPresenter::class, BlogSeo::class);
 
 beforeEach(fn () => Carbon::setTestNow('2026-11-20 12:00:00'));
 

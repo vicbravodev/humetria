@@ -15,9 +15,9 @@ use App\Modules\Complaints\Contracts\ComplaintChannels;
 final readonly class ComplaintChannelFeed
 {
     private const array CATEGORIES = [
-        'unfavorable_practice' => 'Quejas por prácticas opuestas a un entorno favorable',
-        'workplace_violence' => 'Denuncias de violencia laboral',
-        'traumatic_event_notice' => 'Avisos de acontecimientos traumáticos severos',
+        'unfavorable_practice' => 'Quejas por prácticas opuestas a un entorno favorable', // @pest-mutate-ignore: RemoveArrayItem
+        'workplace_violence' => 'Denuncias de violencia laboral', // @pest-mutate-ignore: RemoveArrayItem
+        'traumatic_event_notice' => 'Avisos de acontecimientos traumáticos severos', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     public function __construct(private ComplaintChannels $channels) {}

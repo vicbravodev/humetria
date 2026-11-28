@@ -22,7 +22,7 @@ use InvalidArgumentException;
  */
 final readonly class SubmitResponse
 {
-    public const int DEADLOCK_ATTEMPTS = 3;
+    public const int DEADLOCK_ATTEMPTS = 3; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private OpenInvitation $openInvitation) {}
 

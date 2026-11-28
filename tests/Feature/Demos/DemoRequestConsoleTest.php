@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Demos\Actions\ListDemoRequests;
 use App\Modules\Demos\Enums\DemoProfile;
 use App\Modules\Demos\Enums\Tool;
 use App\Modules\Demos\Enums\Workforce;
@@ -10,7 +11,7 @@ use App\Modules\Demos\Models\DemoRequest;
 use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(DemoRequest::class);
+mutates(DemoRequest::class, ListDemoRequests::class);
 
 it('lives at /admin/demo-requests', function (): void {
     expect(route('demo-requests.index', absolute: false))->toBe('/admin/demo-requests');

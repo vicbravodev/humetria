@@ -13,6 +13,8 @@ use App\Modules\Complaints\Events\ComplaintChannelCodeRotated;
 use App\Modules\Complaints\Events\ComplaintChannelPaused;
 use App\Modules\Complaints\Events\ComplaintChannelPublished;
 use App\Modules\Complaints\Models\ComplaintChannel;
+use App\Modules\Complaints\Support\CompanyComplaintChannels;
+use App\Modules\Complaints\Support\Dates;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Carbon;
@@ -20,7 +22,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ActivateChannel::class, PauseChannel::class, ResumeChannel::class, RotateAccessCode::class, SaveChannelSettings::class);
+mutates(ActivateChannel::class, PauseChannel::class, ResumeChannel::class, RotateAccessCode::class, SaveChannelSettings::class, CompanyComplaintChannels::class, Dates::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-20 03:30:00');

@@ -19,6 +19,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 
 mutates(RecordDissemination::class, EvidenceStore::class, DisclosureFiles::class, DisseminationPages::class);
@@ -155,4 +156,35 @@ it('keeps a list of signatures with how many signed and its sheet, and no other 
     'a list with no sheet' => [['medium' => 'signed_list', 'evidence_path' => null, 'signatures' => 3]],
     'a list nobody signed' => [['medium' => 'signed_list', 'evidence_path' => 'x.pdf', 'signatures' => 0]],
     'a poster with a count' => [['medium' => 'poster', 'signatures' => 3]],
+]);
+
+it('leaves no file behind when the record cannot be saved', function (): void {
+    DisseminationRecord::creating(fn () => throw new RuntimeException('database down'));
+    $this->actingAs($this->hr);
+
+    recordEvidence(['medium' => 'signed_list', 'signatures' => 4, 'evidence' => scannedSheet()])->assertServerError();
+
+    expect(Storage::disk(config()->string('filesystems.disclosure_files'))->allFiles())->toBe([]);
+});
+
+it('refuses in the store a PDF heavier than the limit, naming the limit in MB on the field it came in', function (): void {
+    config(['disclosure.max_document_kb' => 2048]);
+    $file = tempnam(sys_get_temp_dir(), 'evidence');
+    file_put_contents($file, "%PDF-1.4\n".str_repeat('a', 2048 * 1024));
+
+    expect(fn () => resolve(EvidenceStore::class)->store($file, "dissemination/{$this->tenant->id}", 'sheet'))
+        ->toThrow(fn (ValidationException $refusal) => expect($refusal->errors())->toBe(['sheet' => ['El archivo debe pesar menos de 2 MB.']]));
+    unlink($file);
+});
+
+it('decodes a photo of up to twenty-five million pixels, and refuses one pixel more before decoding it', function (int $width, int $height, bool $stored): void {
+    $file = tempnam(sys_get_temp_dir(), 'evidence');
+    imagepng(imagecreatetruecolor($width, $height), $file);
+    $store = fn () => resolve(EvidenceStore::class)->store($file, "dissemination/{$this->tenant->id}");
+
+    $stored ? expect($store())->toEndWith('.png') : expect($store)->toThrow(ValidationException::class, 'Debe ser un PDF o una imagen JPG o PNG.');
+    unlink($file);
+})->with([
+    '5000 × 5000' => [5000, 5000, true],
+    '4901 × 5101, one pixel more' => [4901, 5101, false],
 ]);

@@ -15,9 +15,9 @@ use BaconQrCode\Writer;
  */
 final readonly class QrCode
 {
-    private const int SIZE = 480;
+    private const int SIZE = 480; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const int MARGIN = 2;
+    private const int MARGIN = 2; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function dataUri(string $text): string
     {

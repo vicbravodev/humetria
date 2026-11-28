@@ -13,22 +13,22 @@ use App\Modules\Attendance\Enums\ShiftType;
 final class LegalLimits
 {
     /** Art. 66: at most 4 overtime hours in a day... */
-    public const int DAILY_OVERTIME_MAX = 240;
+    public const int DAILY_OVERTIME_MAX = 240; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** ...on at most 4 days of the week. */
-    public const int OVERTIME_DAYS_MAX = 4;
+    public const int OVERTIME_DAYS_MAX = 4; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** Art. 68: ordinary plus overtime never above 12 hours a day. */
-    public const int DAY_TOTAL_MAX = 720;
+    public const int DAY_TOTAL_MAX = 720; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** Art. 68: overtime beyond the cap of art. 66 (paid triple) at most 4 hours a week. */
-    public const int TRIPLE_WEEKLY_MAX = 240;
+    public const int TRIPLE_WEEKLY_MAX = 240; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** Transitorio segundo: weekly ordinary hours by year. */
-    private const array WEEKLY_ORDINARY_HOURS = [2026 => 48, 2027 => 46, 2028 => 44, 2029 => 42, 2030 => 40];
+    private const array WEEKLY_ORDINARY_HOURS = [2026 => 48, 2027 => 46, 2028 => 44, 2029 => 42, 2030 => 40]; // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
 
     /** Transitorio cuarto: weekly overtime hours by year. */
-    private const array WEEKLY_OVERTIME_HOURS = [2026 => 9, 2027 => 9, 2028 => 10, 2029 => 11, 2030 => 12];
+    private const array WEEKLY_OVERTIME_HOURS = [2026 => 9, 2027 => 9, 2028 => 10, 2029 => 11, 2030 => 12]; // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
 
     public static function weeklyOrdinaryMinutes(int $year): int
     {

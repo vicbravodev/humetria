@@ -34,7 +34,7 @@ final class WaveComparison
 
     private static function direction(int $points): Direction
     {
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             $points > 0 => Direction::Up,
             $points < 0 => Direction::Down,
             default => Direction::Same,

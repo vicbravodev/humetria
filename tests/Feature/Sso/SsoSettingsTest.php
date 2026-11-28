@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\AuditEntry;
+use App\Modules\Sso\Actions\SaveSsoConnection;
 use App\Modules\Sso\Models\SsoConnection;
 use App\Modules\Sso\Models\SsoDomain;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -10,6 +11,8 @@ use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia as Assert;
+
+mutates(SaveSsoConnection::class);
 
 function ssoOf(Tenant $tenant): SsoConnection
 {

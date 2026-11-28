@@ -11,6 +11,7 @@ use App\Modules\Complaints\Models\Complaint;
 use App\Modules\Complaints\Models\ComplaintAssignment;
 use App\Modules\Complaints\Models\ComplaintChannel;
 use App\Modules\Complaints\Support\CasePages;
+use App\Modules\Complaints\Support\EntryText;
 use App\Modules\Complaints\Support\InboxPages;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -19,7 +20,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(InboxPages::class, CasePages::class, ComplaintController::class, ViewCase::class);
+mutates(InboxPages::class, CasePages::class, ComplaintController::class, ViewCase::class, EntryText::class);
 
 // How many queries the inbox makes: measured, then fixed so that a new N+1 breaks the test.
 // Rediseño v2: one more, the count of the cases waiting for their acknowledgement (board V4-Quejas-Bandeja).

@@ -15,13 +15,14 @@ use App\Modules\Interventions\Models\ProgramAction;
 use App\Modules\Interventions\Models\ProgramItem;
 use App\Modules\Interventions\Models\ProgressEntry;
 use App\Modules\Interventions\Support\CompanyProgramOutlines;
+use App\Modules\Interventions\Support\ProgramClock;
 use App\Modules\Results\Contracts\ProgramOutlines;
 use App\Modules\Results\Data\ProgramOutline;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Carbon;
 
-mutates(CompanyProgramOutlines::class);
+mutates(CompanyProgramOutlines::class, ProgramClock::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-20 18:00:00');

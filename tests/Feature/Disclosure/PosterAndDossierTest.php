@@ -27,11 +27,11 @@ beforeEach(function (): void {
     workIn($this->tenant);
 });
 
-it('draws the QR of an address as an SVG data URI that the policy of the pages allows', function (): void {
+it('draws the QR of an address as an SVG data URI of 480 pixels with a margin of two modules, that the policy of the pages allows', function (): void {
     $uri = resolve(QrCode::class)->dataUri('https://humetria.test/workers/abc');
 
     expect($uri)->toStartWith('data:image/svg+xml;base64,')
-        ->and((string) base64_decode(substr($uri, strlen('data:image/svg+xml;base64,')), true))->toContain('<svg')->toContain('<path')
+        ->and((string) base64_decode(substr($uri, strlen('data:image/svg+xml;base64,')), true))->toContain('<svg')->toContain('<path')->toContain('width="480" height="480"')->toContain('translate(2,2)')
         ->and(resolve(QrCode::class)->dataUri('https://humetria.test/workers/abc'))->toBe($uri)
         ->and(resolve(QrCode::class)->dataUri('https://humetria.test/workers/xyz'))->not->toBe($uri);
 });

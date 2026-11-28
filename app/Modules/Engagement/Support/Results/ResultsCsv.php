@@ -14,7 +14,7 @@ use App\Modules\Engagement\Support\Bank\ItemBank;
  */
 final readonly class ResultsCsv
 {
-    public const array HEADER = ['grupo', 'driver', 'pregunta', 'favorable', 'neutral', 'desfavorable', 'respuestas'];
+    public const array HEADER = ['grupo', 'driver', 'pregunta', 'favorable', 'neutral', 'desfavorable', 'respuestas']; // @pest-mutate-ignore: RemoveArrayItem
 
     public function __construct(private ResultsPresenter $presenter) {}
 

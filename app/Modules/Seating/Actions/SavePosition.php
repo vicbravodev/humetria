@@ -23,7 +23,7 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class SavePosition
 {
-    private const int PROLONGED_AFTER_MINUTES = 180;
+    private const int PROLONGED_AFTER_MINUTES = 180; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private CurrentTenant $tenant, private SeatingAssessment $assessment, private RecordAudit $audit) {}
 

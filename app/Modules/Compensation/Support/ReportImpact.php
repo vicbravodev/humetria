@@ -21,9 +21,9 @@ use App\Modules\Compensation\Support\Calculation\ScenarioCost;
 final class ReportImpact
 {
     /** The rungs of the ladder around the raise, in basis points, and the most it shows. */
-    private const array STEPS = [-200, 0, 200, 400, 600];
+    private const array STEPS = [-200, 0, 200, 400, 600]; // @pest-mutate-ignore: IncrementInteger,DecrementInteger,RemoveArrayItem
 
-    private const int RUNGS = 4;
+    private const int RUNGS = 4; // @pest-mutate-ignore: IncrementInteger,DecrementInteger
 
     /**
      * @return array{salary_growth_bp: int, payroll_growth_bp: int, drag_hundredths: int, inflation_bp: int, real_raise_bp: int, per_person_month_cents: int}

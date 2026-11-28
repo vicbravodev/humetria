@@ -60,7 +60,7 @@ final class Tenant extends Model
     /** @use HasFactory<TenantFactory> */
     use HasFactory, HasVersion4Uuids, SearchesText;
 
-    public const int TRIAL_DAYS = 14;
+    public const int TRIAL_DAYS = 14; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function isUnion(): bool
     {

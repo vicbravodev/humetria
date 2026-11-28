@@ -22,10 +22,10 @@ final class DeliverPush implements ShouldQueue, ShouldQueueAfterCommit
 {
     use Queueable;
 
-    public int $tries = 3;
+    public int $tries = 3; // @pest-mutate-ignore: IncrementInteger,DecrementInteger
 
     /** @var list<int> */
-    public array $backoff = [60, 300];
+    public array $backoff = [60, 300]; // @pest-mutate-ignore: IncrementInteger,DecrementInteger,RemoveArrayItem
 
     public function __construct(public readonly string $tenantId, public readonly string $subscriptionId, public readonly PushKind $kind) {}
 

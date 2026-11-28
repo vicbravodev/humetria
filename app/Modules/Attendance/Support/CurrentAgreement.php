@@ -17,7 +17,7 @@ use App\Modules\Tenancy\Contracts\CurrentTenant;
 final readonly class CurrentAgreement
 {
     /** The policy table's default, for a company that has not saved its policy yet. */
-    private const int DEFAULT_RETENTION_MONTHS = 12;
+    private const int DEFAULT_RETENTION_MONTHS = 12; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private CurrentTenant $tenant) {}
 

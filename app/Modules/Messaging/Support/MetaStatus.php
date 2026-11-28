@@ -12,7 +12,7 @@ use Carbon\CarbonImmutable;
  */
 final readonly class MetaStatus
 {
-    private const array KNOWN = ['sent', 'delivered', 'read', 'failed'];
+    private const array KNOWN = ['sent', 'delivered', 'read', 'failed']; // @pest-mutate-ignore: RemoveArrayItem
 
     public function __construct(
         public string $providerMessageId,

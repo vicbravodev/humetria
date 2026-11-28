@@ -83,6 +83,10 @@ it('reports a provider that fails as a failed question, not as a crash, and stor
     expect(AiUsage::query()->withoutGlobalScopes()->count())->toBe(0);
 });
 
+it('refuses a company that does not exist', function (): void {
+    quality(['tenant' => '00000000-0000-4000-8000-000000000000'])->expectsOutputToContain('No encontré esa empresa.')->assertFailed();
+});
+
 it('does not run in production, and refuses a person who is not of that company', function (): void {
     quality(['--as' => 'nadie@otra.mx'])->expectsOutputToContain('no es de esa empresa')->assertFailed();
 

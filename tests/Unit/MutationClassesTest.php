@@ -111,3 +111,11 @@ it('leaves out the fixtures of other tests in the plan too', function (): void {
 
     expect(implode(',', $plan['Kernel']['classes']))->not->toContain('Ghost');
 });
+
+it('runs a module called Notifications like any other, leaving out only the notifications it sends', function (): void {
+    $process = new Process([PHP_BINARY, dirname(__DIR__, 2).'/scripts/mutation-classes.php', 'tests/Fixtures/MutationPlanNotifications', '--plan'], dirname(__DIR__, 2));
+    $process->mustRun();
+
+    expect(explode("\t", trim($process->getOutput()))[0] ?? null)->toBe('Notifications')
+        ->and(explode("\t", trim($process->getOutput()))[1] ?? null)->toBe('App\Modules\Notifications\Actions\ForgetPhones');
+});

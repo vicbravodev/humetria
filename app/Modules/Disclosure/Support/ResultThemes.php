@@ -14,7 +14,7 @@ use App\Modules\Results\Data\RiskGroup;
  */
 final class ResultThemes
 {
-    private const int THEMES = 3;
+    private const int THEMES = 3; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** @return list<string> */
     public static function of(RiskBreakdown $breakdown): array

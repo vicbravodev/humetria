@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\AuditEntry;
 use App\Modules\Seating\Actions\SubmitPersonInput;
 use App\Modules\Seating\Events\PersonInputSubmitted;
+use App\Modules\Seating\Listeners\FlagOnPersonInput;
 use App\Modules\Seating\Models\PersonInput;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 
-mutates(SubmitPersonInput::class);
+mutates(SubmitPersonInput::class, FlagOnPersonInput::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-03-01 18:00:00');

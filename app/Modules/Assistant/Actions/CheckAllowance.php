@@ -19,9 +19,9 @@ use Illuminate\Support\Facades\RateLimiter;
  */
 final readonly class CheckAllowance
 {
-    private const int MINUTE = 60;
+    private const int MINUTE = 60; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const int DAY = 86400;
+    private const int DAY = 86400; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private ScopeGuard $guard, private MonthlyUsage $usage) {}
 

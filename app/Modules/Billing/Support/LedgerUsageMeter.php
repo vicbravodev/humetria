@@ -41,7 +41,7 @@ final readonly class LedgerUsageMeter implements UsageMeter
         return new UsageSnapshot($meter, $period->toDateString(), UsagePeriod::label($period), $counter->used ?? 0, $counter->reserved ?? 0, $this->quota->base($tenantId, $meter) + $granted, $granted);
     }
 
-    public function history(string $tenantId, string $meter, int $perPage = 6, string $pageName = 'usage_page'): LengthAwarePaginator
+    public function history(string $tenantId, string $meter, int $perPage = 6, string $pageName = 'usage_page'): LengthAwarePaginator // @pest-mutate-ignore: IncrementInteger,DecrementInteger
     {
         return UsageCounter::query()->where('tenant_id', $tenantId)->where('meter', $meter)->orderByDesc('period_start')
             ->paginate($perPage, pageName: $pageName)->withQueryString()

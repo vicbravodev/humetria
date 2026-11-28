@@ -3,9 +3,12 @@
 declare(strict_types=1);
 
 use App\Modules\Engagement\Models\Survey;
+use App\Modules\Engagement\Support\Results\ResultsPresenter;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Inertia\Testing\AssertableInertia as Assert;
+
+mutates(ResultsPresenter::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();

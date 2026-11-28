@@ -19,6 +19,9 @@ use App\Modules\Complaints\Models\ComplaintAssignment;
 use App\Modules\Complaints\Models\ComplaintChannel;
 use App\Modules\Complaints\Models\ComplaintEntry;
 use App\Modules\Complaints\Models\ComplaintHandler;
+use App\Modules\Complaints\Support\CaseThread;
+use App\Modules\Complaints\Support\EntryText;
+use App\Modules\Complaints\Support\HeldCase;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Carbon;
@@ -26,7 +29,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(AcknowledgeComplaint::class, StartReview::class, WriteToReporter::class, AddInternalNote::class, ShareCase::class, RecuseFromCase::class, SetLegalHold::class, CloseCase::class, ReopenCase::class, RecordCaseExport::class);
+mutates(AcknowledgeComplaint::class, StartReview::class, WriteToReporter::class, AddInternalNote::class, ShareCase::class, RecuseFromCase::class, SetLegalHold::class, CloseCase::class, ReopenCase::class, RecordCaseExport::class, CaseThread::class, HeldCase::class, EntryText::class);
 
 const NOTE = 'Hablé con el jefe de turno y negó los hechos';
 const REPLY = 'Gracias por avisarnos; revisaremos lo que cuenta';
@@ -375,3 +378,22 @@ it('keeps a note of the person with a day and never an hour', function (): void 
     expect(fn () => ComplaintEntry::factory()->create(['tenant_id' => $this->tenant->id, 'complaint_id' => $this->complaint->id, 'kind' => 'internal_note', 'occurred_at' => null, 'occurred_on' => '2026-11-19']))
         ->toThrow(Illuminate\Database\QueryException::class);
 });
+
+it('says each entry of the log in words made of its states, and each message in its own', function (string $kind, ?array $meta, ?string $text): void {
+    $entry = new ComplaintEntry(['kind' => $kind, 'body' => $kind === 'internal_note' ? NOTE : null, 'meta' => $meta]);
+
+    expect(resolve(EntryText::class)->of($entry, [7 => 'Rosa Aguilar']))->toBe($text);
+})->with([
+    'a note' => ['internal_note', null, NOTE],
+    'acknowledged' => ['status_change', ['acknowledged' => true, 'to' => 'closed'], 'acusó recibo.'],
+    'closed with its resolution' => ['status_change', ['from' => 'in_review', 'to' => 'closed', 'resolution' => 'measures_taken'], 'cerró el caso: '.App\Modules\Complaints\Enums\ComplaintResolution::MeasuresTaken->label().'.'],
+    'closed with no resolution' => ['status_change', ['to' => 'closed'], 'cerró el caso.'],
+    'closed with an unknown resolution' => ['status_change', ['to' => 'closed', 'resolution' => 'other'], 'cerró el caso.'],
+    'reopened' => ['status_change', ['from' => 'closed', 'to' => 'in_review'], 'abrió el caso de nuevo.'],
+    'to review' => ['status_change', ['from' => 'new', 'to' => 'in_review'], 'pasó el caso a revisión.'],
+    'no states' => ['status_change', null, 'pasó el caso a revisión.'],
+    'shared with a known person' => ['assignment_change', ['user_id' => 7], 'compartió el caso con Rosa Aguilar.'],
+    'shared with someone unknown' => ['assignment_change', ['user_id' => 8], 'compartió el caso con otra persona.'],
+    'shared with no id' => ['assignment_change', ['user_id' => '7'], 'compartió el caso con otra persona.'],
+    'recused' => ['recusal', null, 'se excusó del caso por conflicto de interés.'],
+]);

@@ -302,6 +302,15 @@ describe('copying the schedule of another person', function (): void {
         $this->getJson(route('tenant.attendance.schedules.options', ['acme', 'q' => 'carla']))->assertOk()->assertJsonPath('*.label', ['Carla Ruiz']);
     });
 
+    it('offers at most twenty people to copy from', function (): void {
+        $this->actingAs($this->hr);
+        foreach (EmployeeFactory::new()->count(19)->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]) as $person) {
+            AttendanceSchedule::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $person->id]);
+        }
+
+        $this->getJson(route('tenant.attendance.schedules.options', ['acme']))->assertOk()->assertJsonCount(20);
+    });
+
     it('leaves out whoever has no schedule, and the people of another company', function (): void {
         $this->actingAs($this->hr);
         $other = Tenant::factory()->create();

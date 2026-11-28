@@ -7,15 +7,19 @@ use App\Modules\Disclosure\Actions\PublishContent;
 use App\Modules\Disclosure\Actions\PublishResults;
 use App\Modules\Disclosure\Actions\SaveWriting;
 use App\Modules\Disclosure\Enums\DocumentKind;
+use App\Modules\Disclosure\Support\PolicyText;
+use App\Modules\Disclosure\Support\ResultsStanding;
 use App\Modules\Disclosure\Support\ResultThemes;
 use App\Modules\Disclosure\Support\WorkersPages;
 use App\Modules\Disclosure\Support\Writing\Templates;
+use App\Modules\Results\Data\RiskBreakdown;
+use App\Modules\Results\Data\RiskGroup;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(WorkersPages::class, ResultThemes::class);
+mutates(WorkersPages::class, ResultThemes::class, PolicyText::class, ResultsStanding::class);
 
 // Rediseño v2 (board V4-Pagina-Personas): the page of the people of a center on their phone — each block of 5.7 folded with
 // its parts under their headings, and the results in plain words: who answered and what most needs attention, for the whole
@@ -60,4 +64,11 @@ it('names no theme below the minimum', function (): void {
 
     $this->get(route('workers.center', [$this->token, $this->plant->id]))->assertInertia(fn (Assert $page) => $page
         ->where('results.published', ['state' => 'below_minimum', 'closedOn' => '10 nov 2026']));
+});
+
+it('names three themes at most, the ones with most people in Alto or Muy alto first, and none without them', function (): void {
+    $domain = fn (string $label, int $high, int $veryHigh): RiskGroup => new RiskGroup($label, $label, null, [0 => 5, 3 => $high, 4 => $veryHigh]);
+
+    expect(ResultThemes::of(new RiskBreakdown('scored', domains: [$domain('Carga', 1, 0), $domain('Jornada', 2, 2), $domain('Liderazgo', 0, 0), $domain('Control', 3, 0), $domain('Relaciones', 0, 2)])))
+        ->toBe(['Jornada', 'Control', 'Relaciones']);
 });

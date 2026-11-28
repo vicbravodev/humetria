@@ -11,6 +11,7 @@ use App\Modules\Attendance\Events\MarkCorrected;
 use App\Modules\Attendance\Events\OfflineMarkReviewed;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\CorrectionRequest;
+use App\Modules\Notifications\Actions\ForgetSubscriptions;
 use App\Modules\Notifications\Enums\PushKind;
 use App\Modules\Notifications\Jobs\DeliverPush;
 use App\Modules\Notifications\Listeners\ForgetOnAccessRevoked;
@@ -30,7 +31,7 @@ use Illuminate\Support\Facades\Queue;
 use Minishlink\WebPush\VAPID;
 use Tests\Support\OfflineDeliveries;
 
-mutates(NotifyMarkReviewed::class, NotifyCorrectionResolved::class, ForgetOnAccessRevoked::class);
+mutates(NotifyMarkReviewed::class, NotifyCorrectionResolved::class, ForgetOnAccessRevoked::class, ForgetSubscriptions::class);
 
 /*
  * Two things of Attendance tell the person (a mark made without connection was reviewed; a request to correct was answered), and

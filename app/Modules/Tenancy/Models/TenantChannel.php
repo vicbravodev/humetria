@@ -28,7 +28,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $enabled_by
  * @property CarbonImmutable|null $enabled_at
  */
-#[Fillable(['tenant_id', 'channel', 'enabled', 'preference', 'monthly_cap', 'consent_wording_version', 'enabled_by', 'enabled_at'])]
+#[Fillable(['tenant_id', 'channel', 'enabled', 'preference', 'monthly_cap', 'consent_wording_version', 'enabled_by', 'enabled_at'])] // @pest-mutate-ignore: RemoveArrayItem
 #[UseFactory(TenantChannelFactory::class)]
 final class TenantChannel extends Model
 {

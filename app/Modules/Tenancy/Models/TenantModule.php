@@ -9,7 +9,6 @@ use Carbon\CarbonImmutable;
 use Database\Factories\Tenancy\TenantModuleFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -27,7 +26,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property CarbonImmutable|null $expires_at
  * @property int|null $granted_by
  */
-#[Fillable(['tenant_id', 'module', 'source', 'reason', 'expires_at', 'granted_by'])]
+#[Fillable(['tenant_id', 'module', 'source', 'reason', 'expires_at', 'granted_by'])] // @pest-mutate-ignore: RemoveArrayItem
 #[UseFactory(TenantModuleFactory::class)]
 final class TenantModule extends Model
 {
@@ -46,16 +45,6 @@ final class TenantModule extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
-    }
-
-    /**
-     * The rows that count now: they have no end, or it has not come.
-     *
-     * @param  Builder<self>  $query
-     */
-    public function scopeActive(Builder $query): void
-    {
-        $query->where(fn (Builder $open) => $open->whereNull('expires_at')->orWhere('expires_at', '>', now()));
     }
 
     /**

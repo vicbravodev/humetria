@@ -15,6 +15,7 @@ use App\Modules\Engagement\Support\Bank\ItemBank;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Log;
 
 mutates(CloseSurvey::class, CloseExpiredSurveys::class, SurveyClosed::class);
@@ -97,6 +98,21 @@ it('closes, in every company, the surveys whose last day ended yesterday in the 
     workIn($third);
     expect($elsewhere->refresh()->status)->toBe(SurveyStatus::Closed);
     Event::assertDispatchedTimes(SurveyClosed::class, 2);
+});
+
+it('reports the failure of one company and still closes the others', function (): void {
+    Event::fake([SurveyClosed::class]);
+    Exceptions::fake();
+    $globex = Tenant::factory()->create();
+    Survey::factory()->active('2026-11-01')->create(['tenant_id' => $globex->id]);
+    $survey = Survey::factory()->active('2026-11-01')->create(['tenant_id' => $this->tenant->id]);
+    failToEnter($globex->id);
+
+    expect(resolve(CloseExpiredSurveys::class)->handle())->toBe(1);
+
+    workIn($this->tenant);
+    expect($survey->refresh()->status)->toBe(SurveyStatus::Closed);
+    Exceptions::assertReported(fn (RuntimeException $failure): bool => $failure->getMessage() === 'The company could not be entered.');
 });
 
 it('logs an expiry as automatic', function (): void {

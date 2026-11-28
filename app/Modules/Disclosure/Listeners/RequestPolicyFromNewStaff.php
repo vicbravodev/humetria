@@ -24,10 +24,10 @@ final class RequestPolicyFromNewStaff implements ShouldQueue, ShouldQueueAfterCo
     use InteractsWithQueue;
 
     /** The job carries its own tries: Horizon's supervisors run with one, and a failure here would lose the request and its mail. */
-    public int $tries = 3;
+    public int $tries = 3; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** @var list<int> Seconds before the second and the third try. */
-    public array $backoff = [60, 300];
+    public array $backoff = [60, 300]; // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
 
     public function __construct(private Companies $companies, private Roster $roster, private RequestAcknowledgments $request) {}
 

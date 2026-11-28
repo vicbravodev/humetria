@@ -8,6 +8,7 @@ use App\Modules\Compensation\Models\GradeSalary;
 use App\Modules\Compensation\Models\Scenario;
 use App\Modules\Compensation\Support\Calculation\Money;
 use App\Modules\Compensation\Support\Calculation\ScenarioCost;
+use App\Modules\Compensation\Support\OtherScenarios;
 use App\Modules\Compensation\Support\ScenarioInputBuilder;
 use App\Modules\Compensation\Support\ScenarioPreview;
 use App\Modules\Organization\Models\Employee;
@@ -16,7 +17,7 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\Route;
 
-mutates(ScenarioPreview::class);
+mutates(ScenarioPreview::class, OtherScenarios::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-04 10:00:00');

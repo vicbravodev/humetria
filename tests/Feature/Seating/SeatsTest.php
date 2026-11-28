@@ -7,6 +7,7 @@ use App\Modules\Seating\Actions\SaveSeat;
 use App\Modules\Seating\Http\Controllers\SeatController;
 use App\Modules\Seating\Models\Seat;
 use App\Modules\Seating\Models\StandingPosition;
+use App\Modules\Seating\Support\SeatingFiles;
 use App\Modules\Seating\Support\SeatPhotoStore;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -18,9 +19,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(SaveSeat::class, SeatPhotoStore::class, SeatController::class);
+mutates(SaveSeat::class, SeatPhotoStore::class, SeatController::class, SeatingFiles::class);
 
 beforeEach(function (): void {
     Storage::fake(config()->string('filesystems.seating_files'));
@@ -213,4 +215,36 @@ it('opens a seat in the form when asked to edit it', function (): void {
     $seat = Seat::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'location' => 'Almacén']);
     $this->actingAs($this->hr)->get(route('tenant.seating.seats.index', [$this->tenant, $this->center->id, 'edit' => $seat->id]))
         ->assertInertia(fn (Assert $page) => $page->where('editing.id', $seat->id)->where('editing.location', 'Almacén')->where('canManage', true));
+});
+
+it('refuses in the store a photo heavier than the limit, naming the limit in MB on the field it came in', function (): void {
+    config(['seating.max_photo_kb' => 2048]);
+    $file = tempnam(sys_get_temp_dir(), 'seat');
+    file_put_contents($file, str_repeat('a', 2048 * 1024 + 1));
+
+    expect(fn () => resolve(SeatPhotoStore::class)->store($file, 'seats', 'evidence'))
+        ->toThrow(fn (ValidationException $refusal) => expect($refusal->errors())->toBe(['evidence' => ['El archivo debe pesar menos de 2 MB.']]));
+    unlink($file);
+});
+
+it('decodes a photo of up to twenty-five million pixels, and refuses one pixel more before decoding it', function (int $width, int $height, bool $stored): void {
+    $file = tempnam(sys_get_temp_dir(), 'seat');
+    $image = imagecreatetruecolor($width, $height);
+    imagepng($image, $file);
+    $store = fn () => resolve(SeatPhotoStore::class)->store($file, 'seats');
+
+    $stored ? expect($store())->toStartWith('seats/seat-') : expect($store)->toThrow(ValidationException::class, 'Debe ser una imagen JPG o PNG.');
+    unlink($file);
+})->with([
+    '5000 × 5000' => [5000, 5000, true],
+    '4901 × 5101, one pixel more' => [4901, 5101, false],
+]);
+
+it('leaves no photo behind when the seat cannot be saved', function (): void {
+    Seat::saving(fn () => throw new RuntimeException('database down'));
+    $this->actingAs($this->hr);
+
+    postSeat(['photo' => jpeg()])->assertServerError();
+
+    expect(Storage::disk(config()->string('filesystems.seating_files'))->allFiles())->toBe([]);
 });

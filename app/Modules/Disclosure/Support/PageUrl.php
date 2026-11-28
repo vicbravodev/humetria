@@ -16,10 +16,10 @@ final class PageUrl
     {
         $token = $link->token();
 
-        return match (true) {
-            $token === null => null,
-            $workCenterId === null => route('workers.show', $token),
-            default => route('workers.center', [$token, $workCenterId]),
-        };
+        if ($token === null) {
+            return null;
+        }
+
+        return $workCenterId === null ? route('workers.show', $token) : route('workers.center', [$token, $workCenterId]);
     }
 }

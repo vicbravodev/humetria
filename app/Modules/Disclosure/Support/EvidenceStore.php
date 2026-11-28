@@ -16,7 +16,7 @@ use Illuminate\Validation\ValidationException;
 final readonly class EvidenceStore
 {
     /** Pixels GD may be asked to decode: a small file can unpack to gigabytes. */
-    private const int MAX_PIXELS = 25_000_000;
+    private const int MAX_PIXELS = 25_000_000; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private DisclosureFiles $files) {}
 

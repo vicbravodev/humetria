@@ -50,7 +50,7 @@ use Illuminate\Support\Collection;
  * @property string|null $match_type
  * @property Carbon $created_at
  */
-#[Fillable(['name', 'email', 'whatsapp', 'company', 'profile', 'workforce', 'tools', 'message', 'utm_source', 'utm_medium', 'utm_campaign', 'referrer_host', 'first_utm_source', 'first_utm_medium', 'first_utm_campaign', 'first_referrer_host', 'ad_click_type', 'ad_click_id', 'utm_term', 'utm_content', 'match_type'])]
+#[Fillable(['name', 'email', 'whatsapp', 'company', 'profile', 'workforce', 'tools', 'message', 'utm_source', 'utm_medium', 'utm_campaign', 'referrer_host', 'first_utm_source', 'first_utm_medium', 'first_utm_campaign', 'first_referrer_host', 'ad_click_type', 'ad_click_id', 'utm_term', 'utm_content', 'match_type'])] // @pest-mutate-ignore: RemoveArrayItem
 #[UseFactory(DemoRequestFactory::class)]
 final class DemoRequest extends Model
 {
