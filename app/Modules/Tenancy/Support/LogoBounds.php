@@ -33,7 +33,9 @@ final class LogoBounds
         $whole = ['x' => 0, 'y' => 0, 'width' => imagesx($image), 'height' => imagesy($image)];
         $probe = imagescale($image, min(self::PROBE, imagesx($image)), -1, IMG_BILINEAR_FIXED);
 
-        // GD answers false only for a size below one pixel or a point outside the image, which never reach these three checks.
+        // GD answers false only when it fails inside (out of memory) or for a point outside the image, which none of the three
+        // checks of false can reach: the logo is at least 40 px high and at most 4000 wide (UpdateTenantLogoRequest), so the probe
+        // is never under one pixel, and every point read is inside it.
         if ($probe === false) {
             return $whole; // @pest-mutate-ignore: RemoveEarlyReturn
         }
