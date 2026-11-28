@@ -239,3 +239,12 @@ it('decodes a photo of up to twenty-five million pixels, and refuses one pixel m
     '5000 × 5000' => [5000, 5000, true],
     '4901 × 5101, one pixel more' => [4901, 5101, false],
 ]);
+
+it('leaves no photo behind when the seat cannot be saved', function (): void {
+    Seat::saving(fn () => throw new RuntimeException('database down'));
+    $this->actingAs($this->hr);
+
+    postSeat(['photo' => jpeg()])->assertServerError();
+
+    expect(Storage::disk(config()->string('filesystems.seating_files'))->allFiles())->toBe([]);
+});

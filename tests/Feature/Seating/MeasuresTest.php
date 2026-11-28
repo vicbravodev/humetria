@@ -247,3 +247,13 @@ it('says on the plan whether every medium or high assessment has its measure, an
     PreventiveMeasure::factory()->create($where + ['assessment_id' => $high->id, 'position_id' => null]);
     $this->get($url)->assertInertia(fn (Assert $page) => $page->where('measuresRule', ['state' => 'met', 'count' => 0]));
 });
+
+it('leaves no evidence behind when the measure cannot be saved', function (): void {
+    $measure = PreventiveMeasure::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'position_id' => $this->position->id]);
+    PreventiveMeasure::saving(fn () => throw new RuntimeException('database down'));
+    $this->actingAs($this->hr);
+
+    $this->put(route('tenant.seating.measures.update', [$this->tenant, $measure->id]), ['status' => 'done', 'evidence' => evidencePdf()])->assertServerError();
+
+    expect(Storage::disk(config()->string('filesystems.seating_files'))->allFiles())->toBe([]);
+});

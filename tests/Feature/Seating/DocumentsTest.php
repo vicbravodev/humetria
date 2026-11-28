@@ -184,3 +184,12 @@ it('refuses in the database an unknown kind', function (): void {
 
     expect(fn () => DB::transaction(fn () => DB::table('seating_documents')->update(['kind' => 'poem'])))->toThrow(QueryException::class, 'seating_documents_kind_known');
 });
+
+it('leaves no file behind when the document cannot be saved', function (): void {
+    SeatingDocument::saving(fn () => throw new RuntimeException('database down'));
+    $this->actingAs($this->hr);
+
+    $this->post(documentsUrl(), documentForm())->assertServerError();
+
+    expect(Storage::disk(config()->string('filesystems.seating_files'))->allFiles())->toBe([]);
+});
