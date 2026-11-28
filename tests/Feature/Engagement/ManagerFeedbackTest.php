@@ -38,6 +38,17 @@ it('says how the people of a manager answer, question by question, against the c
     expect($other?->items[0]['favorable'])->toBe(0)->and($other->items[0]['vsCompany'])->toBe(-50);
 });
 
+it('picks no strength nor opportunity in a wave that asked seven of the eight questions about the manager', function (): void {
+    $survey = climateManagerSurvey($this->tenant, [FEEDBACK_BOSS_A => [6, 5], FEEDBACK_BOSS_B => [6, 1]]);
+    $survey->update(['items' => array_values(array_filter($survey->items, fn (string $ref): bool => ! str_starts_with($ref, 'manager.priorities@')))]);
+
+    $feedback = ManagerFeedback::for($survey->refresh(), FEEDBACK_BOSS_A);
+
+    expect($feedback?->items)->toHaveCount(7)
+        ->and($feedback?->strengths)->toBe([])
+        ->and($feedback?->opportunities)->toBe([]);
+});
+
 it('gives nothing while the survey is not closed', function (): void {
     $survey = climateManagerSurvey($this->tenant, [FEEDBACK_BOSS_A => [6, 5]]);
     $survey->update(['status' => 'active', 'closed_at' => null]);
