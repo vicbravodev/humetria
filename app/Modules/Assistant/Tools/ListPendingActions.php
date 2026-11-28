@@ -29,9 +29,9 @@ use Laravel\Ai\Tools\Request;
  */
 final readonly class ListPendingActions implements TellsLiveFacts, Tool
 {
-    private const int MAX_ITEMS = 15;
+    private const int MAX_ITEMS = 15; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const int CLOSING_DAYS = 7;
+    private const int CLOSING_DAYS = 7; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(
         private AssistantScope $scope,

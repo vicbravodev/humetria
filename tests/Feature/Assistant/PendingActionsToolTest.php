@@ -77,6 +77,17 @@ it('lists a draft to launch and a campaign about to close, with what is missing'
         ->and($card['rows'][1]['title'])->toBe('Lanzar la campaña de Borrador · Evaluación NOM-035');
 });
 
+it('counts a campaign as about to close up to seven days before its end, and not at eight', function (): void {
+    $this->travelTo(now(config()->string('app.display_timezone'))->setTime(12, 0));
+    Campaign::factory()->active(now()->addDays(7)->toDateString())->create(['tenant_id' => $this->a->id, 'work_center_id' => pendingCenter($this->a, 'Siete días')->id]);
+    Campaign::factory()->active(now()->addDays(8)->toDateString())->create(['tenant_id' => $this->a->id, 'work_center_id' => pendingCenter($this->a, 'Ocho días')->id]);
+
+    $card = toolCard(ListPendingActions::class, $this->scope);
+
+    expect(pendingKinds($card))->toBe(['campaign_closing'])
+        ->and($card['rows'][0]['title'])->toBe('Cierra pronto: Siete días · Evaluación NOM-035');
+});
+
 it('lists the rows of NOM-037 that are missing or partial where someone teleworks, after the rest', function (): void {
     $center = pendingCenter($this->a);
     Campaign::factory()->closed()->create(['tenant_id' => $this->a->id, 'work_center_id' => $center->id]);
