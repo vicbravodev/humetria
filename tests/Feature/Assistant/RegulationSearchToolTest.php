@@ -107,6 +107,15 @@ it('gives at most three criteria, each cut to a size the model can read', functi
         ->and(collect($card['rows'])->every(fn (array $row): bool => mb_strlen($row['text']) <= 1201))->toBeTrue();
 });
 
+it('gives three criteria when more match, and cuts a long one to 1200 characters with an ellipsis', function (): void {
+    $card = toolCard(SearchRegulations::class, $this->scope, ['query' => 'Impuesto sobre nómina (ISN) por estado']);
+    $long = collect($card['rows'])->firstWhere('title', 'Impuesto sobre nómina (ISN) por estado, 2026');
+
+    expect($card['rows'])->toHaveCount(3)
+        ->and(mb_strlen($long['text']))->toBe(1200)
+        ->and($long['text'])->toEndWith('…');
+});
+
 it('says it found nothing instead of inventing an answer', function (): void {
     $card = toolCard(SearchRegulations::class, $this->scope, ['query' => 'receta de mole poblano']);
 
@@ -149,3 +158,30 @@ it('tells the model every norm it can look up, so it reaches for it on any of th
         expect($description)->toContain((string) $norm);
     }
 });
+
+it('skips an entry of the list of norms that names no document', function (): void {
+    config()->set('humi.regulations', ['Rota' => ['no es una ruta'], 'Prueba' => 'tests/Fixtures/regulations/weights.md']);
+
+    expect(array_map(fn (RegulationChunk $chunk): string => $chunk->id, resolve(RegulationIndex::class)->all()))
+        ->toBe(['C-01', 'C-02', 'C-03', 'C-04', 'C-05', 'C-06', 'C-07']);
+});
+
+it('weighs a word in a title as six in the text, counts a word at most five times in the text, and reads words of four letters', function (string $question, string $first): void {
+    config()->set('humi.regulations', ['Prueba' => 'tests/Fixtures/regulations/weights.md']);
+
+    expect(resolve(RegulationIndex::class)->search($question, 1)[0]->id)->toBe($first);
+})->with([
+    'a title beats six times in the text' => ['alfa', 'C-02'],
+    'seven in the text beat a title' => ['beta gama', 'C-04'],
+    'five times in the text beat four' => ['delta', 'C-06'],
+]);
+
+it('finds nothing for a question of only short words or words that say nothing', function (string $question): void {
+    expect(resolve(RegulationIndex::class)->search($question, 3))->toBe([]);
+})->with(['de la NOM', 'cual como para']);
+
+it('leaves out the words of a question that say nothing about the topic', function (string $word): void {
+    config()->set('humi.regulations', ['Prueba' => 'tests/Fixtures/regulations/weights.md']);
+
+    expect(resolve(RegulationIndex::class)->search($word, 3))->toBe([]);
+})->with(['cual', 'cuales', 'como', 'para', 'esta', 'este', 'sobre', 'entre', 'donde', 'cuando', 'tiene', 'tienen', 'puedo', 'debo']);

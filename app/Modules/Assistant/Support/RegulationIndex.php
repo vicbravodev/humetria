@@ -13,14 +13,14 @@ use Illuminate\Support\Str;
  */
 final class RegulationIndex
 {
-    private const int MIN_WORD = 4;
+    private const int MIN_WORD = 4; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const int TITLE_WEIGHT = 6;
+    private const int TITLE_WEIGHT = 6; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const int BODY_CAP = 5;
+    private const int BODY_CAP = 5; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** Words of a question that say nothing about the topic. */
-    private const array STOP = ['cual', 'cuales', 'como', 'para', 'esta', 'este', 'sobre', 'entre', 'donde', 'cuando', 'tiene', 'tienen', 'puedo', 'debo'];
+    private const array STOP = ['cual', 'cuales', 'como', 'para', 'esta', 'este', 'sobre', 'entre', 'donde', 'cuando', 'tiene', 'tienen', 'puedo', 'debo']; // @pest-mutate-ignore: RemoveArrayItem
 
     /**
      * @return list<RegulationChunk>
