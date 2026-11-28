@@ -92,6 +92,20 @@ it('does not flag exactly 90 percent favorable nor exactly 40 percent at the mid
         ->and(pilotRow($this->survey, 'reward.raises'))->toMatchArray(['midpoint' => 40, 'flags' => []]);
 });
 
+it('flags 91 percent favorable and 41 percent at the midpoint, the first shares past the limits', function (): void {
+    pilotResponses($this->survey, [
+        ...array_fill(0, 10, ['reward.pay' => 4]),
+        ['reward.pay' => 1],
+    ]);
+    pilotResponses($this->survey, [
+        ...array_fill(0, 7, ['reward.raises' => 3]),
+        ...array_fill(0, 10, ['reward.raises' => 2]),
+    ]);
+
+    expect(pilotRow($this->survey, 'reward.pay'))->toMatchArray(['favorable' => 91, 'flags' => ['over_90_favorable']])
+        ->and(pilotRow($this->survey, 'reward.raises'))->toMatchArray(['midpoint' => 41, 'flags' => ['midpoint_over_40']]);
+});
+
 it('prints only the shown and skipped counts of a question under the minimum', function (): void {
     pilotResponses($this->survey, [
         ...array_fill(0, 4, ['reward.pay' => 5]),

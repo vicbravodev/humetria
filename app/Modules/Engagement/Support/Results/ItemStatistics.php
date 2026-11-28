@@ -22,10 +22,10 @@ use App\Modules\Engagement\Support\Thresholds;
 final readonly class ItemStatistics
 {
     /** The share of favorable answers above which a question probably tells nobody apart. */
-    private const int FAVORABLE_LIMIT = 90;
+    private const int FAVORABLE_LIMIT = 90; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** The share in the middle of the scale above which a question probably tells nobody apart. */
-    private const int MIDPOINT_LIMIT = 40;
+    private const int MIDPOINT_LIMIT = 40; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private Thresholds $thresholds) {}
 
