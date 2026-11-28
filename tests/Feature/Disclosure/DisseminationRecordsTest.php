@@ -129,3 +129,16 @@ it('lets only whoever manages record', function (TenantRole $role): void {
 
     expect(DisseminationRecord::query()->count())->toBe(0);
 })->with([TenantRole::Viewer, TenantRole::Committee]);
+
+it('takes the six incisos of 5.7, a to f, and keeps them in that order', function (): void {
+    $record = resolve(RecordDissemination::class)->handle($this->plant->id, 'poster', ['f', 'e', 'd', 'c', 'b', 'a'], '2026-11-18', '', $this->hr->id);
+
+    expect($record->covered_items)->toBe(['a', 'b', 'c', 'd', 'e', 'f']);
+});
+
+it('lets the failure of a record without a file through as it came', function (): void {
+    DisseminationRecord::creating(fn () => throw new RuntimeException('database down'));
+
+    expect(fn () => resolve(RecordDissemination::class)->handle($this->plant->id, 'poster', ['a'], '2026-11-18', '', $this->hr->id))
+        ->toThrow(RuntimeException::class, 'database down');
+});

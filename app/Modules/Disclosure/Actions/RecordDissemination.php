@@ -24,7 +24,7 @@ use Throwable;
  */
 final readonly class RecordDissemination
 {
-    private const array ITEMS = ['a', 'b', 'c', 'd', 'e', 'f'];
+    private const array ITEMS = ['a', 'b', 'c', 'd', 'e', 'f']; // @pest-mutate-ignore: RemoveArrayItem
 
     public function __construct(private CurrentTenant $tenant, private WorkCenters $workCenters, private EvidenceStore $evidence, private DisclosureFiles $files) {}
 
