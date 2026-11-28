@@ -215,3 +215,9 @@ it('shares no reason for a company that is not blocked', function (): void {
     $this->actingAs(ownerOf($tenant))->get(route('tenant.dashboard', $tenant))
         ->assertInertia(fn (Assert $page) => $page->where('tenant.restriction_reason', null));
 });
+
+it('lets through a route that names no company', function (): void {
+    Route::middleware(['web', BlockSuspendedTenant::class])->get('_probe/no-company', fn (): string => 'ok');
+
+    $this->get('/_probe/no-company')->assertOk()->assertSeeText('ok');
+});
