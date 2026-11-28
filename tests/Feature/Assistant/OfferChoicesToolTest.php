@@ -74,7 +74,7 @@ it('shows each label and text on one line, without markup, and cuts a label at 4
     expect($card['title'])->not->toContain("\n")->not->toContain('<')
         ->and($card['rows'][0]['label'])->not->toContain("\n")->not->toContain('<')->not->toContain('>')
         ->and($card['rows'][0]['text'])->not->toContain("\n")->not->toContain('<')
-        ->and(mb_strlen($card['rows'][1]['label']))->toBeLessThanOrEqual(40);
+        ->and($card['rows'][1]['label'])->toBe(str_repeat('a', 39).'…');
 });
 
 it('refuses to run for another company than the request', function (): void {
