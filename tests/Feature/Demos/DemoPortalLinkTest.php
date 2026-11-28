@@ -6,6 +6,7 @@ use App\Models\AuditEntry;
 use App\Models\User;
 use App\Modules\Demos\Enums\DemoSessionStatus;
 use App\Modules\Demos\Models\DemoSession;
+use App\Modules\Demos\Support\SessionCenter;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -21,6 +22,8 @@ use Illuminate\Support\Facades\Notification;
  * The Vacaciones tour, on the presenter's own computer: the guide opens the portal of one person of the session's center
  * with a one-use link, issued as the demo's head of HR and never sent anywhere; the presenter then creates the key there.
  */
+
+mutates(SessionCenter::class);
 
 beforeEach(function (): void {
     $this->demo = Tenant::factory()->demo()->create();

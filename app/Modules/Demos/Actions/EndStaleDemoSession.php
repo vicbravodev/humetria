@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Log;
  */
 final readonly class EndStaleDemoSession
 {
-    public const int EXPIRES_AFTER_HOURS = 24;
+    public const int EXPIRES_AFTER_HOURS = 24; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private EndDemoSession $end) {}
 

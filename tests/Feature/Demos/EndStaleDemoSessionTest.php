@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Modules\Demos\Actions\EndDemoSession;
+use App\Modules\Demos\Actions\EndStaleDemoSession;
 use App\Modules\Demos\Enums\DemoSessionStatus;
 use App\Modules\Demos\Jobs\ResetDemo;
 use App\Modules\Demos\Models\DemoRun;
@@ -17,6 +19,8 @@ use Illuminate\Support\Facades\Queue;
  * The backstop of «Terminar sesión»: every hour a command ends the session that has been open for more than 24 hours
  * (the reset wipes what the audience left), and frees the lock of one stuck preparing or ending because its run died.
  */
+
+mutates(EndStaleDemoSession::class, EndDemoSession::class);
 
 beforeEach(function (): void {
     // The marks are exact: 24 h and STALE_AFTER_MINUTES still count as young.

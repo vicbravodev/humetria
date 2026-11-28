@@ -10,6 +10,8 @@ use App\Modules\Demos\Support\Tours\Answers;
  * number invited, the verb the number that answered. With nobody invited there is nothing to tell.
  */
 
+mutates(Answers::class);
+
 it('tells the answers live, in the singular when one was invited', function (int $invited, int $answered, string $live): void {
     expect(Answers::state(true, $invited, $answered, false)->live)->toBe($live);
 })->with([

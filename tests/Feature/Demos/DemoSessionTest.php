@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Demos\Actions\EndDemoSession;
+use App\Modules\Demos\Actions\StartDemoSession;
 use App\Modules\Demos\Contracts\DemoWorkspace;
 use App\Modules\Demos\Enums\DemoSessionStatus;
 use App\Modules\Demos\Jobs\PrepareDemoSession;
@@ -22,6 +24,8 @@ use Illuminate\Support\Facades\Queue;
  * A demo session: the superadmin starts one for a client, with the tours to show; the demo resets and gets ready for the
  * real audience, and ending it resets the demo again, so whatever the audience left goes with it. One at a time.
  */
+
+mutates(StartDemoSession::class, EndDemoSession::class);
 
 /** A workspace that tells one step, or fails (preparing or staging the session); it notes what it was asked. */
 function sessionWorkspace(bool $fails = false, bool $stagingFails = false): ArrayObject
