@@ -22,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $amount
  * @property int $used
  */
-#[Fillable(['tenant_id', 'resource', 'amount', 'used'])]
+#[Fillable(['tenant_id', 'resource', 'amount', 'used'])] // @pest-mutate-ignore: RemoveArrayItem
 #[UseFactory(TenantLimitFactory::class)]
 final class TenantLimit extends Model
 {

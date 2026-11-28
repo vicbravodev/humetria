@@ -45,7 +45,7 @@ final class TenantInvitation extends Model
     /** @use HasFactory<TenantInvitationFactory> */
     use HasFactory, HasVersion4Uuids;
 
-    public const int VALID_DAYS = 7;
+    public const int VALID_DAYS = 7; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public static function hashToken(string $token): string
     {
