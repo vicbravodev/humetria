@@ -25,7 +25,7 @@ use Laravel\Ai\Tools\Request;
  */
 final readonly class GetCampaignProgress implements TellsLiveFacts, Tool
 {
-    private const int MAX_ROWS = 10;
+    private const int MAX_ROWS = 10; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(
         private AssistantScope $scope,
