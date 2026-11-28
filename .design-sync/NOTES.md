@@ -73,6 +73,16 @@
   wrap them in a box with `transform: translateZ(0)` and draw the phone with CSS `zoom` (0.9–0.94).
 - `CompanyMark` with a company brand is not shown (would need `brand` in that file's page props).
 
+## Re-sync 2026-11-28
+
+- main added the shared prop `demoGuide` (the demo's guide). Every preview that builds `HumetriaPage.props` and the
+  conventions snippet set `demoGuide: null`: left `undefined`, a frame reads `guide.finished` and `AppSidebarLayout` renders
+  an empty root. A new shared prop in `resources/js/types/global.d.ts` needs the same line in those previews and in
+  `conventions.md`.
+- `Humi` and `HumiAvatar` have authored previews; `HumiCrown` and `HumiEyes` (its parts) ship on the floor card.
+- `cardMode: column` for `ArcMeter`, `ChoiceField`, `Humi`, `PosterQr`, `RouteInspectionCard`, `StageBar`, `ToolIcon`, and
+  `single` (`OverTheApp`) for `NewVersionBanner`: the render check flagged them `[GRID_OVERFLOW]`.
+
 ## Known render warns
 
 - Floor-card components flagged `[RENDER_BLANK]`/`[RENDER_THIN]` with no authored preview (e.g. `InputOTPSeparator`,
@@ -80,6 +90,9 @@
   `QuestionHeading`, `ReportLinkBar`): unauthored, not failures.
 
 ## Re-sync risks
+
+- A new shared Inertia prop (`global.d.ts` sharedPageProps) the frame reads breaks the frame previews and the
+  conventions snippet until it is added there (see Re-sync 2026-11-28).
 
 - build-dist parses exports with regexes (`export default function X`, `export function|const X`, `export { … }`): a
   component exported another way is silently left out. Compare `entry: N exports` against the last run.

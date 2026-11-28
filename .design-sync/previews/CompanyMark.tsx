@@ -51,6 +51,7 @@ Object.assign(globalThis, {
             tenants: { data: [{ slug: 'aceros-del-norte', trade_name: 'Aceros del Norte' }], total: 1 },
             inCourse: { count: 1, daysLeft: 9, elapsed: 64 },
             firstSteps: null,
+            demoGuide: null,
             demo: false,
             brand: null,
             sidebarOpen: true,
