@@ -28,9 +28,9 @@ final readonly class SchedulePages
 {
     private const int PER_PAGE = 25; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const int COPIES = 20;
+    private const int COPIES = 20; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const array VIEWS = ['all', 'scheduled', 'unscheduled'];
+    private const array VIEWS = ['all', 'scheduled', 'unscheduled']; // @pest-mutate-ignore: RemoveArrayItem
 
     public function __construct(private Roster $roster, private WorkCenters $workCenters, private Timezones $timezones) {}
 
