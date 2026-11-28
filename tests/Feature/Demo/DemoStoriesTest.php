@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Modules\Demos\Contracts\DemoWorkspace;
 use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 
@@ -29,6 +30,12 @@ it('tells the whole story on one prepared demo company', function (): void {
     });
 
     resolve(DemoWorkspace::class)->prepare();
+
+    // The planner sees the prepared company. Without this, an autovacuum ANALYZE from outside would see the tables empty
+    // (it does not count rows this test has not committed) and the pages of the story would plan for empty tables: a run of
+    // minutes became one of half an hour on CI. Inside this transaction, ANALYZE counts them and keeps autovacuum out.
+    DB::statement('ANALYZE');
+    expect(DB::scalar("select reltuples from pg_class where relname = 'attendance_marks'"))->toBeGreaterThan(0);
 
     foreach (['foundation', 'nom035', 'engagement', 'leave', 'attendance', 'complaints', 'disclosure', 'seating', 'telework', 'coherence', 'compensation'] as $story) {
         foreach (require __DIR__."/Sections/{$story}.php" as $name => $group) {
