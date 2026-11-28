@@ -44,6 +44,19 @@ it('finds a work center in use of the company, and no archived or other company\
         ->and(resolve(WorkCenters::class)->findActive($other->id))->toBeNull();
 });
 
+it('locks a work center in use of the company to change what hangs from it, and no archived or other company\'s one', function (): void {
+    $tenant = Tenant::factory()->create();
+    $north = WorkCenter::factory()->for($tenant)->create(['name' => 'Norte']);
+    $archived = WorkCenter::factory()->for($tenant)->archived()->create();
+    $other = WorkCenter::factory()->for(Tenant::factory()->create())->create();
+    workIn($tenant);
+
+    expect(resolve(WorkCenters::class)->lockActive($north->id))->toEqual(new WorkCenterSummary($north->id, 'Norte', false, 'Manufactura de autopartes'))
+        ->and(resolve(WorkCenters::class)->lockActive($archived->id))->toBeNull()
+        ->and(resolve(WorkCenters::class)->lockActive($other->id))->toBeNull()
+        ->and(resolve(WorkCenters::class)->lockActive('00000000-0000-4000-8000-000000000000'))->toBeNull();
+});
+
 it('describes a work center for a report, archived ones included, and no other company\'s one', function (): void {
     $tenant = Tenant::factory()->create(['legal_name' => 'Autopartes Acme, S.A. de C.V.', 'rfc' => 'AAC010101AB1']);
     $plant = WorkCenter::factory()->for($tenant)->archived()->create(workCenterForm(['interior_number' => null]));
