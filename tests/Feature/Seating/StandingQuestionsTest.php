@@ -16,6 +16,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
@@ -133,4 +134,26 @@ it('runs from the scheduled command and reports how many it reminded', function 
     $this->travel(7)->days();
 
     $this->artisan('seating:remind-questions')->expectsOutput('Recordatorios de las 2 preguntas: 1')->assertSuccessful();
+});
+
+it('leaves the demo company out of the reminders, and reminds the others even when one of them fails', function (): void {
+    Exceptions::fake();
+    startAna();
+    // The demo goes first and the broken company second, so neither keeps the one after them from its reminder.
+    $demo = Tenant::factory()->demo()->create(['id' => '00000000-0000-4000-8000-000000000001', 'slug' => 'demo']);
+    $broken = Tenant::factory()->create(['id' => '00000000-0000-4000-8000-000000000002', 'slug' => 'beta']);
+    $brokenDraft = RiskAssessment::factory()->create(['tenant_id' => $broken->id]);
+    RiskAssessment::factory()->create(['tenant_id' => $demo->id]);
+    RiskAssessment::retrieved(function (RiskAssessment $draft) use ($brokenDraft): void {
+        if (($draft->getAttributes()['employee_id'] ?? null) === $brokenDraft->employee_id) {
+            throw new RuntimeException('boom');
+        }
+    });
+    Queue::fake();
+    $this->travel(7)->days();
+
+    expect(resolve(RemindStandingQuestions::class)->handle())->toBe(1);
+    Exceptions::assertReported(fn (RuntimeException $failure): bool => $failure->getMessage() === 'boom');
+    Queue::assertPushed(SendStandingQuestions::class, fn (SendStandingQuestions $job): bool => $job->tenantId === $this->tenant->id);
+    Queue::assertPushed(SendStandingQuestions::class, 1);
 });
