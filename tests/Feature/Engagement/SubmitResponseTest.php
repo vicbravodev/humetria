@@ -92,6 +92,18 @@ it('stores one response with the group of the invitation and each comment on its
         ->and($this->invitation->fresh()?->answered)->toBeTrue();
 });
 
+it('retries the whole survey up to 3 times when it deadlocks with another write', function (): void {
+    $real = app('db');
+    $db = Mockery::mock($real);
+    $db->shouldReceive('transaction')->once()->withArgs(fn (Closure $callback, int $attempts = 1): bool => $attempts === 3)
+        ->andReturnUsing(fn (Closure $callback, int $attempts) => $real->transaction($callback, $attempts));
+    DB::swap($db);
+
+    resolve(SubmitResponse::class)->handle('the-token', submittedAnswers(), [], 9);
+
+    expect(Response::query()->count())->toBe(1);
+});
+
 it('stores an all-omitted response', function (): void {
     submitEngagement(['answers' => submittedAnswers(null)])->assertSessionHasNoErrors();
 
