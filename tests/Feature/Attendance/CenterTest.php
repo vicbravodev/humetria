@@ -12,6 +12,7 @@ use App\Modules\Attendance\Models\AttendanceCenterMode;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\KioskDevice;
+use App\Modules\Attendance\Support\AttendancePages;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -20,7 +21,7 @@ use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia;
 
-mutates(AttendanceController::class, ZoneController::class, ZoneRequest::class, KioskController::class);
+mutates(AttendanceController::class, ZoneController::class, ZoneRequest::class, KioskController::class, AttendancePages::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['slug' => 'acme']);
