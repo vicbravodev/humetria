@@ -9,6 +9,7 @@ use App\Modules\Engagement\Actions\LaunchSurvey;
 use App\Modules\Engagement\Actions\RemindPending;
 use App\Modules\Engagement\Enums\InvitationStatus;
 use App\Modules\Engagement\Enums\SurveyStatus;
+use App\Modules\Engagement\Jobs\SendInvitations;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Notifications\SurveyInvitation;
@@ -26,10 +27,11 @@ use Illuminate\Bus\PendingBatch;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 
-mutates(EngagementInvitationLinks::class);
+mutates(EngagementInvitationLinks::class, SendInvitations::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-09 15:00:00');
@@ -132,6 +134,29 @@ it('never sends a reminder through WhatsApp, and leaves invited_via as the invit
     expect(array_values(array_unique(surveyChannelsSent())))->toBe(['mail'])
         ->and($invitations[$staff[0]->id]->invited_via)->toBe('whatsapp')
         ->and($invitations[$staff[5]->id]->invitation_status)->toBe(InvitationStatus::Sent);
+});
+
+it('leaves as sent, and counts apart, a reminder whose person was left with only WhatsApp after it was queued, and still reminds the rest', function (): void {
+    [$survey] = waSurveyLaunch($this->tenant, $this->plant, $this->area, $this->user, 6);
+    foreach (waSurveyJobs() as $job) {
+        $job->handle();
+    }
+    Notification::fake();
+    Bus::fake();
+    resolve(RemindPending::class)->handle($survey->id);
+    // The first one the job meets and the first by id: a stop at the first one skipped would leave the rest unreminded.
+    $onlyWhatsApp = [Invitation::query()->firstOrFail()->employee_id, Invitation::query()->orderBy('id')->firstOrFail()->employee_id];
+    Employee::query()->whereIn('id', $onlyWhatsApp)->update(['email' => null]);
+    $skipped = count(array_unique($onlyWhatsApp));
+    Log::spy();
+
+    foreach (waSurveyJobs() as $job) {
+        $job->handle();
+    }
+
+    Notification::assertSentOnDemandTimes(SurveyInvitation::class, 6 - $skipped);
+    expect(Invitation::query()->where('survey_id', $survey->id)->whereIn('employee_id', $onlyWhatsApp)->pluck('invitation_status')->unique()->all())->toBe([InvitationStatus::Sent]);
+    Log::shouldHaveReceived('info')->with('engagement.invitations_sent', ['survey_id' => $survey->id, 'sent' => 6 - $skipped, 'skipped_reminders' => $skipped])->once();
 });
 
 it('keeps everything on mail while the function is off, whatever the company rows say', function (): void {
