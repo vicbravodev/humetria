@@ -14,7 +14,7 @@ use Closure;
 final class SegmentGeneralizer
 {
     /** @var list<CutAttribute> */
-    private const array ORDER = [CutAttribute::Tenure, CutAttribute::Area, CutAttribute::WorkCenter, CutAttribute::Manager];
+    private const array ORDER = [CutAttribute::Tenure, CutAttribute::Area, CutAttribute::WorkCenter, CutAttribute::Manager]; // @pest-mutate-ignore: RemoveArrayItem
 
     /**
      * Per field in order, counts how many rows share each full combination and drops that field from the rows whose

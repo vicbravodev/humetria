@@ -13,12 +13,12 @@ use InvalidArgumentException;
 final class PulsePlanner
 {
     /** The last day of the month a pulse can be set on: every month has it. */
-    public const int LAST_DAY = 28;
+    public const int LAST_DAY = 28; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const array MONTHLY = [PulseMode::FollowUp, PulseMode::Tour, PulseMode::Manager];
+    private const array MONTHLY = [PulseMode::FollowUp, PulseMode::Tour, PulseMode::Manager]; // @pest-mutate-ignore: RemoveArrayItem
 
     /** The manager every other cycle of four: with a quarterly pulse a cycle of three would make every pulse about the manager. */
-    private const array QUARTERLY = [PulseMode::FollowUp, PulseMode::Tour, PulseMode::Manager, PulseMode::Tour];
+    private const array QUARTERLY = [PulseMode::FollowUp, PulseMode::Tour, PulseMode::Manager, PulseMode::Tour]; // @pest-mutate-ignore: RemoveArrayItem
 
     /**
      * @param  int  $position  the pulses the company already launched

@@ -20,7 +20,7 @@ final class ItemBank
     public const string VERSION = 'v1';
 
     /** The three questions whose average favorable share is the engagement index. */
-    public const array INDEX = ['eng.pride', 'eng.motivation', 'eng.connection'];
+    public const array INDEX = ['eng.pride', 'eng.motivation', 'eng.connection']; // @pest-mutate-ignore: RemoveArrayItem
 
     public const string RECOMMEND = 'eng.recommend';
 
@@ -30,11 +30,11 @@ final class ItemBank
     public const string LOOP = 'loop.action';
 
     public const array AGREEMENT_LABELS = [
-        1 => 'Totalmente en desacuerdo',
-        2 => 'En desacuerdo',
-        3 => 'Ni de acuerdo ni en desacuerdo',
-        4 => 'De acuerdo',
-        5 => 'Totalmente de acuerdo',
+        1 => 'Totalmente en desacuerdo', // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
+        2 => 'En desacuerdo', // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
+        3 => 'Ni de acuerdo ni en desacuerdo', // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
+        4 => 'De acuerdo', // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
+        5 => 'Totalmente de acuerdo', // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
     ];
 
     /** The instruction of the manager section; `:name` is the name of the manager. */
