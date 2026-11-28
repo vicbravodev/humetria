@@ -18,7 +18,7 @@ use App\Modules\Engagement\Support\Thresholds;
 final class Priorities
 {
     /** Below this variance the answers are all the same and the correlation is 0. ponytail: float noise guard, not a tunable. */
-    private const float NO_VARIANCE = 1e-12;
+    private const float NO_VARIANCE = 1e-12; // @pest-mutate-ignore: DecrementFloat,IncrementFloat
 
     /**
      * @param  list<ResponseRow>  $rows
