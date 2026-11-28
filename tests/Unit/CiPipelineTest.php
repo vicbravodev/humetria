@@ -155,8 +155,9 @@ it('checks out only the scripts in the jobs that read nothing else', function (s
 it('splits the browser tests into six shards', function (): void {
     $browser = workflowJobs('tests.yml')['browser'];
 
+    // Three processes on the four cores: a Chromium per process, PHP and Postgres fit without a step waiting on the CPU.
     expect($browser['strategy']['matrix']['shard'] ?? null)->toBe([1, 2, 3, 4, 5, 6])
-        ->and(jobRuns($browser))->toContain('--shard=${{ matrix.shard }}/6');
+        ->and(jobRuns($browser))->toContain('php artisan test --testsuite=Browser --parallel --processes=3 --shard=${{ matrix.shard }}/6');
 });
 
 it('audits the dependencies of a pull request only when it changes them, and main every day', function (): void {

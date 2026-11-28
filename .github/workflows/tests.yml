@@ -274,7 +274,9 @@ jobs:
       # A hung test stops here, not at the job's 30 minutes.
       - name: Browser tests (shard ${{ matrix.shard }}/6)
         timeout-minutes: 15
-        run: composer test:browser -- --shard=${{ matrix.shard }}/6 --log-junit=junit-browser-${{ matrix.shard }}.xml
+        # Three processes, not the four of composer test:browser: on the 4 cores of the runner, four Chromium, four PHP and
+        # Postgres fought for the CPU and steps timed out at random.
+        run: php artisan test --testsuite=Browser --parallel --processes=3 --shard=${{ matrix.shard }}/6 --log-junit=junit-browser-${{ matrix.shard }}.xml
 
       # The time of each test class this shard measured (docs/testing.md, «Los shards»).
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

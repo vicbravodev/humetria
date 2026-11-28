@@ -177,7 +177,7 @@ Los jobs corren en paralelo; `ci`, el check obligatorio, espera a todos:
 | `checks` | Auditoría (solo si el cambio toca `composer.*`, `package*.json` o `scripts/npm-audit.sh`; `audit.yml` audita `main` cada día), Pint, PHPStan (con su caché de resultados), `vp check`, tsc y Vitest. No construye: genera Wayfinder con `wayfinder:generate --with-form`. |
 | `tests` (3 shards) | Unit y Feature con PCOV; cada shard guarda su cobertura (`--coverage-php`) y sus tiempos (`timings-tests-N`). |
 | `coverage` | Junta la cobertura de los shards (`scripts/coverage-merge.php`, con el merger de php-code-coverage) y aplica el 90 % (`scripts/coverage-min.php`). |
-| `browser` (6 shards) | Pest Browser; guarda sus tiempos (`timings-browser-N`). Si falla, sube las capturas (`tests/Browser/Screenshots`) como artefacto. |
+| `browser` (6 shards) | Pest Browser con 3 procesos por shard (con 4, cuatro Chromium, cuatro PHP y Postgres se peleaban los 4 núcleos y los pasos vencían al azar); guarda sus tiempos (`timings-browser-N`). Si falla, sube las capturas (`tests/Browser/Screenshots`) como artefacto. |
 | `ssr` | El bundle SSR con un Node real (usa el del job `build`: `SSR_PREBUILT=true`) y la imagen `ssr` con Docker. |
 
 ## Los shards
