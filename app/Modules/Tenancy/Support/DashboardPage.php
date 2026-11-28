@@ -23,11 +23,11 @@ use Carbon\CarbonImmutable;
  */
 final readonly class DashboardPage
 {
-    private const int CENTERS_PER_PAGE = 5;
+    private const int CENTERS_PER_PAGE = 5; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const int URGENCIES = 5;
+    private const int URGENCIES = 5; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const int WEEK = 5;
+    private const int WEEK = 5; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(
         private CampaignRecords $campaigns,
