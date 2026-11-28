@@ -62,6 +62,17 @@ it('rejects two options that would send the same text', function (): void {
     expect(isChoicesCard($answer))->toBeFalse()->and($answer)->toContain('No pude armar la pregunta');
 });
 
+it('rejects an option without its label or its text, or that is no option', function (mixed $option): void {
+    $answer = offered(['question' => '¿Cuál?', 'options' => [['label' => 'Una', 'text' => 'Quiero esto'], $option]]);
+
+    expect(isChoicesCard($answer))->toBeFalse()->and($answer)->toContain('No pude armar la pregunta');
+})->with([
+    'without a text' => [['label' => 'Otra']],
+    'without a label' => [['text' => 'Quiero lo otro']],
+    'a text that is no text' => [['label' => 'Otra', 'text' => 3]],
+    'no option' => ['Otra'],
+]);
+
 it('shows each label and text on one line, without markup, and cuts a label at 40 characters', function (): void {
     $card = toolCard(OfferChoices::class, $this->scope, [
         'question' => "¿De qué\nparte? <b>ya</b>",
