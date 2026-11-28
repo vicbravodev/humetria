@@ -99,6 +99,16 @@ it('counts the companies nobody has entered for 30 days, a company that never wa
         ->assertInertia(fn (Assert $page) => $page->where('inactive', 2));
 });
 
+it('keeps out a company entered exactly 30 days ago and counts one entered a second before', function (): void {
+    $this->freezeSecond();
+    $open = fn () => Tenant::factory()->activeUntil(now()->addMonth());
+    memberOf($open()->create(), TenantRole::Owner)->forceFill(['last_login_at' => now()->subDays(30)])->save();
+    memberOf($open()->create(), TenantRole::Owner)->forceFill(['last_login_at' => now()->subDays(30)->subSecond()])->save();
+
+    $this->actingAs(superadmin())->get(route('overview.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('inactive', 1));
+});
+
 it('does not count a company that has not started: nobody could have entered it yet', function (): void {
     Tenant::factory()->create();
 

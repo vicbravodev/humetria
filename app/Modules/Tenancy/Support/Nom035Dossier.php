@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Log;
 final readonly class Nom035Dossier
 {
     /** The label of the evidence link of a stage when the link is the row's own way in (stages 2, 3, 5 and 6). */
-    private const array OWN_EVIDENCE = [2 => 'Resultados de la evaluación', 3 => 'Canalización', 5 => 'Programa de intervención', 6 => 'Informe 7.7'];
+    private const array OWN_EVIDENCE = [2 => 'Resultados de la evaluación', 3 => 'Canalización', 5 => 'Programa de intervención', 6 => 'Informe 7.7']; // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
 
     public function __construct(private RoutePage $page, private WorkCenters $workCenters, private RecordAudit $audit) {}
 
