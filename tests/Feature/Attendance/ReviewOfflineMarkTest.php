@@ -24,6 +24,7 @@ use App\Modules\WorkerAccess\Models\WorkerCredential;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Tests\Support\OfflineDeliveries;
@@ -258,6 +259,21 @@ describe('verifying several', function (): void {
             ->and(MarkReview::query()->count())->toBe(3)
             ->and(AuditEntry::query()->where('event', 'attendance.offline_mark_reviewed')->count())->toBe(3);
         Event::assertDispatchedTimes(OfflineMarkReviewed::class, 3);
+    });
+
+    it('skips a mark corrected between finding it pending and verifying it', function (): void {
+        $mark = AttendanceMark::query()->findOrFail(OfflineDeliveries::accepted($this->ana, '2026-11-02 09:00')->mark_id);
+        $raced = false;
+        // RH corrects it in another tab right after this page found it pending.
+        DB::listen(function (Illuminate\Database\Events\QueryExecuted $query) use ($mark, &$raced): void {
+            if (! $raced && str_contains($query->sql, 'attendance_mark_reviews')) {
+                $raced = true;
+                AttendanceMark::factory()->correcting($mark)->create(['reason' => 'Corregida en otra pestaña.']);
+            }
+        });
+
+        expect(verifyMany([$mark->id]))->toBe(['verified' => 0, 'skipped' => 1])
+            ->and(MarkReview::query()->count())->toBe(0);
     });
 
     it('skips what is already reviewed, what changed, and what is not of the company', function (): void {
