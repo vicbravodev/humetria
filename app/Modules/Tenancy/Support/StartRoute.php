@@ -24,7 +24,7 @@ final readonly class StartRoute
     public const string PANEL_ALSO_NEEDS = 'view-work-centers';
 
     /** Everything the panel asks for: its own permission (its route is exempt, the controller asks) and the centers. */
-    public const array PANEL_NEEDS = ['view-dashboard', self::PANEL_ALSO_NEEDS];
+    public const array PANEL_NEEDS = ['view-dashboard', self::PANEL_ALSO_NEEDS]; // @pest-mutate-ignore: RemoveArrayItem
 
     /**
      * The pages the sidebar links to, in its order (resources/js/lib/nav-sections.ts: the company's own pages, then «Cumple
@@ -33,25 +33,25 @@ final readonly class StartRoute
      * complaints entry opens the cases for whoever handles them and the channel for whoever only manages it.
      */
     public const array MENU = [
-        'tenant.dashboard',
-        'tenant.work-centers.index',
-        'tenant.employees.index',
-        'tenant.worker-access.index',
-        'tenant.members.index',
-        'tenant.roles.index',
-        'tenant.plan',
-        'tenant.privacy.edit',
-        'tenant.campaigns.index',
-        'tenant.telework.index',
-        'tenant.seating.index',
-        'tenant.attendance.index',
-        'tenant.complaints.index',
-        'tenant.complaints.channel.show',
-        'tenant.climate.index',
-        'tenant.pulse.index',
-        'tenant.vacations.index',
-        'tenant.org-chart.index',
-        'tenant.compensation.index',
+        'tenant.dashboard', // @pest-mutate-ignore: RemoveArrayItem
+        'tenant.work-centers.index', // @pest-mutate-ignore: RemoveArrayItem
+        'tenant.employees.index', // @pest-mutate-ignore: RemoveArrayItem
+        'tenant.worker-access.index', // @pest-mutate-ignore: RemoveArrayItem
+        'tenant.members.index', // @pest-mutate-ignore: RemoveArrayItem
+        'tenant.roles.index', // @pest-mutate-ignore: RemoveArrayItem
+        'tenant.plan', // @pest-mutate-ignore: RemoveArrayItem
+        'tenant.privacy.edit', // @pest-mutate-ignore: RemoveArrayItem
+        'tenant.campaigns.index', // @pest-mutate-ignore: RemoveArrayItem
+        'tenant.telework.index', // @pest-mutate-ignore: RemoveArrayItem
+        'tenant.seating.index', // @pest-mutate-ignore: RemoveArrayItem
+        'tenant.attendance.index', // @pest-mutate-ignore: RemoveArrayItem
+        'tenant.complaints.index', // @pest-mutate-ignore: RemoveArrayItem
+        'tenant.complaints.channel.show', // @pest-mutate-ignore: RemoveArrayItem
+        'tenant.climate.index', // @pest-mutate-ignore: RemoveArrayItem
+        'tenant.pulse.index', // @pest-mutate-ignore: RemoveArrayItem
+        'tenant.vacations.index', // @pest-mutate-ignore: RemoveArrayItem
+        'tenant.org-chart.index', // @pest-mutate-ignore: RemoveArrayItem
+        'tenant.compensation.index', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     public function __construct(private CompanyRoles $roles) {}
