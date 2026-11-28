@@ -251,3 +251,16 @@ it('queues the mail of the center when it fits the quota exactly', function (): 
 
     Queue::assertPushed(SendRisksToConfirm::class, 1);
 });
+
+it('skips who left the company when it sends to a center, and still sends to the rest', function (): void {
+    Queue::fake();
+    signedFor($this->ana->id);
+    // One who left sorts before Ana and one after, by id and by name, so whatever the order the roster gives, one comes first.
+    foreach ([['00000000-0000-4000-8000-000000000001', 'Aarón Paz'], ['ffffffff-ffff-4fff-bfff-ffffffffffff', 'Zulema Ríos']] as [$id, $name]) {
+        $left = EmployeeFactory::new()->deactivated()->create(['id' => $id, 'tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'name' => $name]);
+        signedFor($left->id);
+    }
+
+    expect(resolve(RequestAcknowledgmentsForCenter::class)->handle($this->center->id))->toBe(['queued' => 1, 'withoutEmail' => 0]);
+    Queue::assertPushed(SendRisksToConfirm::class, fn (SendRisksToConfirm $job): bool => $job->employeeId === $this->ana->id);
+});
