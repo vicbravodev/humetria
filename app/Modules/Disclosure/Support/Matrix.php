@@ -222,7 +222,7 @@ final readonly class Matrix
         if ($kind !== null && $step !== null && $has('missing')) {
             $questions = count($this->templates->template($kind)->questions());
             $drafting = $documents->contains(fn (Document $document): bool => $document->kind === $kind && $document->status === DocumentStatus::Draft);
-            $where = $centers === 1 ? 'tu centro' : "tus {$centers} centros";
+            $whereItGoes = sprintf($step[1], $centers === 1 ? 'tu centro' : "tus {$centers} centros");
 
             return [
                 'item' => $item,
@@ -231,7 +231,7 @@ final readonly class Matrix
                     0 => '',
                     1 => '1 pregunta con opciones. ',
                     default => "{$questions} preguntas con opciones. ",
-                }.sprintf($step[1], $where),
+                }.$whereItGoes,
                 'action' => ['label' => $drafting ? 'Continuar' : 'Empezar', 'href' => route('tenant.disclosure.write', [$tenantSlug, $kind->value])],
             ];
         }
