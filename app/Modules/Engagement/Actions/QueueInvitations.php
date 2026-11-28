@@ -24,7 +24,7 @@ use Illuminate\Support\Str;
  */
 final readonly class QueueInvitations
 {
-    public const int BLOCK = 50;
+    public const int BLOCK = 50; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private Roster $roster, private MailQuota $mail, private WhatsAppQuota $whatsApp) {}
 

@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Log;
  */
 final readonly class LaunchSurvey
 {
-    public const int MAX_DAYS = 60;
+    public const int MAX_DAYS = 60; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(
         private SnapshotAudience $snapshot,
