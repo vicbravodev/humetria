@@ -197,6 +197,20 @@ it('leaves the end empty and says so for a day with a start and no end', functio
         ->end->toBeNull()->endDate->toBeNull()->workedMinutes->toBe(0)->flags->toBe(['Sin marca de fin']));
 });
 
+it('names the marks of a break that RH added', function (): void {
+    reportDay($this->ana, '2027-01-05 08:00', '2027-01-05 16:00');
+
+    foreach ([[MarkType::BreakStart, '12:00', 'Olvidó marcar su comida.'], [MarkType::BreakEnd, '13:00', 'Olvidó marcar su regreso.']] as [$type, $time, $reason]) {
+        AttendanceMark::factory()->create([
+            'tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_center_id' => $this->plant->id, 'type' => $type,
+            'marked_at' => CarbonImmutable::parse("2027-01-05 {$time}", 'America/Mexico_City')->utc(), 'method' => MarkMethod::Correction, 'corrected_by' => User::factory(), 'reason' => $reason,
+        ]);
+    }
+
+    expect(authorityRows($this->plant, '2027-01-04', '2027-01-10'))->sequence(fn ($row) => $row
+        ->corrections->toBe(['marca agregada (inicio de pausa 12:00, por RH): Olvidó marcar su comida.', 'marca agregada (fin de pausa 13:00, por RH): Olvidó marcar su regreso.']));
+});
+
 it('lists each correction of the day with its reason, and the day\'s evidence is the weakest of its marks', function (): void {
     $start = reportMark($this->ana, MarkType::Start, '2027-01-05 08:20');
     AttendanceMark::factory()->correcting($start)->create(['marked_at' => CarbonImmutable::parse('2027-01-05 08:00', 'America/Mexico_City')->utc(), 'reason' => 'El lector no respondió.']);
@@ -611,6 +625,40 @@ it('streams hundreds of people in chunks, every row in order, in the same querie
         // Who has days and their order, the center's zone, then nine reads for each of the three chunks of 200 (what was corrected, where the marks come from and who was away among them).
         ->and(count(DB::getQueryLog()))->toBe(3 + 3 * 9);
 });
+
+it('holds at most a thousand person-weeks of marks at once, so a long period takes fewer people per chunk', function (string $to, int $perChunk): void {
+    $marks = function (int $count): void {
+        $rows = [];
+        foreach (EmployeeFactory::new()->count($count)->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->plant->id]) as $person) {
+            foreach ([[MarkType::Start, '2027-01-05 08:00'], [MarkType::End, '2027-01-05 16:00']] as [$type, $local]) {
+                $rows[] = [
+                    'id' => (string) Str::uuid(), 'tenant_id' => $this->tenant->id, 'employee_id' => $person->id, 'work_center_id' => $this->plant->id,
+                    'type' => $type->value, 'method' => MarkMethod::QrAndGeofence->value, 'timezone' => 'America/Mexico_City', 'marked_at' => CarbonImmutable::parse($local, 'America/Mexico_City')->utc(), 'created_at' => now(),
+                ];
+            }
+        }
+        AttendanceMark::query()->insert($rows);
+    };
+    $queries = function () use ($to): int {
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        authorityRows($this->plant, '2027-01-04', $to);
+
+        return count(DB::getQueryLog());
+    };
+
+    $marks(1);
+    $queries(); // The first read also learns the zone of the center.
+    $one = $queries();
+    $marks($perChunk - 1);
+    $full = $queries();
+    $marks(1);
+
+    expect($full)->toBe($one)->and($queries())->toBe($one + 9);
+})->with([
+    'eight weeks: 125 people' => ['2027-02-28', 125],
+    'seven weeks: 142 people' => ['2027-02-21', 142],
+]);
 
 it('reads its people in chunks of the size of config/attendance.php (200 by default)', function (): void {
     expect(config('attendance.report.chunk_size'))->toBe(200);

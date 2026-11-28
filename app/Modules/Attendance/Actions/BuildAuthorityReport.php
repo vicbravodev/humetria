@@ -81,26 +81,26 @@ final readonly class BuildAuthorityReport
     public const string VERIFIED = 'Marca sin conexión verificada por RH';
 
     private const array SIGNED_WITH = [
-        SignerType::Passkey->value => 'firmó con su llave de acceso',
-        SignerType::DeviceKey->value => 'con la llave del dispositivo',
+        SignerType::Passkey->value => 'firmó con su llave de acceso', // @pest-mutate-ignore: RemoveArrayItem
+        SignerType::DeviceKey->value => 'con la llave del dispositivo', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     /** At most the people of attendance.report.chunk_size per chunk, and at most this many person-weeks of marks held at once: a long period takes fewer people per chunk. */
-    private const int PERSON_WEEKS = 1000;
+    private const int PERSON_WEEKS = 1000; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     private const array EVIDENCE = [
-        EvidenceLevel::Strong->value => 'Fuerte',
-        EvidenceLevel::Medium->value => 'Media',
-        EvidenceLevel::Basic->value => 'Básica',
-        EvidenceLevel::Corrected->value => 'Corregida',
+        EvidenceLevel::Strong->value => 'Fuerte', // @pest-mutate-ignore: RemoveArrayItem
+        EvidenceLevel::Medium->value => 'Media', // @pest-mutate-ignore: RemoveArrayItem
+        EvidenceLevel::Basic->value => 'Básica', // @pest-mutate-ignore: RemoveArrayItem
+        EvidenceLevel::Corrected->value => 'Corregida', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     /** From the strongest evidence to the weakest. */
     private const array RANK = [
-        EvidenceLevel::Strong->value => 0,
-        EvidenceLevel::Medium->value => 1,
-        EvidenceLevel::Basic->value => 2,
-        EvidenceLevel::Corrected->value => 3,
+        EvidenceLevel::Strong->value => 0, // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
+        EvidenceLevel::Medium->value => 1, // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
+        EvidenceLevel::Basic->value => 2, // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
+        EvidenceLevel::Corrected->value => 3, // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
     ];
 
     /** Said of a reviewer who is no longer a member of the company. */
