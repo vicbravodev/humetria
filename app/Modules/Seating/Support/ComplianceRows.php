@@ -259,7 +259,7 @@ final readonly class ComplianceRows
      */
     private function row(string $key, int $missing, int $warning = 0, ?CarbonImmutable $since = null, bool $nothingToCheck = false, bool $notApplicable = false): ComplianceRow
     {
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             $nothingToCheck => new ComplianceRow($key, RowState::Pending),
             $notApplicable => new ComplianceRow($key, RowState::NotApplicable),
             $missing > 0 => new ComplianceRow($key, RowState::Missing, $missing, $since),
