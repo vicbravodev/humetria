@@ -45,7 +45,8 @@ final readonly class PublishResults
 
         return $this->active($record->id) ?? DB::transaction(function () use ($record, $userId, $showMeasures): ResultPublication {
             try {
-                $publication = ResultPublication::query()->create(['tenant_id' => $this->tenant->id(), 'campaign_id' => $record->id, 'work_center_id' => $record->workCenterId, 'show_measures' => $showMeasures, 'published_at' => now(), 'published_by' => $userId]);
+                // In a savepoint of its own: a violation aborts what it is in, and the read below must still run.
+                $publication = DB::transaction(fn (): ResultPublication => ResultPublication::query()->create(['tenant_id' => $this->tenant->id(), 'campaign_id' => $record->id, 'work_center_id' => $record->workCenterId, 'show_measures' => $showMeasures, 'published_at' => now(), 'published_by' => $userId]));
             } catch (UniqueConstraintViolationException) {
                 // Two requests raced: the one that lost reads the one that won.
                 return $this->active($record->id) ?? throw new ModelNotFoundException;

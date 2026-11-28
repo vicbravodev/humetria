@@ -18,10 +18,13 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\Events\TransactionBeginning;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -296,4 +299,19 @@ it('scopes the publications to the current company', function (): void {
 
     expect(ResultPublication::query()->pluck('id')->all())->toBe([$own->id])
         ->and(app(CampaignRecords::class)->find($own->campaign_id))->not->toBeNull();
+});
+
+it('gives the request that lost a race the publication of the one that won, and writes no second one', function (): void {
+    $campaign = disclosureResultsEvaluation($this);
+    // The other request writes its publication between this one's check and its insert: as the transaction of the insert begins.
+    Event::listen(TransactionBeginning::class, function () use ($campaign): void {
+        if (DB::table('disclosure_result_publications')->where('campaign_id', $campaign->id)->doesntExist()) {
+            DB::table('disclosure_result_publications')->insert(['id' => (string) Str::uuid(), 'tenant_id' => $this->tenant->id, 'campaign_id' => $campaign->id, 'work_center_id' => $campaign->work_center_id, 'show_measures' => false, 'published_at' => now(), 'published_by' => $this->hr->id, 'created_at' => now(), 'updated_at' => now()]);
+        }
+    });
+
+    $publication = resolve(PublishResults::class)->handle($campaign->id, $this->hr->id);
+
+    expect(ResultPublication::query()->where('campaign_id', $campaign->id)->count())->toBe(1)
+        ->and($publication->id)->toBe(ResultPublication::query()->where('campaign_id', $campaign->id)->value('id'));
 });
