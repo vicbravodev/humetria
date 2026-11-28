@@ -97,10 +97,10 @@ final readonly class BuildAuthorityReport
 
     /** From the strongest evidence to the weakest. */
     private const array RANK = [
-        EvidenceLevel::Strong->value => 0, // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
+        EvidenceLevel::Strong->value => 0, // @pest-mutate-ignore: IncrementInteger,RemoveArrayItem
         EvidenceLevel::Medium->value => 1, // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
-        EvidenceLevel::Basic->value => 2, // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
-        EvidenceLevel::Corrected->value => 3, // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
+        EvidenceLevel::Basic->value => 2, // @pest-mutate-ignore: DecrementInteger,RemoveArrayItem
+        EvidenceLevel::Corrected->value => 3, // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     /** Said of a reviewer who is no longer a member of the company. */
