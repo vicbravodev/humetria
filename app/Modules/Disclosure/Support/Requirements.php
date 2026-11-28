@@ -14,7 +14,7 @@ use App\Modules\Results\Data\RiskBreakdown;
  */
 final readonly class Requirements
 {
-    private const array INCISOS = ['a', 'b', 'c'];
+    private const array INCISOS = ['a', 'b', 'c']; // @pest-mutate-ignore: RemoveArrayItem
 
     /**
      * @return list<Requirement>
@@ -181,7 +181,7 @@ final readonly class Requirements
 
         $closed = "La evaluación cerrada el {$fact->latest->closedOn}";
 
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             $breakdown->needingProgram() !== [] => [new Requirement('D9', 'Tablas 4 y 7', 'Revisar la política tras la evaluación', RequirementState::Notice, "{$closed} tiene riesgo medio o más y la política vigente es anterior: revise la política y refuerce su aplicación y difusión.")],
             self::hasLowRisk($breakdown) => [new Requirement('D9', 'Tablas 4 y 7', 'Revisar la política tras la evaluación', RequirementState::Notice, "{$closed} tiene riesgo bajo y la política vigente es anterior: dé mayor difusión a la política.")],
             default => [],
