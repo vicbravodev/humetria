@@ -52,6 +52,21 @@ it('gives the thirteen requirements with their state, count and date, and a summ
         ->has('requirements', 13)
         ->where('requirements.0', ['key' => 'r1', 'number' => 'R1', 'label' => 'Sector declarado y puestos con su Figura 1', 'tab' => 'positions', 'state' => 'missing', 'stateLabel' => 'Falta', 'count' => 1, 'since' => null])
         ->where('requirements', fn ($rows) => collect($rows)->pluck('key')->all() === array_map(fn (int $number): string => "r{$number}", range(1, 13)))
+        ->where('requirements', fn ($rows) => collect($rows)->map(fn (array $row): array => [$row['label'], $row['tab']])->all() === [
+            ['Sector declarado y puestos con su Figura 1', 'positions'],
+            ['Evaluación vigente de cada persona que trabaja de pie', 'people'],
+            ['Acta de cada evaluación firmada', 'people'],
+            ['Asientos en cada puesto', 'inventory'],
+            ['Asiento de descanso en un área designada', 'inventory'],
+            ['Asientos fuera del puesto señalizados', 'inventory'],
+            ['Medida para cada evaluación Media o Alta', 'plan'],
+            ['Confirmación de cada persona evaluada', 'people'],
+            ['Canalización de quien tiene malestares', 'people'],
+            ['Reglamento interior firmado, depositado y repartido', 'regulation'],
+            ['Acuerdo de pausas en cada puesto con asiento aparte', 'plan'],
+            ['Diagnóstico y programa de seguridad y salud', 'documents'],
+            ['Integrantes de la Comisión asignados al centro', null],
+        ])
         ->where('summary', ['met' => 0, 'warning' => 0, 'missing' => 4, 'pending' => 9, 'notApplicable' => 0]));
 });
 
