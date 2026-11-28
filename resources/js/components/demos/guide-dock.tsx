@@ -35,7 +35,7 @@ export default function GuideDock() {
                         aria-hidden
                         data-slot="guide-veil"
                         onClick={() => setOpen(false)}
-                        className="fixed inset-0 z-40 bg-black/48 md:hidden print:hidden"
+                        className="fixed inset-0 z-40 bg-foreground/32 md:hidden dark:bg-background/70 print:hidden"
                     />
                     <GuideStepCard
                         guide={guide}

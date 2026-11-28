@@ -110,7 +110,7 @@ final class SessionGuide implements DemoGuide
         $impersonator = $tenantId === $this->demoId ? User::query()->find($impersonatorId) : null;
 
         // The gate of the room decides, for the one behind the impersonation: the impersonated owner or HR never passes it.
-        return $impersonator !== null && Gate::forUser($impersonator)->allows('manage-demo');
+        return $impersonator !== null && Gate::forUser($impersonator)->check('manage-demo');
     }
 
     private function session(): ?DemoSession

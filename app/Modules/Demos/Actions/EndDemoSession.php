@@ -8,6 +8,7 @@ use App\Actions\RecordAudit;
 use App\Modules\Demos\Enums\DemoSessionStatus;
 use App\Modules\Demos\Models\DemoSession;
 use App\Modules\Tenancy\Contracts\DemoCompanies;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Ends the open session, or the last one when its preparation failed: it goes to «ending» and the demo resets, wiping
@@ -51,6 +52,8 @@ final readonly class EndDemoSession
         if ($moved) {
             $this->audit->handle('demo.session_ended', $session, ['tenant_id' => $this->demos->id()]);
         }
+
+        Log::info('demo.session_ended', ['session_id' => $session->id, 'retried' => ! $moved]);
 
         return $outcome;
     }
