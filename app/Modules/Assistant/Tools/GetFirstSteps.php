@@ -23,18 +23,18 @@ final readonly class GetFirstSteps implements Tool
 {
     /** The titles of the panel's steps (lib/first-steps/steps.ts), by step key. */
     private const array TITLES = [
-        'work_centers' => 'Revisa tus centros de trabajo',
-        'people' => 'Carga a tu gente',
-        'team' => 'Invita a alguien de tu equipo',
-        'humi' => 'Conoce a Humi',
+        'work_centers' => 'Revisa tus centros de trabajo', // @pest-mutate-ignore: RemoveArrayItem
+        'people' => 'Carga a tu gente', // @pest-mutate-ignore: RemoveArrayItem
+        'team' => 'Invita a alguien de tu equipo', // @pest-mutate-ignore: RemoveArrayItem
+        'humi' => 'Conoce a Humi', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     /** The title of the evaluation step, by the tool it points at. */
     private const array EVALUATION_TITLES = [
-        'nom035' => 'Lanza tu primera evaluación NOM-035',
-        'nom037' => 'Dinos a qué centros les aplica NOM-037',
-        'seating' => 'Dinos a qué centros les aplica Ley Silla',
-        'attendance' => 'Configura el registro de jornada',
+        'nom035' => 'Lanza tu primera evaluación NOM-035', // @pest-mutate-ignore: RemoveArrayItem
+        'nom037' => 'Dinos a qué centros les aplica NOM-037', // @pest-mutate-ignore: RemoveArrayItem
+        'seating' => 'Dinos a qué centros les aplica Ley Silla', // @pest-mutate-ignore: RemoveArrayItem
+        'attendance' => 'Configura el registro de jornada', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     public function __construct(

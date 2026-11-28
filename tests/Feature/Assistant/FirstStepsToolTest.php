@@ -32,6 +32,7 @@ it('gives the owner each step with its state and its link', function (): void {
         ->and($card['rows'][0]['link'])->toBe("/admin/{$this->a->slug}/work-centers")
         ->and($card['rows'][1]['title'])->toBe('Carga a tu gente')
         ->and($card['rows'][1]['link'])->toStartWith("/admin/{$this->a->slug}/")
+        ->and($card['rows'][3]['title'])->toBe('Invita a alguien de tu equipo')
         ->and($card['rows'][4]['title'])->toBe('Conoce a Humi')
         ->and($card['rows'][4]['link'])->toBe("/admin/{$this->a->slug}");
 });
