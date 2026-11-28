@@ -427,6 +427,6 @@ it('ignores the page asked for in a real company: the room only sends to the dem
     ownerOf($company);
 
     $this->actingAs(superadmin())
-        ->post(route('companies.impersonate', $company), ['to' => '/admin/acme/employees'])
+        ->post(route('companies.impersonate', $company), ['to' => '/admin/acme/employees', 'reason' => 'Revisar un reporte', 'minutes' => 30])
         ->assertRedirect(route('dashboard'));
 });

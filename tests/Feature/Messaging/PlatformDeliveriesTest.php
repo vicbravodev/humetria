@@ -63,7 +63,8 @@ it('counts every template of the registry over a range, a template that sent not
 
     expect($templates->get('survey_invite_v1'))->toEqual(new TemplateTraffic('survey_invite_v1', 'UTILITY', false, 3, 2, 1))
         ->and($templates->get('engagement_invite_v1'))->toEqual(new TemplateTraffic('engagement_invite_v1', 'UTILITY', false, 0, 0, 0))
-        ->and($templates->get('worker_invite_v1')?->pendingInCode)->toBeTrue()
+        ->and($templates->get('access_link_v1')?->pendingInCode)->toBeTrue()
+        ->and($templates->get('worker_invite_v1')?->pendingInCode)->toBeFalse()
         ->and($templates->get('proof_code_v1')?->category)->toBe('AUTHENTICATION');
 });
 
