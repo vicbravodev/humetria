@@ -14,7 +14,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Notification;
 
-mutates(SensitiveMentions::class);
+mutates(SensitiveMentions::class, SummarizeComments::class);
 
 beforeEach(function (): void {
     Notification::fake();
