@@ -129,3 +129,34 @@ it('shows an undeclared center with an empty profile', function (): void {
     $this->actingAs(memberOf($this->tenant, TenantRole::Hr))->get(route('tenant.seating.center', [$this->tenant, $this->south->id]))
         ->assertInertia(fn (Assert $page) => $page->where('profile', null));
 });
+
+it('pages the positions of a center twelve at a time, each with the result of its Figura 1 in the words of the DOF', function (): void {
+    $where = ['tenant_id' => $this->tenant->id, 'work_center_id' => $this->north->id];
+    StandingPosition::factory()->create($where + ['name' => 'A Cajera']);
+    StandingPosition::factory()->nearby()->create($where + ['name' => 'B Empacador']);
+    StandingPosition::factory()->withinCenter()->create($where + ['name' => 'C Montacarguista']);
+    StandingPosition::factory()->count(10)->create($where + ['name' => 'D Operador']);
+
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr))->get(route('tenant.seating.center', [$this->tenant, $this->north->id]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('positions.data', 12)
+            ->where('positions.total', 13)
+            ->where('positions.data', fn ($positions): bool => collect($positions)->take(3)->map(fn (array $position): array => [$position['placement'], $position['placementLetter'], $position['placementText']])->all() === [
+                ['at_workstation', 'A', 'Se debe proporcionar el asiento o silla con respaldo a la persona trabajadora con las características determinadas para su espacio de trabajo.'],
+                ['nearby', 'B', 'Se debe proporcionar el asiento o silla con respaldo a la persona trabajadora en un lugar determinado cerca de su lugar de trabajo.'],
+                ['within_center', 'C', 'Se debe proporcionar el asiento o silla con respaldo a la persona trabajadora en un lugar determinado dentro del centro de trabajo.'],
+            ]));
+});
+
+it('pages the people of a position fifteen at a time', function (): void {
+    $position = StandingPosition::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->north->id]);
+    PositionAssignment::factory()->count(16)->create(['tenant_id' => $this->tenant->id, 'position_id' => $position->id]);
+
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr))->get(route('tenant.seating.positions.show', [$this->tenant, $position->id]))
+        ->assertInertia(fn (Assert $page) => $page->has('people.data', 15)->where('people.total', 16));
+});
+
+it('asks a position for the five conditions it gives its people, and leaves the footwear and the discomfort to each person', function (): void {
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr))->get(route('tenant.seating.positions.create', [$this->tenant, $this->north->id]))
+        ->assertInertia(fn (Assert $page) => $page->where('conditions', fn ($conditions): bool => collect($conditions)->pluck('key')->all() === ['standing_time', 'posture_change', 'surface', 'movement_space', 'pauses']));
+});
