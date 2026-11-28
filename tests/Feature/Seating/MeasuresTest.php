@@ -257,3 +257,14 @@ it('leaves no evidence behind when the measure cannot be saved', function (): vo
 
     expect(Storage::disk(config()->string('filesystems.seating_files'))->allFiles())->toBe([]);
 });
+
+it('cancels a measure once: cancelling it again changes and logs nothing', function (): void {
+    $measure = PreventiveMeasure::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'position_id' => $this->position->id]);
+    resolve(CancelMeasure::class)->handle($measure);
+    Log::spy();
+
+    resolve(CancelMeasure::class)->handle($measure->fresh() ?? $measure);
+
+    Log::shouldNotHaveReceived('info');
+    expect($measure->fresh()?->status->value)->toBe('cancelled');
+});
