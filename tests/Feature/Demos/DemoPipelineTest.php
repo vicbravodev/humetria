@@ -225,7 +225,7 @@ it('offers the contract of other modules how many requests each status holds', f
     DemoRequest::factory()->count(2)->create();
     DemoRequest::factory()->create(['status' => DemoStatus::Contacted]);
 
-    expect(app(DemoLeads::class)->countsByStatus())->toBe(['all' => 3, 'new' => 2, 'contacted' => 1, 'converted' => 0, 'discarded' => 0]);
+    expect(app(DemoLeads::class)->countsByStatus())->toBe(['all' => 3, 'new' => 2, 'contacted' => 1, 'scheduled' => 0, 'trial' => 0, 'converted' => 0, 'discarded' => 0]);
 });
 
 it('marks a request converted once: the second try changes nothing and says so', function (): void {
