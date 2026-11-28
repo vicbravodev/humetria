@@ -96,6 +96,44 @@ it('sends the class and place of an exception, never its words', function (): vo
         ->and(json_encode($record, JSON_THROW_ON_ERROR))->not->toContain('ana@empresa.mx');
 });
 
+it('gives each level its OpenTelemetry severity', function (string $level, int $number, string $text): void {
+    shippingLogs();
+    config(['logging.channels.posthog.level' => 'debug']);
+    Log::forgetChannel('posthog');
+
+    Log::channel('posthog')->log($level, 'test.logged');
+    PostHogLogs::flush();
+
+    expect(shippedRecords()[0])->toMatchArray(['severityNumber' => $number, 'severityText' => $text]);
+})->with([
+    ['debug', 5, 'DEBUG'],
+    ['info', 9, 'INFO'],
+    ['notice', 10, 'INFO2'],
+    ['warning', 13, 'WARN'],
+    ['error', 17, 'ERROR'],
+    ['critical', 18, 'ERROR2'],
+    ['alert', 19, 'ERROR3'],
+    ['emergency', 21, 'FATAL'],
+]);
+
+it('types each value of the context, leaves out the empty ones and names what it cannot write', function (): void {
+    shippingLogs();
+
+    Log::channel('posthog')->info('test.logged', [
+        'gone' => null, 'sent' => true, 'count' => 3, 'ratio' => 0.5, 'area' => 'Ventas', 'ids' => [1, 2], 'thing' => new stdClass,
+    ]);
+    PostHogLogs::flush();
+
+    expect(shippedRecords()[0]['attributes'])->toBe([
+        ['key' => 'sent', 'value' => ['boolValue' => true]],
+        ['key' => 'count', 'value' => ['intValue' => '3']],
+        ['key' => 'ratio', 'value' => ['doubleValue' => 0.5]],
+        ['key' => 'area', 'value' => ['stringValue' => 'Ventas']],
+        ['key' => 'ids', 'value' => ['stringValue' => '[1,2]']],
+        ['key' => 'thing', 'value' => ['stringValue' => 'stdClass']],
+    ]);
+});
+
 it('leaves out what is below its level', function (): void {
     shippingLogs();
 

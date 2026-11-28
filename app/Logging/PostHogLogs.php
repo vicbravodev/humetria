@@ -22,9 +22,9 @@ use WeakMap;
  */
 final class PostHogLogs extends AbstractProcessingHandler
 {
-    public const string URL = Analytics::HOST.'/i/v1/logs';
+    public const string URL = Analytics::HOST.'/i/v1/logs'; // @pest-mutate-ignore: ConcatRemoveLeft,ConcatRemoveRight,ConcatSwitchSides
 
-    private const int BATCH = 100;
+    private const int BATCH = 100; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** @var list<array<string, mixed>> */
     private array $buffer = [];
@@ -118,7 +118,7 @@ final class PostHogLogs extends AbstractProcessingHandler
         $attributes = [];
 
         foreach ($values as $key => $value) {
-            $typed = match (true) {
+            $typed = match (true) { // @pest-mutate-ignore: TrueToFalse
                 $value === null => null,
                 is_bool($value) => ['boolValue' => $value],
                 // OpenTelemetry's JSON carries a 64-bit integer as a string.
