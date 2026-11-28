@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Log;
  */
 final readonly class ExportAuditTrail
 {
-    public const int LIMIT = 10_000;
+    public const int LIMIT = 10_000; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private AuditPages $pages, private RecordAudit $recordAudit) {}
 

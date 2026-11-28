@@ -9,6 +9,7 @@ use App\Modules\Tenancy\Actions\RemoveTwoFactor;
 use App\Modules\Tenancy\Actions\SendPasswordReset;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Support\PlatformPermissions;
 use App\Modules\Tenancy\Support\UserPages;
 use App\Notifications\ResetPasswordNotification;
 use Illuminate\Support\Facades\Gate;
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(UserPages::class, RemoveTwoFactor::class, SendPasswordReset::class);
+mutates(UserPages::class, RemoveTwoFactor::class, SendPasswordReset::class, PlatformPermissions::class);
 
 /** A user with two-factor on, as Fortify leaves it once confirmed. */
 function userWithTwoFactor(array $attributes = []): User

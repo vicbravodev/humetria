@@ -11,10 +11,11 @@ use App\Modules\Tenancy\Actions\ExtendTrials;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantLimit;
 use App\Modules\Tenancy\Models\TenantMembership;
+use App\Modules\Tenancy\Support\StaffDirectory;
 use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(AssignAccountManager::class, ExtendTrials::class);
+mutates(AssignAccountManager::class, ExtendTrials::class, StaffDirectory::class);
 
 /** @return list<string> */
 function viewNames(string $status, string $q = ''): array

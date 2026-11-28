@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Middleware\ForbidWhileImpersonating;
 use App\Models\AuditEntry;
 use App\Models\User;
+use App\Modules\Tenancy\Actions\ExportAuditTrail;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Support\AuditPages;
 use Carbon\CarbonImmutable;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(AuditPages::class);
+mutates(AuditPages::class, ExportAuditTrail::class);
 
 /** One audit row, written straight to the table: its time and who did it are the point of each test. */
 function auditRow(string $event, array $attributes = []): AuditEntry
@@ -283,6 +284,22 @@ it('exports what the filters find as CSV, newest first, and records the export i
         ->where('filters.family', 'audit')
         ->where('entries.data.0.event', 'audit.exported')
         ->where('entries.data.0.context', ['Empresa' => 'Acme', 'Tipo de evento' => 'tenant', 'Filas' => '2']));
+});
+
+it('exports at most ten thousand entries', function (): void {
+    foreach (array_chunk(range(1, ExportAuditTrail::LIMIT + 1), 1000) as $chunk) {
+        DB::table('audit_entries')->insert(array_map(fn (int $n): array => [
+            'id' => (string) Illuminate\Support\Str::uuid(),
+            'event' => 'tenant.updated',
+            'metadata' => '{}',
+            'created_at' => now()->subSeconds($n),
+        ], $chunk));
+    }
+
+    $csv = $this->actingAs(superadmin())->get(route('audit.export'))->streamedContent();
+
+    expect(substr_count($csv, "\n"))->toBe(10_001)
+        ->and(AuditEntry::query()->where('event', 'audit.exported')->sole()->metadata)->toMatchArray(['rows' => 10_000]);
 });
 
 it('lets only the superadmin export the trail', function (User $user): void {
