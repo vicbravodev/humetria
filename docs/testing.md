@@ -172,12 +172,12 @@ Los jobs corren en paralelo; `ci`, el check obligatorio, espera a todos:
 
 | Job | Qué hace |
 |---|---|
-| `changes` | Decide si el cambio necesita el pipeline (`scripts/ci-code-changed.sh`). |
+| `changes` | Decide si el cambio necesita el pipeline (`scripts/ci-code-changed.sh`) y si toca las dependencias (`scripts/ci-dependencies-changed.sh`). Solo baja `scripts/`. |
 | `build` | Construye el frontend una vez (`npm run build:ssr`) y lo sube como artefacto `assets`: `public/build`, `bootstrap/ssr` y los archivos de Wayfinder. |
-| `checks` | Auditoría, Pint, PHPStan, `vp check`, tsc y Vitest. No construye: genera Wayfinder con `wayfinder:generate --with-form`. |
+| `checks` | Auditoría (solo si el cambio toca `composer.*`, `package*.json` o `scripts/npm-audit.sh`; `audit.yml` audita `main` cada día), Pint, PHPStan (con su caché de resultados), `vp check`, tsc y Vitest. No construye: genera Wayfinder con `wayfinder:generate --with-form`. |
 | `tests` (3 shards) | Unit y Feature con PCOV; cada shard guarda su cobertura (`--coverage-php`) y sus tiempos (`timings-tests-N`). |
 | `coverage` | Junta la cobertura de los shards (`scripts/coverage-merge.php`, con el merger de php-code-coverage) y aplica el 90 % (`scripts/coverage-min.php`). |
-| `browser` (4 shards) | Pest Browser; guarda sus tiempos (`timings-browser-N`). Si falla, sube las capturas (`tests/Browser/Screenshots`) como artefacto. |
+| `browser` (6 shards) | Pest Browser; guarda sus tiempos (`timings-browser-N`). Si falla, sube las capturas (`tests/Browser/Screenshots`) como artefacto. |
 | `ssr` | El bundle SSR con un Node real (usa el del job `build`: `SSR_PREBUILT=true`) y la imagen `ssr` con Docker. |
 
 ## Los shards
@@ -197,7 +197,8 @@ Pest avisa que el archivo está viejo.
 
 - **Nunca con `--update-shards` de Pest.** Reescribe el archivo entero con una sola corrida, y una corrida de Browser y Feature
   a la vez mide su pelea por la CPU, no las pruebas: el 17 nov 2026 le dio 1270 s a `DemoStoriesTest` (tarda 146 s), Pest
-  la dejó casi sola en un shard y los otros dos cargaron 7000 pruebas cada uno, hasta el timeout. `scripts/shard-timings.php`
+  la dejó casi sola en un shard y los otros dos cargaron 7000 pruebas cada uno. (Esos 1270 s eran reales en parte: ver
+  «Autovacuum», abajo.) `scripts/shard-timings.php`
   conserva las clases que los reportes no traen: se puede medir una suite sin perder la otra.
 - Se actualiza cuando un shard tarda notablemente más que los otros, o cuando Pest avisa de muchos archivos nuevos.
 
@@ -207,12 +208,33 @@ Pest avisa que el archivo está viejo.
   un proceso por núcleo, así que pasar el repo a privado duplica el tiempo de cada shard (pasó el 26 nov 2026: de ~16 a
   ~28 min). En privado, además, los minutos salen del crédito del plan.
 - Las pruebas esperan a Postgres más que a la CPU (~40 % de uso en la historia de la demo): Postgres corre en el mismo runner.
-- `main` está protegido con un ruleset: solo entra por PR y con `ci` en verde; nadie empuja directo ni reescribe su historia.
+- `main` está protegido con un ruleset: solo entra por PR, con `ci` en verde y la rama al día con `main` (así `main` queda
+  probado tal como entra); nadie empuja directo ni reescribe su historia. La cola de merge solo existe en repos de una
+  organización: el `merge_group` de `tests.yml` queda listo para cuando lo sea.
+
+## Autovacuum
+
+Una prueba corre dentro de una transacción que nunca se confirma (`RefreshDatabase`). Si autovacuum analiza una tabla a
+media prueba, no cuenta las filas que esa transacción insertó: guarda la tabla como vacía (`reltuples = 0`) y el planner
+elige planes para tablas vacías (nested loops que recorren cada fila por fila). Así, la historia de la demo pasó de ~2.5 min
+a más de 30 en ~1 de cada 4 corridas del CI desde el 25 nov 2026, sin poderse reproducir sola en una Mac: hacen falta cambios
+previos en ese worker para que el análisis se dispare. El mecanismo lo confirma Tom Lane
+(https://www.postgresql.org/message-id/28701.1556221558%40sss.pgh.pa.us) y otros proyectos lo arreglaron igual.
+
+- En CI, autovacuum está apagado (la acción `setup`): la base muere con el job.
+- Una prueba que siembra mucho y luego consulta mucho corre `ANALYZE` dentro de su transacción tras sembrar (lo hace
+  `DemoStoriesTest`): cuenta sus propias filas y deja fuera a autovacuum hasta el final, también en local.
 
 ## Lo demás
 
-- Postgres en CI vive en un tmpfs y con `fsync`, `synchronous_commit` y `full_page_writes` apagados (la acción `setup`):
-  la base muere con el job.
+- Postgres en CI vive en un tmpfs y con `fsync`, `synchronous_commit`, `full_page_writes` y `autovacuum` apagados (la acción
+  `setup`): la base muere con el job.
+- Solo `build` y `checks` cancelan la corrida al fallar (son los rápidos). Los shards terminan aunque otro falle: la corrida
+  muestra todos los fallos de una vez, cada uno con su log, y «Re-run failed jobs» repite solo el shard rojo.
+- El paso de pruebas de `tests` y `browser` se corta a los 15 min: un cuelgue no quema los 30 del job.
+- `assets` y la cobertura de cada shard se guardan 7 días: un job que se repite días después todavía los encuentra.
+- `deploy.yml` guarda en caché solo las capas de las imágenes que publica (`mode=min`): con `mode=max` la caché de BuildKit
+  pasaba los 10 GB del repo y empujaba fuera las de vendor, npm y Playwright.
 - Los navegadores de Playwright se guardan en caché por la versión de Playwright.
-- Cada job tiene `timeout-minutes`; el flujo también corre en `merge_group`, listo para una cola de merge.
+- Cada job tiene `timeout-minutes`.
 - En local nada cambia: `composer test` mide la cobertura en una sola corrida (`test:coverage`) y `composer setup` construye.

@@ -42,8 +42,9 @@ runs:
         key: vendor-${{ runner.os }}-php8.5-${{ hashFiles('composer.lock') }}
 
     # The CI database lives and dies with the job: no write needs to survive a crash. Off: fsync, full page writes and
-    # the wait for each commit to reach the disk (all three reload without a restart). The data directory is a tmpfs
-    # (tests.yml, service options).
+    # the wait for each commit to reach the disk. Off too: autovacuum, whose ANALYZE does not count the rows a test has not
+    # committed and left a long test planning for empty tables (docs/testing.md, «El runner»). All four reload without a
+    # restart. The data directory is a tmpfs (tests.yml, service options).
     - name: Tune Postgres for tests
       if: inputs.database == 'true'
       shell: bash
@@ -52,6 +53,7 @@ runs:
         -c 'ALTER SYSTEM SET fsync = off'
         -c 'ALTER SYSTEM SET synchronous_commit = off'
         -c 'ALTER SYSTEM SET full_page_writes = off'
+        -c 'ALTER SYSTEM SET autovacuum = off'
         -c 'SELECT pg_reload_conf()'
 
     # composer setup without the build: the build comes from the input `assets`.
