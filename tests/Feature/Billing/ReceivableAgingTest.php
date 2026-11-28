@@ -11,9 +11,9 @@ use App\Modules\Billing\Models\Subscription;
 use App\Modules\Billing\Support\OpenBalances;
 use Inertia\Testing\AssertableInertia as Assert;
 
-/** An issued statement of the account for this many pesos, issued that many days (and hours) ago. */
 mutates(OpenBalances::class);
 
+/** An issued statement of the account for this many pesos, issued that many days (and hours) ago. */
 function agedStatement(BillingAccount $account, int $pesos, int $days, int $hours = 0): Statement
 {
     return Statement::factory()->issued()->create(['billing_account_id' => $account->id, 'subtotal_cents' => $pesos * 100, 'vat_cents' => 0, 'total_cents' => $pesos * 100, 'issued_at' => now()->subDays($days)->subHours($hours)]);
