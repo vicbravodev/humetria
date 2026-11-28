@@ -22,6 +22,13 @@ it('measures 100 m between two points a hundred meters apart (Haversine)', funct
     expect($reading->distanceM)->toBeFloat()->toEqualWithDelta(100.0, 0.01);
 });
 
+it('measures on a sphere of 6371000 m: ten degrees of latitude are 1111949.27 m', function (): void {
+    $reading = Geofence::evaluate([zone('a', 9.0, -99.0, 5000)], 19.0, -99.0, 10, 100);
+
+    expect($reading->distanceM)->toEqualWithDelta(10 * METERS_PER_DEGREE, 0.01)
+        ->and(10 * METERS_PER_DEGREE)->toEqualWithDelta(1111949.27, 0.01);
+});
+
 it('measures along a parallel with the cosine of the latitude', function (): void {
     $lat = 60.0;
     $reading = Geofence::evaluate([zone('a', $lat, 10.0, 5000)], $lat, 10.0 + 100 / (METERS_PER_DEGREE * cos(deg2rad($lat))), 10, 100);
