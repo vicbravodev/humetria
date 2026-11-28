@@ -197,6 +197,22 @@ it('leaves the end empty and says so for a day with a start and no end', functio
         ->end->toBeNull()->endDate->toBeNull()->workedMinutes->toBe(0)->flags->toBe(['Sin marca de fin']));
 });
 
+it('leaves out a person the roster does not have and goes on with the next', function (): void {
+    reportDay($this->ana, '2027-01-05 08:00', '2027-01-05 16:00');
+
+    $rows = resolve(BuildAuthorityReport::class)->rowsOf([(string) Str::uuid(), $this->ana->id], $this->plant->id, CarbonImmutable::parse('2027-01-04'), CarbonImmutable::parse('2027-01-10'))->values()->all();
+
+    expect(array_map(fn (AuthorityRow $row): string => $row->personName, $rows))->toBe([$this->ana->name]);
+});
+
+it('looks for no delivery made without a connection when the people have no marks', function (): void {
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+
+    expect(resolve(BuildAuthorityReport::class)->rowsOf([$this->ana->id], $this->plant->id, CarbonImmutable::parse('2027-01-04'), CarbonImmutable::parse('2027-01-10'))->all())->toBe([])
+        ->and(array_filter(DB::getQueryLog(), fn (array $query): bool => str_contains($query['query'], 'attendance_offline_marks')))->toBe([]);
+});
+
 it('names the marks of a break that RH added', function (): void {
     reportDay($this->ana, '2027-01-05 08:00', '2027-01-05 16:00');
 
