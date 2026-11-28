@@ -5,8 +5,8 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Tenancy\Models\Tenant;
-use App\Modules\Tenancy\Models\TenantLimit;
 use App\Modules\Tenancy\Models\TenantInvitation;
+use App\Modules\Tenancy\Models\TenantLimit;
 use App\Modules\Tenancy\Models\TenantMembership;
 
 // The labels of the open row menu, in order.
