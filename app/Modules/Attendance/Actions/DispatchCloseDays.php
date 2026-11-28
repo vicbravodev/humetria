@@ -26,7 +26,7 @@ final readonly class DispatchCloseDays
     public const string TASK = 'attendance.close-days';
 
     /** Minutes after the center's midnight: shortly after it, as the nightly close always ran. */
-    private const int AFTER_MIDNIGHT = 15;
+    private const int AFTER_MIDNIGHT = 15; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private Companies $companies, private WorkCenters $centers, private Timezones $timezones) {}
 

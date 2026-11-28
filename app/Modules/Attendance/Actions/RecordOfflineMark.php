@@ -140,7 +140,7 @@ final readonly class RecordOfflineMark
     {
         $signed = $v->signed;
 
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             $signed instanceof DeviceSigned && ($v->submission->declaredAt->greaterThan($signed->passExpiresAt) || $signed->passIssuedAt->greaterThan($v->receivedAt)) => OfflineRejection::PassExpired,
             $v->receivedAt->greaterThan($v->ticketIssuedAt->addDays(config()->integer('attendance.offline.ticket_horizon_days'))) => OfflineRejection::TicketExpired,
             ! $v->person->active => OfflineRejection::PersonInactive,

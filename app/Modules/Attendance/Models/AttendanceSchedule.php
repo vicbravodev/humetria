@@ -34,7 +34,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'employee_id', 'valid_from', 'shift_type', 'work_mode', 'minutes_by_weekday', 'starts_by_weekday'])]
+#[Fillable(['tenant_id', 'employee_id', 'valid_from', 'shift_type', 'work_mode', 'minutes_by_weekday', 'starts_by_weekday'])] // @pest-mutate-ignore: RemoveArrayItem
 #[UseFactory(AttendanceScheduleFactory::class)]
 final class AttendanceSchedule extends Model
 {

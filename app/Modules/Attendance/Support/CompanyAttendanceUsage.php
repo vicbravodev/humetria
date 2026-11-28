@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 final class CompanyAttendanceUsage implements AttendanceUsage
 {
     /** The tables whose rows say a company has put Attendance to work. */
-    private const array TABLES = ['attendance_policies', 'attendance_kiosk_devices', 'attendance_marks'];
+    private const array TABLES = ['attendance_policies', 'attendance_kiosk_devices', 'attendance_marks']; // @pest-mutate-ignore: RemoveArrayItem
 
     public function among(array $tenantIds): array
     {

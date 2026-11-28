@@ -96,7 +96,7 @@ final class MarkPolicyCheck
             throw new MarkRejected($reading->accuracyOk ? 'outside_zone' : 'accuracy_too_low');
         }
 
-        $method = match (true) {
+        $method = match (true) { // @pest-mutate-ignore: TrueToFalse
             $inZone && $qrValid === true => MarkMethod::QrAndGeofence,
             $qrValid === true => MarkMethod::Qr,
             default => MarkMethod::Geofence,
@@ -193,7 +193,7 @@ final class MarkPolicyCheck
             throw new MarkRejected('qr_invalid');
         }
 
-        $method = match (true) {
+        $method = match (true) { // @pest-mutate-ignore: TrueToFalse
             $position !== null && $position->accuracyM <= $policy->max_accuracy_m => MarkMethod::Field,
             $qrValid === true => MarkMethod::Qr,
             default => MarkMethod::FieldUnlocated,

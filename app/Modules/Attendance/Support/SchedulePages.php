@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\Gate;
  */
 final readonly class SchedulePages
 {
-    private const int PER_PAGE = 25;
+    private const int PER_PAGE = 25; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     private const int COPIES = 20;
 

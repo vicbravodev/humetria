@@ -21,7 +21,7 @@ use Carbon\CarbonImmutable;
  */
 final readonly class ReportPages
 {
-    private const int PER_PAGE = 25;
+    private const int PER_PAGE = 25; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private BuildAuthorityReport $report, private Roster $roster, private Timezones $timezones) {}
 

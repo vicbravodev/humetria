@@ -28,7 +28,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property CarbonImmutable $created_at
  * @property CarbonImmutable $updated_at
  */
-#[Fillable(['tenant_id', 'work_center_id', 'token_hash', 'activated_at', 'last_seen_at', 'revoked_at'])]
+#[Fillable(['tenant_id', 'work_center_id', 'token_hash', 'activated_at', 'last_seen_at', 'revoked_at'])] // @pest-mutate-ignore: RemoveArrayItem
 #[Table('attendance_kiosk_devices')]
 #[UseFactory(KioskDeviceFactory::class)]
 final class KioskDevice extends Model

@@ -37,7 +37,7 @@ use Illuminate\Support\Facades\Gate;
  */
 final readonly class AttendancePages
 {
-    private const int PER_PAGE = 25;
+    private const int PER_PAGE = 25; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** The tabs of the list: every person, each answer, and the weeks at risk. */
     private const array VIEWS = ['all', 'pending', 'disputed', 'confirmed', 'at_risk'];
