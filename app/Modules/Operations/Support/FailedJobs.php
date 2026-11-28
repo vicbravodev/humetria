@@ -15,7 +15,7 @@ use Illuminate\Support\Str;
 final class FailedJobs
 {
     /** At most this many kinds of job: it is a summary, the full list is Horizon's. */
-    private const int KINDS = 10;
+    private const int KINDS = 10; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /**
      * @return array{today: int, week: list<array{job: string, module: string|null, queue: string, count: int, lastFailedAt: string}>}

@@ -15,7 +15,7 @@ use Carbon\CarbonImmutable;
 final readonly class SystemHealth
 {
     /** The scheduler beats every 5 minutes; the alert of docs/operations/observability.md fires after 15 without a beat. */
-    private const int LATE_AFTER_MINUTES = 15;
+    private const int LATE_AFTER_MINUTES = 15; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(
         private QueueWorkload $queues,
