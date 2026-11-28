@@ -3,9 +3,12 @@
 declare(strict_types=1);
 
 use App\Modules\Engagement\Enums\PulseMode;
+use App\Modules\Engagement\Support\SurveyPages;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Inertia\Testing\AssertableInertia as Assert;
+
+mutates(SurveyPages::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-11 18:00:00');

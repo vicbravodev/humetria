@@ -10,6 +10,7 @@ use App\Modules\Engagement\Http\Controllers\SurveyController;
 use App\Modules\Engagement\Models\Commitment;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
+use App\Modules\Engagement\Support\Participation;
 use App\Modules\Engagement\Support\Pulse\OpenCommitments;
 use App\Modules\Engagement\Support\Pulse\PriorityDrivers;
 use App\Modules\Engagement\Support\SurveyPages;
@@ -21,7 +22,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 /** The queries of a survey in progress, whatever the number of people or groups (the session and the panel frame included). */
 const CLIMATE_SHOW_QUERIES = 21;
 
-mutates(SurveyController::class, SurveyPages::class, SnapshotAudience::class, OpenCommitments::class, PriorityDrivers::class);
+mutates(SurveyController::class, SurveyPages::class, Participation::class, SnapshotAudience::class, OpenCommitments::class, PriorityDrivers::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-09 18:00:00');
