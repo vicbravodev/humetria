@@ -115,3 +115,9 @@
     outline: 2px solid var(--ring);
     outline-offset: 2px;
 }
+
+/* The demo guide rings the control of its step (hooks/use-guide-spotlight.ts): no veil, so the page and the dock keep their clicks. */
+[data-guide-spotlight] {
+    outline: 3px solid var(--primary);
+    outline-offset: 3px;
+}

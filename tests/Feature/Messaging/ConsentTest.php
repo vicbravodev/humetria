@@ -56,8 +56,13 @@ it('does not send when the company turned WhatsApp off', function (): void {
     expect(canSend($other))->toBeFalse();
 });
 
-it('never sends from the demo company', function (): void {
+// Decision 5 of the guided demo (2026-11-26): the demo writes through WhatsApp under the same rules as any company.
+it('sends from the demo company under the same rules', function (): void {
     becomeDemo($this->tenant);
+
+    expect(canSend($this->tenant))->toBeTrue();
+
+    optOutOf(CONSENT_PHONE, $this->tenant->id);
 
     expect(canSend($this->tenant))->toBeFalse();
 });

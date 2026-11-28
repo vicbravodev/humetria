@@ -91,16 +91,27 @@ it('skips WhatsApp for a phone that opted out, of this company or global', funct
     expect(route_(null, '+528186875767'))->toBe([]);
 });
 
-it('skips WhatsApp when the accepted words are stale, the function is paused, or the company is the demo', function (string $case): void {
+it('skips WhatsApp when the accepted words are stale or the function is paused', function (string $case): void {
     TenantChannelFactory::new()->for($this->tenant)->whatsAppEnabled()->create(['preference' => 1]);
     match ($case) {
         'words' => config(['whatsapp.consent.version' => '2027-01-01']),
         'paused' => config(['whatsapp.paused' => true]),
-        'demo' => becomeDemo($this->tenant),
     };
 
     expect(route_('a@example.com', '+528186875767'))->toBe(['mail' => 'a@example.com']);
-})->with(['words', 'paused', 'demo']);
+})->with(['words', 'paused']);
+
+// Decision 5 of the guided demo (2026-11-26): the demo writes through WhatsApp, and through every channel that works at once.
+it('routes the demo through every channel that works, in order of preference', function (): void {
+    TenantChannelFactory::new()->for($this->tenant)->whatsAppEnabled()->create(['preference' => 1]);
+    TenantChannelFactory::new()->for($this->tenant)->create(['channel' => 'mail', 'preference' => 2]);
+    becomeDemo($this->tenant);
+
+    expect(route_('a@example.com', '+528186875767'))->toBe(['whatsapp' => '+528186875767', 'mail' => 'a@example.com'])
+        ->and(route_('a@example.com', '+528186875767', false))->toBe(['mail' => 'a@example.com'])
+        ->and(route_(null, '+528186875767'))->toBe(['whatsapp' => '+528186875767'])
+        ->and(route_(null, null))->toBe([]);
+});
 
 it('makes no query at all with the function off and answers as before', function (): void {
     config(['whatsapp.enabled' => false]);

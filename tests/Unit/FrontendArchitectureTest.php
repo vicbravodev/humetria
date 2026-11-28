@@ -195,6 +195,16 @@ it('keeps design-system components free of modules and layouts', function (strin
     expect($result['output'])->toContain('no-restricted-imports');
 })->with(['@/components/app-sidebar', '@/components/app-shell', '@/layouts/app-layout']);
 
+it('lets a design-system piece compose another one: Humi\'s avatar draws Humi', function (): void {
+    $piece = probeId();
+
+    $result = lintFrontendProbe([
+        "components/humetria/{$piece}.tsx" => "import Humi from '@/components/humetria/humi';\n\nexport default Humi;\n",
+    ]);
+
+    expect($result['output'])->not->toContain('no-restricted-imports');
+});
+
 it('keeps hooks, lib and types free of components and layouts', function (string $layer): void {
     $result = lintFrontendProbe([
         "{$layer}/".probeId().'.ts' => "import { Button } from '@/components/ui/button';\n\nexport const thing = Button;\n",

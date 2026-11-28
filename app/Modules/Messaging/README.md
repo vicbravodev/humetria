@@ -11,9 +11,9 @@ mensaje. El módulo que manda un aviso (Campaigns, Engagement…) sigue eligiend
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `WhatsAppGateway`    | `send(OutboundMessage)` y `sendText(to, body)`: `SendOutcome` (Cloud API, nulo con `WHATSAPP_ENABLED=false`, falso en pruebas)  |
 | `ChannelConsent`     | `canSend(tenantId, channel, phone)`: canal activo con opt-in vigente y sin baja                                                 |
-| `ChannelPicker`      | un solo canal por persona (el de menor preferencia entre los activos con dato de contacto)                                      |
+| `ChannelPicker`      | un solo canal por persona (el de menor preferencia entre los activos con dato de contacto); en la demo, todos los que sirven    |
 | `TracksDelivery`     | la notificación dice a qué invitación pertenece, para seguir su entrega                                                         |
-| `InvitationLinks`    | cada módulo entrega el enlace y los parámetros de su plantilla                                                                  |
+| `InvitationLinks`    | cada módulo entrega el enlace y los parámetros de su plantilla (Campaigns, Engagement, WorkerAccess)                            |
 | `DeliverySummary`    | agregados por canal de una campaña o encuesta (mínimo de 5)                                                                     |
 | `DeliveryOutcomes`   | cuáles mensajes no se entregaron, para la conciliación de Billing                                                               |
 | `PlatformDeliveries` | la consola de la plataforma: conteos por canal y por plantilla, empresas con 5 o más rechazos, último webhook, conexión y bajas |
@@ -43,6 +43,15 @@ cifrado (lleva el teléfono), sin medidor ni cobro, y con la pausa y `WHATSAPP_E
 - El teléfono nunca se guarda en estas tablas: solo su HMAC (`recipient_hash`, con claves versionadas).
 - Ninguna tabla de respuestas tiene llave, canal, id de mensaje ni teléfono hacia estas tablas. El canal vive solo en
   `invited_via` de la invitación.
+
+## La demo (decisión 5 de la demo guiada)
+
+En la empresa demo, WhatsApp sigue las mismas reglas que en una empresa real (función disponible, canal encendido con las palabras
+vigentes, número válido, sin baja), pero `ChannelPicker` devuelve **todos** los canales que sirven: el público que Victor da de
+alta en vivo recibe la invitación por correo y por WhatsApp a la vez. `invited_via` guarda el primero (correo, el preferido de la
+sesión). Las 180 personas sembradas no tienen teléfono, así que a nadie ficticio le sale un mensaje. La demo no cuenta en cobros:
+Billing no le aparta cupo de WhatsApp ni le cuenta los mensajes aceptados.
+
 - Nada del payload de Meta ni de Resend llega a logs.
 
 ## Orden de validación

@@ -20,9 +20,9 @@ export default function RoomDoor({ door }: { door: DemoDoor }) {
             className="flex flex-col gap-3 card p-5"
         >
             <div className="flex flex-wrap items-center gap-2">
-                <h2 id="room-door" className="text-base font-semibold">
+                <h3 id="room-door" className="text-base font-semibold">
                     La puerta
-                </h2>
+                </h3>
                 {door.open ? (
                     <Badge>{`Abierta hasta las ${door.closes_at}`}</Badge>
                 ) : (

@@ -1,5 +1,6 @@
 import type { Auth } from '@/types/auth';
 import type { SalaryImportSummary } from '@/types/compensation';
+import type { DemoGuide } from '@/types/demo-guide';
 import type { DemoShareLink } from '@/types/demos';
 import type { FirstSteps } from '@/types/first-steps';
 import type { InCourse } from '@/types/navigation';
@@ -47,6 +48,8 @@ declare module '@inertiajs/core' {
             inCourse: InCourse | null;
             /** The owner's guided tour of the company; null for anyone else, outside a company, once finished or when switched off. */
             firstSteps: FirstSteps | null;
+            /** The guide of the demo session the superadmin presents; null for anyone else, outside the demo or without a session. */
+            demoGuide: DemoGuide | null;
             /** Whether the company of the page is the demo: then every page, its reports above all, carries the «DEMO» mark. */
             demo: boolean;
             /** White label: the logo, name and accent of the company of the page; null outside one, absent on the pages that share almost nothing (the public channel, the workers' page). */

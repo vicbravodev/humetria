@@ -4,6 +4,7 @@ import {
     RANGES,
     SECTORS,
     seatingResult,
+    staffNote,
 } from '@/lib/applicability';
 
 describe('nom035Result', () => {
@@ -72,5 +73,25 @@ describe('choices', () => {
             'Industrial',
             'Otro parecido',
         ]);
+    });
+});
+
+describe('staffNote', () => {
+    it('says the size was marked from the people registered', () => {
+        expect(staffNote(16, 'Planta', '16_to_50')).toBe(
+            'Tienes 16 registradas en Planta. Lo marcamos por ti; las guías de cada evaluación salen de las personas que registres.',
+        );
+    });
+
+    it('claims no size where the demo applies Guía II to a few people', () => {
+        const note = staffNote(3, 'Sala', '16_to_50');
+
+        expect(note).toBe(
+            'Tienes 3 registradas en Sala. Aplican las Guías I y II: en esta demostración se aplican siempre, sin importar cuántas personas tenga el centro.',
+        );
+        expect(note).not.toMatch(/hasta 15|16 a 50/);
+        expect(staffNote(15, 'Sala', 'up_to_15')).toContain(
+            'Lo marcamos por ti',
+        );
     });
 });

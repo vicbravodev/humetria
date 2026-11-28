@@ -45,7 +45,7 @@ return [
         $rows = resolve(App\Modules\Seating\Support\CenterBoard::class)->for($offices)['requirements'];
         $missing = array_values(array_map(fn (array $row): string => $row['key'], array_filter($rows, fn (array $row): bool => $row['state'] === 'missing')));
 
-        // docs/operations/demo.md, section 4
+        // docs/operations/demo.md, section 5
         expect($missing)->toBe(['r2', 'r3', 'r8', 'r10', 'r12'], 'states: '.json_encode(array_column($rows, 'state', 'key')));
     },
 

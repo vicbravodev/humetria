@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Modules\Demos\Support\TourCatalog;
+
 /** @return list<string> */
 function tourAnchorsIn(string $glob, string $pattern): array
 {
@@ -21,9 +23,11 @@ it('has in the pages every control a tour points at', function (): void {
     $targets = tourAnchorsIn('resources/js/lib/first-steps/steps.ts', "/target: '([a-z-]+)'/");
     $anchors = tourAnchorsIn('resources/js/{pages,components}/{*,*/*}.tsx', '/data-tour="([a-z-]+)"/');
 
+    // Two guides light the panel's controls: the owner's first steps and the steps of a demo session.
     expect($targets)->not->toBeEmpty()
         ->and(array_diff($targets, $anchors))->toBe([])
-        ->and(array_diff($anchors, $targets))->toBe([]);
+        ->and(array_diff(TourCatalog::TARGETS, $anchors))->toBe([])
+        ->and(array_values(array_diff($anchors, $targets, TourCatalog::TARGETS)))->toBe([]);
 });
 
 it('runs exactly one tour runner per page: the dock owns it, the bare component only where there is no dock', function (): void {
@@ -39,6 +43,6 @@ it('runs exactly one tour runner per page: the dock owns it, the bare component 
 
     // The dock calls the hook itself, so it must not also render the component (a second runner), but it keeps the styles.
     expect($dock)->toContain('useFirstStepsTour()')
-        ->and($dock)->toContain('first-steps-tour.css')
+        ->and($dock)->toContain('spotlight-tour.css')
         ->and($withTour)->toBe(['pages/tenancy/onboarding.tsx']);
 });

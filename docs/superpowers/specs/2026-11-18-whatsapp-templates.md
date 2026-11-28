@@ -29,7 +29,7 @@ Fuente: la documentación vigente de Meta (ver «Fuentes»). Lo que no pude leer
 | Encabezado de texto | Opcional, 1; hasta 60 caracteres; 1 variable. | Solo en las invitaciones. |
 | Encabezado multimedia (imagen, video, PDF) | Opcional; el archivo se sube antes por la API de carga. | Un PDF solo en el acuse de políticas (ver su fila). |
 | Cuerpo | Obligatorio; hasta 1024 caracteres; varias variables, con nombre o por posición. | Todas. |
-| Pie | Opcional; hasta 60 caracteres. | `Humetria` en todas. |
+| Pie | Opcional; hasta 60 caracteres. | `Humetria` en todas, salvo `worker_invite_v1` (`Humetría`, con acento). |
 | Botón URL | Hasta 2 por plantilla; texto hasta 25; **una sola variable, al final de la URL**. | El principal de casi todas. |
 | Botón de respuesta rápida | Hasta 10; texto hasta 25; van juntos y después de los demás tipos. | «Dejar de recibir» en las invitaciones y avisos. |
 | Botón de teléfono | 1; texto hasta 25. | «Llamar a RH» en vacaciones. |
@@ -128,7 +128,7 @@ Todas llevan el pie `Humetria` y un botón URL que abre el portal; la persona en
 
 | Nombre | Categoría | Origen | Cuerpo | Botones |
 | --- | --- | --- | --- | --- |
-| `worker_invite_v1` | UTILITY | `WorkerAccess\WorkerInvitation`: invitación a su portal | `Hola, buen día. {{empresa}} le invita a crear su acceso personal al portal. El enlace es personal y solo sirve una vez.` | URL `Crear mi acceso` → enlace con el token |
+| `worker_invite_v1` | UTILITY | `WorkerAccess\WorkerInvitation`: invitación a su portal | `Hola, buen día. {{empresa}} le invita a crear su acceso personal al portal. El enlace es personal y solo sirve una vez.` | URL `Crear mi acceso` → `https://humetria.com.mx/access/{{1}}` (la ruta corta `worker.link.short`, que lleva al enlace de un solo uso sin gastarlo). Pie `Humetría`. **Enviada a Meta el 2026-11-26 (id 1462008746046287, es_MX), pendiente de aprobación**; sale por WhatsApp solo con `WHATSAPP_WORKER_INVITE=true` |
 | `access_link_v1` | UTILITY | `WorkerAccess\AccessLinkRequested`: el enlace que pidió | `Hola, buen día. Este es el enlace que pidió para entrar a su portal de {{empresa}}. Solo sirve una vez y vence en {{minutos}} minutos.` | URL `Entrar al portal` → enlace con el token |
 | `key_registered_v1` | UTILITY (aviso de seguridad) | `WorkerAccess\KeyRegistered`: se registró una llave | `Hola, buen día. Se registró una llave de acceso nueva en su portal de {{empresa}}. Si no fue usted, avísenos.` | URL `No fui yo` → dirección firmada que la revoca |
 | `proof_code_v1` | AUTENTICACIÓN | `WorkerAccess\ProofCode`: código para confirmar que es usted | Texto fijo de la biblioteca de autenticación de Meta, con el código | Copiar código |

@@ -18,6 +18,7 @@ use App\Modules\WorkerAccess\Http\Controllers\InstallableAppController;
 use App\Modules\WorkerAccess\Http\Controllers\KeyController;
 use App\Modules\WorkerAccess\Http\Controllers\NotMeController;
 use App\Modules\WorkerAccess\Http\Controllers\ProofController;
+use App\Modules\WorkerAccess\Http\Controllers\ShortLinkController;
 use App\Modules\WorkerAccess\Http\Middleware\RequireWorkerSession;
 use App\Modules\WorkerAccess\Http\Middleware\ResolveWorkerTenant;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -46,6 +47,10 @@ Route::middleware(['throttle:worker-link', ResolveWorkerTenant::class])->group(f
     Route::get('me/{tenant:slug}/link/{token}', [AccessLinkController::class, 'show'])->name('worker.link.show');
     Route::post('me/{tenant:slug}/link/{token}', [AccessLinkController::class, 'open'])->name('worker.link.open');
 });
+
+// The same link without the company in the address (`access/{token}`): a WhatsApp button takes its variable only at the end.
+// It finds the company by the token and sends the person to that link without spending it. Same limits as the link.
+Route::get('access/{token}', ShortLinkController::class)->middleware('throttle:worker-link')->name('worker.link.short');
 
 // Registering a key takes the person's session (checked by the controller: a link RH issued or a key; never a link the person
 // asked for). Per address.

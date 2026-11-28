@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import FirstStepsDone from '@/components/first-steps/first-steps-done';
 import FirstStepsLauncher from '@/components/first-steps/first-steps-launcher';
 import FirstStepsPanel from '@/components/first-steps/first-steps-panel';
-import '@/components/first-steps/first-steps-tour.css';
+import '@/components/humetria/spotlight-tour.css';
 import FirstStepsWelcome from '@/components/first-steps/first-steps-welcome';
 import { Popover, PopoverContent } from '@/components/ui/popover';
 import { useFirstStepsActions } from '@/hooks/use-first-steps-actions';
@@ -13,7 +13,7 @@ import { OPEN_FIRST_STEPS } from '@/lib/first-steps/open';
 /** The "Primeros pasos" button beside Humi, its panel, the welcome and the closing message; nothing for who has no steps. */
 export default function FirstStepsDock() {
     const { props } = usePage();
-    const { firstSteps, tenant } = props;
+    const { firstSteps, tenant, demoGuide } = props;
     const finished = firstSteps?.steps.every((step) => step.done) === true;
     const [open, setOpen] = useState(finished);
     // The one tour runner of the panel layout (a page without the dock mounts the bare tour component itself).
@@ -34,7 +34,8 @@ export default function FirstStepsDock() {
         setOpen(open || finished);
     }
 
-    if (firstSteps === null || tenant === null) {
+    // One guide at a time: while the superadmin presents a demo session, its guide takes this place.
+    if (firstSteps === null || tenant === null || demoGuide !== null) {
         return null;
     }
 

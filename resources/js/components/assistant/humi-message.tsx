@@ -1,6 +1,6 @@
 import type { UIMessage } from 'ai';
 import HumiAnswerFooter from '@/components/assistant/humi-answer-footer';
-import HumiAvatar from '@/components/assistant/humi-avatar';
+import HumiAvatar from '@/components/humetria/humi-avatar';
 import HumiMarkdown from '@/components/assistant/humi-markdown';
 import HumiResultCard from '@/components/assistant/humi-result-card';
 import HumiToolSteps from '@/components/assistant/humi-tool-steps';

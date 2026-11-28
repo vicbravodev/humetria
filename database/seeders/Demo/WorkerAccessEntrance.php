@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Database\Seeders\Demo;
 
-use App\Models\User;
 use App\Modules\Demos\Contracts\DemoDoorPool;
 use App\Modules\Demos\Contracts\DemoEntrance;
 use App\Modules\Tenancy\Contracts\Companies;
@@ -34,8 +33,6 @@ final readonly class WorkerAccessEntrance implements DemoEntrance
             throw new InvalidArgumentException('That person is not one the door hands out.');
         }
 
-        $hr = User::query()->where('email', DemoRoster::person(DemoRoster::HR)->email)->value('id');
-
-        return $this->links->handle($employeeId, LinkKind::Issued, is_int($hr) ? $hr : throw new LogicException('The demo has no head of HR to issue its links.'))[1];
+        return $this->links->handle($employeeId, LinkKind::Issued, DemoRoster::hrHeadUserId())[1];
     }
 }

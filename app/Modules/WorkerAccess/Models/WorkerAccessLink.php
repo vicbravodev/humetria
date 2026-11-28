@@ -18,7 +18,8 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * A one-time link a person enters with (spec «Identidad única de la persona trabajadora»): `issued` by RH or `requested` by
- * the person. Only the hash of its random token is kept, and it never reaches a page, a log or the audit trail. It opens
+ * the person. Only the hash of its token is kept (derived from its id and APP_KEY), and it never reaches a page, a log or the
+ * audit trail. It opens
  * once, before it expires and while nobody revoked it.
  *
  * @property string $id
@@ -46,10 +47,40 @@ final class WorkerAccessLink extends Model
         return hash('sha256', $token);
     }
 
+    /**
+     * The token of the link with this id, derived like a survey link's so the WhatsApp job can rebuild it when it runs (the queue
+     * never carries it). Only its hash is kept.
+     */
+    public static function tokenFor(string $id): string
+    {
+        // ponytail: derived from APP_KEY, so rotating the key leaves the WhatsApp job and the fallback unable to rebuild the token of
+        // a link already out (it still opens, by its hash); keep the old key until those links expire (48 h) if that matters.
+        return hash_hmac('sha256', "worker-access-link:{$id}", config()->string('app.key'));
+    }
+
+    /** The token of this link (see tokenFor()). */
+    public function token(): string
+    {
+        return self::tokenFor($this->id);
+    }
+
+    /** The link of `$id` in the current company while it may still open. */
+    public static function findPendingById(string $id): ?self
+    {
+        return self::query()->whereKey($id)->whereNull('used_at')->whereNull('revoked_at')->where('expires_at', '>', CarbonImmutable::now())->first();
+    }
+
     /** The current company's link of `$token` while it may still open: not used, not revoked, within its time. */
     public static function findPending(string $token): ?self
     {
         return self::query()->where('token_hash', self::hashToken($token))->whereNull('used_at')->whereNull('revoked_at')
+            ->where('expires_at', '>', CarbonImmutable::now())->first();
+    }
+
+    /** The link of `$token` in whichever company, while it may still open: the short address carries no company. */
+    public static function findPendingInAnyCompany(string $token): ?self
+    {
+        return self::query()->withoutGlobalScope('tenant')->where('token_hash', self::hashToken($token))->whereNull('used_at')->whereNull('revoked_at')
             ->where('expires_at', '>', CarbonImmutable::now())->first();
     }
 

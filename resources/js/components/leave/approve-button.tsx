@@ -23,6 +23,7 @@ export default function ApproveButton({
         <ConfirmDialog
             trigger={
                 <Button
+                    data-tour="approve-leave-request"
                     variant={primary ? 'default' : 'outline'}
                     className={cn(block && 'max-sm:h-11 max-sm:w-full')}
                 >

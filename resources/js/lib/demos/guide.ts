@@ -1,0 +1,188 @@
+import type { DemoGuide, DemoGuideStep } from '@/types/demo-guide';
+
+/** The control a step lights up, only while its page is the one open (the address without its query). */
+export function spotlightFor(
+    current: DemoGuideStep,
+    url: string,
+): { selector: string } | null {
+    if (current.target === null) {
+        return null;
+    }
+
+    const page = new URL(current.href, 'http://localhost').pathname;
+
+    return url.split('?')[0] === page
+        ? { selector: `[data-tour="${current.target}"]` }
+        : null;
+}
+
+/** «Paso 2 de 6 · NOM-035»: the step within its tour. */
+export function progressLabel(current: DemoGuideStep): string {
+    return `Paso ${current.index} de ${current.total} · ${current.tour}`;
+}
+
+/** «4 de 15»: the step the session is on over all its steps (done or skipped come before it). */
+export function guideCount(guide: DemoGuide): string {
+    const done = guide.tours.reduce((sum, tour) => sum + tour.done, 0);
+    const total = guide.tours.reduce((sum, tour) => sum + tour.total, 0);
+
+    return `${Math.min(done + (guide.finished ? 0 : 1), total)} de ${total}`;
+}
+
+/** «Seguir con 3 respuestas»: on a step the audience does, moving on with what already came in; null when there is none. */
+export function continueLabel(current: DemoGuideStep): string | null {
+    return current.kind !== 'watch' ||
+        current.count === null ||
+        current.count === 0 ||
+        current.noun === null
+        ? null
+        : `Seguir con ${current.count} ${current.noun}`;
+}
+
+/** The line that celebrates: the end of the session, or the step just done; null when there is nothing to celebrate. */
+export function celebrationOf(guide: DemoGuide): string | null {
+    if (guide.finished) {
+        return guide.tours.length === 1
+            ? 'Terminaste el recorrido de esta sesión.'
+            : `Terminaste los ${guide.tours.length} recorridos de esta sesión.`;
+    }
+
+    return guide.justDone === null ? null : `Listo: «${guide.justDone}».`;
+}
+
+/** A celebration held on screen, with the step the guide was on when it came. */
+export type Celebration = { text: string; key: string | null };
+
+/** What to hold once `guide` arrives: a new celebration replaces the one held; a guide with none keeps it. */
+export function nextCelebration(
+    held: Celebration | null,
+    guide: DemoGuide | null,
+): Celebration | null {
+    const text = guide === null ? null : celebrationOf(guide);
+    const key = guide?.current?.key ?? null;
+
+    return text === null || (held?.text === text && held.key === key)
+        ? held
+        : { text, key };
+}
+
+/** The held celebration, while the guide stays on the step it came with (the next poll brings none). */
+export function shownCelebration(
+    held: Celebration | null,
+    guide: DemoGuide | null,
+): string | null {
+    return held !== null &&
+        guide !== null &&
+        held.key === (guide.current?.key ?? null)
+        ? held.text
+        : null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null;
+}
+
+function hasStrings(value: Record<string, unknown>, keys: string[]): boolean {
+    return keys.every((key) => typeof value[key] === 'string');
+}
+
+function hasNumbers(value: Record<string, unknown>, keys: string[]): boolean {
+    return keys.every((key) => typeof value[key] === 'number');
+}
+
+function orString(value: unknown): boolean {
+    return value === null || typeof value === 'string';
+}
+
+function orNumber(value: unknown): boolean {
+    return value === null || typeof value === 'number';
+}
+
+function isTour(value: unknown): boolean {
+    return (
+        isRecord(value) &&
+        hasStrings(value, ['key', 'title']) &&
+        hasNumbers(value, ['done', 'total'])
+    );
+}
+
+function isStep(value: unknown): boolean {
+    return (
+        isRecord(value) &&
+        hasStrings(value, ['key', 'tour', 'title', 'todo', 'why', 'href']) &&
+        hasNumbers(value, ['index', 'total']) &&
+        (value['kind'] === 'do' || value['kind'] === 'watch') &&
+        [value['target'], value['ask'], value['live'], value['noun']].every(
+            orString,
+        ) &&
+        [value['count'], value['of']].every(orNumber)
+    );
+}
+
+/** Whether what the poll brought is the guide; anything else (no session, a login page) means no guide. */
+export function isDemoGuide(value: unknown): value is DemoGuide {
+    return (
+        isRecord(value) &&
+        Array.isArray(value['tours']) &&
+        value['tours'].every(isTour) &&
+        (value['current'] === null || isStep(value['current'])) &&
+        typeof value['finished'] === 'boolean' &&
+        orString(value['justDone'])
+    );
+}
+
+// The poll's answers that mean the session is over for this person: signed out, no longer presenting, no session.
+const GONE = [401, 403, 404];
+
+/**
+ * What an answer of the dock's endpoints does to the guide: the guide it brings; null (no guide) for a 200 whose body is a
+ * literal null, or for a poll the server refuses (`GONE`); undefined (keep the guide on screen) for anything else, so a skip
+ * refused because its step just got done, a server error or a page that is not the guide never hides it mid-demo.
+ * `body` is undefined when the answer was not JSON.
+ */
+export function guideAnswer(
+    status: number,
+    body: unknown,
+    poll: boolean,
+): DemoGuide | null | undefined {
+    if (status === 200) {
+        return body === null ? null : isDemoGuide(body) ? body : undefined;
+    }
+
+    return poll && GONE.includes(status) ? null : undefined;
+}
+
+/** The order of the guide's requests: which answer still counts, and whether a skip is on its way. */
+export type GuideSequence = {
+    /** Numbers a request as the latest; a skip holds the poll until it lands. */
+    begin: (skip: boolean) => number;
+    /** The request `ticket` landed: true when its answer counts (no later request, no new page, since it left). */
+    settle: (ticket: number, skip: boolean) => boolean;
+    /** A new page brought its guide: no answer still on its way counts. */
+    supersede: () => void;
+    /** A skip is on its way: a poll now could land after it with the step it skips. */
+    holdsPolls: () => boolean;
+};
+
+export function guideSequence(): GuideSequence {
+    let latest = 0;
+    let skips = 0;
+
+    return {
+        begin: (skip) => {
+            latest += 1;
+            skips += skip ? 1 : 0;
+
+            return latest;
+        },
+        settle: (ticket, skip) => {
+            skips -= skip ? 1 : 0;
+
+            return ticket === latest;
+        },
+        supersede: () => {
+            latest += 1;
+        },
+        holdsPolls: () => skips > 0,
+    };
+}

@@ -22,6 +22,7 @@ use App\Modules\Billing\Models\UsageReservation;
 use App\Modules\Compensation\Models\FiscalParameter;
 use App\Modules\Demos\Models\DemoRequest;
 use App\Modules\Demos\Models\DemoRun;
+use App\Modules\Demos\Models\DemoSession;
 use App\Modules\Messaging\Models\Delivery;
 use App\Modules\Messaging\Models\DeliveryEvent;
 use App\Modules\Messaging\Models\OptOut;
@@ -93,6 +94,8 @@ const PLATFORM_MODELS = [
     // The console prepares or resets the demo company; the run is the platform's lock and progress, not the company's
     // content, and it outlives every reset of the demo.
     DemoRun::class => 'a preparation of the demo company, run by the staff console',
+    // Plataforma, como demo_runs: the session outlives the resets it starts and ends, which wipe the demo company.
+    DemoSession::class => 'a demo session for a client, run by the staff console',
     // Deduplication of what a provider sends again, before any company is known.
     WebhookEvent::class => 'deduplication of provider callbacks, before any company is known',
     Pause::class => 'an operational stop of the whole feature, for every company',

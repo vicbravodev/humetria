@@ -7,6 +7,7 @@ namespace App\Http\Middleware;
 use App\Http\Impersonation;
 use App\Models\User;
 use App\Modules\Campaigns\Contracts\OpenCampaigns;
+use App\Modules\Demos\Contracts\DemoGuide;
 use App\Modules\FirstSteps\Contracts\FirstSteps;
 use App\Modules\Tenancy\Contracts\CompanyBranding;
 use App\Modules\Tenancy\Contracts\DemoCompanies;
@@ -76,6 +77,8 @@ final class HandleInertiaRequests extends Middleware
             // Every page of the demo company, its reports above all, carries the «DEMO» mark (DemoMark). Read when the page
             // renders: the company routes and the report links set the company before then.
             'demo' => fn (): bool => app(DemoCompanies::class)->isCurrent(),
+            // The guide of a demo session, to the superadmin presenting it in the demo company; null for everyone else.
+            'demoGuide' => fn (): ?array => $this->demoGuide($request),
             // White label: the logo, the name and the accent of the company the page works in (null outside one). Humetría stays
             // only as the "hecho con humetría" seal.
             'brand' => fn (): ?CompanyBrand => app(CompanyBranding::class)->current(),
@@ -121,6 +124,7 @@ final class HandleInertiaRequests extends Middleware
             'inCourse' => null,
             'firstSteps' => null,
             'demo' => false,
+            'demoGuide' => null,
             'brand' => null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
@@ -146,6 +150,30 @@ final class HandleInertiaRequests extends Middleware
         }
 
         return app(FirstSteps::class)->forUser($user->id, impersonated: app(Impersonation::class)->isActive())?->toArray();
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function demoGuide(Request $request): ?array
+    {
+        // Outside the demo nothing is asked: a real company's pages run no query for it.
+        if (! app(DemoCompanies::class)->isCurrent()) {
+            return null;
+        }
+
+        $guide = app(DemoGuide::class);
+        $route = $request->route()?->getName();
+
+        // Only a page opened in full is a visit: neither a partial reload (the guide's own, or any other) nor a page fetched
+        // ahead while a link is hovered (Inertia's prefetch).
+        $prefetch = $request->header('Purpose') === 'prefetch';
+
+        if (is_string($route) && ! $request->hasHeader('X-Inertia-Partial-Component') && ! $prefetch) {
+            $guide->recordVisit($route);
+        }
+
+        return $guide->forCurrentRequest(advance: ! $prefetch);
     }
 
     private function seesNom035(): bool

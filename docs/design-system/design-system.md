@@ -154,7 +154,7 @@ Toda página vive en uno de estos marcos; `layouts/frames.ts` decide cuál. Una 
 
 ### Panel de la empresa (`/admin/{tenant}`)
 
-`layouts/app/app-sidebar-layout.tsx` arma `AppShell` (el `SidebarProvider`, que recuerda si está plegado en la cookie `sidebar_state`), `AppSidebar`, `AppContent`, `MobileTabBar`, `CommandPalette`, el dock de primeros pasos y el de Humi.
+`layouts/app/app-sidebar-layout.tsx` arma `AppShell` (el `SidebarProvider`, que recuerda si está plegado en la cookie `sidebar_state`), `AppSidebar`, `AppContent`, `MobileTabBar`, `CommandPalette`, el dock de primeros pasos, el del guía de la demo (`components/demos/guide-dock.tsx`, solo con una sesión de demo en curso y en lugar de primeros pasos) y el de Humi.
 
 - **Panel de la página:** el sidebar es `variant="inset"`; desde `md` el contenido va en un panel `bg-background` con `rounded-xl`, borde `sidebar-border` y `shadow-raised`, sobre el fondo `sidebar`. El cuerpo llena hasta 1440 px y se centra (ver «Espacio, forma y profundidad»).
 - **Sidebar** (`components/app-sidebar.tsx`), de arriba abajo: `CompanyMark` (al staff fuera de una empresa, además la pastilla «Consola» en `warning`); `TenantSwitcher`, la tarjeta de 56 px con iniciales y nombre de la empresa, que abre la lista cuando la persona tiene dos o más; la navegación; al pie `NextObligationCard` (solo con una evaluación en curso) y `NavUser` (fila de 56 px que abre el menú de la cuenta hacia arriba). La lista se desvanece en sus bordes (`scroll-fade`) en vez de mostrar barra.

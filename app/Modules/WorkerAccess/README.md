@@ -113,6 +113,13 @@ muestra una vez en el flash `accessLink`; la bitácora (`worker_access.link_issu
 - `WorkerLinks`: `home()` y `to($route, $parameters)`, direcciones de la persona sin credencial.
 - `WorkerInvitations::send($employeeId, $issuedBy): InvitationOutcome`: RH emite el enlace (`sent`, `without_email` con
   el enlace para mostrarlo una vez, `unavailable`).
+  La invitación (`IssueAccessLink`) sale por los canales de la empresa (`ChannelPicker`): por WhatsApp (`worker_invite_v1`,
+  con un mensaje apartado del cupo) cuando la empresa lo pone primero y `WHATSAPP_WORKER_INVITE=true` (Meta la aprobó); si no,
+  o sin cupo, por correo, que sale aunque ningún canal llegue a la persona. El token del enlace se deriva de su id y de
+  `APP_KEY` (`WorkerAccessLink::tokenFor`), para que el job de WhatsApp lo reconstruya (`Support/WorkerInvitationLinks`); solo
+  se guarda su hash. Si WhatsApp falla, `Listeners/FallBackToMail` manda por correo el mismo enlace (sin rotarlo), salvo en la
+  demo, que ya lo mandó por correo. El botón abre `access/{token}` (`worker.link.short`, `ShortLinkController`): busca el enlace
+  en cualquier empresa y redirige a `worker.link.show` sin gastarlo; uno que no abre da la pantalla de enlace que no sirve.
 - `WorkerSection::for(WorkerIdentity): ?WorkerSectionLink`: lo que cada herramienta ofrece en el inicio (`/me/{slug}`). Cada
   módulo etiqueta la suya `worker.sections`; `Support/WorkerSections` las junta en un orden fijo y una que falla se reporta
   y se omite sin tumbar el inicio.

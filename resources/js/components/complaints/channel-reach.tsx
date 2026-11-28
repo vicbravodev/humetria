@@ -29,6 +29,7 @@ export default function ChannelReach({
             </h2>
             <div className="flex items-start gap-4">
                 <img
+                    data-tour="complaint-channel-qr"
                     src={channel.qr}
                     alt="Código QR del canal de quejas"
                     className="size-24 shrink-0 rounded-lg border"

@@ -17,7 +17,6 @@ import {
     remindable,
     reminderNote,
     percent,
-    staffBand,
     visibleStandings,
     weekChoices,
 } from '@/lib/evaluation';
@@ -34,15 +33,6 @@ describe('dateRange', () => {
         expect(dateRange('28 dic 2026', '8 ene 2027')).toBe(
             '28 dic 2026 al 8 ene 2027',
         );
-    });
-});
-
-describe('staffBand', () => {
-    it('groups the people as the norm does, at its exact limits', () => {
-        expect(staffBand(15)).toBe('hasta 15 personas');
-        expect(staffBand(16)).toBe('de 16 a 50 personas');
-        expect(staffBand(50)).toBe('de 16 a 50 personas');
-        expect(staffBand(51)).toBe('más de 50 personas');
     });
 });
 

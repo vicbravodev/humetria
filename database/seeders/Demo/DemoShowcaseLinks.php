@@ -8,9 +8,13 @@ use App\Actions\RecordAudit;
 use App\Modules\Attendance\Actions\ReissueKioskDevice;
 use App\Modules\Attendance\Models\KioskDevice;
 use App\Modules\Demos\Contracts\DemoShowcase;
+use App\Modules\Demos\Models\DemoSession;
+use App\Modules\Organization\Contracts\Roster;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\DemoCompanies;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\WorkerAccess\Actions\CreateAccessLink;
+use App\Modules\WorkerAccess\Enums\LinkKind;
 use Database\Seeders\Demo\Stories\ComplaintsStory;
 use Illuminate\Support\Facades\Context;
 use Spatie\Permission\PermissionRegistrar;
@@ -18,7 +22,15 @@ use Spatie\Permission\PermissionRegistrar;
 /** The demo's links the room shares live, found the way the story built them. */
 final readonly class DemoShowcaseLinks implements DemoShowcase
 {
-    public function __construct(private DemoCompanies $demos, private Companies $companies, private ReissueKioskDevice $reissue, private PermissionRegistrar $permissions, private RecordAudit $audit) {}
+    public function __construct(
+        private DemoCompanies $demos,
+        private Companies $companies,
+        private ReissueKioskDevice $reissue,
+        private PermissionRegistrar $permissions,
+        private RecordAudit $audit,
+        private Roster $roster,
+        private CreateAccessLink $links,
+    ) {}
 
     public function complaintChannelUrl(): ?string
     {
@@ -61,5 +73,29 @@ final readonly class DemoShowcaseLinks implements DemoShowcase
         }
 
         return $links;
+    }
+
+    public function portalLinkFor(string $employeeId): ?string
+    {
+        $tenantId = $this->demos->id();
+        $center = DemoSession::active()?->work_center_id;
+
+        if ($tenantId === null || $center === null) {
+            return null;
+        }
+
+        // The presenter works in the demo already (impersonating it); entering it makes sure nothing is issued elsewhere.
+        $this->companies->enter($tenantId);
+
+        if (! in_array($employeeId, $this->roster->activeIdsIn($center), true)) {
+            return null;
+        }
+
+        // Never mailed: the presenter opens it right here. CreateAccessLink logs the link's id, never its token; the demo's
+        // trail says who issued it, as IssueAccessLink's does.
+        [$link, $url] = $this->links->handle($employeeId, LinkKind::Issued, DemoRoster::hrHeadUserId());
+        $this->audit->handle('demo.portal_link_issued', $link, ['employee_id' => $employeeId]);
+
+        return $url;
     }
 }

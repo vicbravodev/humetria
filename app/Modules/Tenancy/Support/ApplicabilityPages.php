@@ -50,7 +50,7 @@ final readonly class ApplicabilityPages
                 'name' => $center->name,
                 'activity' => $center->mainActivity,
                 'people' => $people[$center->id] ?? 0,
-                'range' => $this->range($people[$center->id] ?? 0),
+                'range' => $this->range($people[$center->id] ?? 0, $center->id),
                 'hasTeleworkers' => $telework[$center->id] ?? null,
                 'standing' => isset($seating[$center->id]) ? $seating[$center->id]->standing : null,
                 'sector' => isset($seating[$center->id]) ? $seating[$center->id]->sector : null,
@@ -70,16 +70,16 @@ final readonly class ApplicabilityPages
         return [
             'workCenter' => ['id' => $center->id, 'name' => $center->name],
             'people' => $people,
-            'range' => $this->range($people),
+            'range' => $this->range($people, $center->id),
             'norm' => $norm,
             'seating' => $seating === null ? null : ['standing' => $seating->standing, 'sector' => $seating->sector, 'declaredOn' => $seating->declaredOn],
         ];
     }
 
     /** Which of the three sizes of num. 4.4 the center has: what decides its NOM-035 guides. */
-    private function range(int $people): string
+    private function range(int $people, string $workCenterId): string
     {
-        $guides = $this->guides->for($people);
+        $guides = $this->guides->for($people, $workCenterId);
 
         return match (true) {
             in_array('III', $guides, true) => 'over_50',

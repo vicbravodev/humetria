@@ -25,15 +25,6 @@ export function dateRange(from: string, to: string): string {
     return month === toMonth ? `${day} al ${to}` : `${day} ${month} al ${to}`;
 }
 
-/** Why a work center takes the guides it takes (num. 4.4): how many people it has, as the norm groups them. */
-export function staffBand(workers: number): string {
-    if (workers <= 15) {
-        return 'hasta 15 personas';
-    }
-
-    return workers <= 50 ? 'de 16 a 50 personas' : 'más de 50 personas';
-}
-
 /** A calendar date (Y-m-d) moved by some days; the same text when it is not a date. */
 export function addDays(date: string, days: number): string {
     const day = fromCalendarDate(date);

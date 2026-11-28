@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders\Demo;
 
+use App\Models\User;
 use App\Support\DemoMail;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -167,6 +168,18 @@ final class DemoRoster
         }
 
         throw new InvalidArgumentException("No one in the demo roster has the key [{$key}].");
+    }
+
+    /**
+     * The account id of the demo's head of HR, who issues the demo's portal links.
+     *
+     * @throws LogicException when the demo has no such account.
+     */
+    public static function hrHeadUserId(): int
+    {
+        $id = User::query()->where('email', self::person(self::HR)->email)->value('id');
+
+        return is_int($id) ? $id : throw new LogicException('The demo has no head of HR to issue its links.');
     }
 
     /**
