@@ -23,7 +23,7 @@ final class Analytics
     public const string ASSETS_HOST = 'https://us-assets.i.posthog.com';
 
     /** The campaign parameters of our own links: the only part of the query PostHog is told. */
-    private const array CAMPAIGN_PARAMETERS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'matchtype'];
+    private const array CAMPAIGN_PARAMETERS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'matchtype']; // @pest-mutate-ignore: RemoveArrayItem
 
     /** Where the id of a request just stored waits, flashed, for the next visit to the landing. */
     private const string LEAD_KEY = 'analytics.lead_id';

@@ -173,6 +173,18 @@ describe('the errors of the server', function (): void {
             ->and(collect($frames)->firstWhere(fn (array $frame): bool => str_starts_with($frame['filename'], 'vendor/'))['in_app'] ?? false)->toBeFalse();
     });
 
+    it('keeps the fifty innermost frames of a deep trace, the line that threw last', function (): void {
+        $deep = function (int $depth) use (&$deep): RuntimeException {
+            return $depth === 0 ? new RuntimeException('x') : $deep($depth - 1);
+        };
+        $exception = $deep(80);
+
+        $frames = PostHogExceptions::properties($exception)['$exception_list'][0]['stacktrace']['frames'];
+
+        expect($frames)->toHaveCount(50)
+            ->and(end($frames))->toMatchArray(['filename' => 'tests/Feature/PostHogServerTest.php', 'lineno' => $exception->getLine(), 'function' => '']);
+    });
+
     it('sends no null in any frame: PostHog rejects the whole exception when a frame function is null', function (): void {
         serverMeasuring();
         throwingRoute(new RuntimeException('x'));
