@@ -294,3 +294,17 @@ it('names the center of the assessment', function (): void {
     $this->actingAs($this->cora)->get(route('tenant.seating.assessments.show', [$this->tenant, $draft->id]))
         ->assertInertia(fn (Assert $page) => $page->where('workCenter', ['id' => $this->center->id, 'name' => 'Planta Norte']));
 });
+
+it('drops from a pending draft the five conditions of the old position that the new one does not give', function (): void {
+    $this->actingAs($this->cora);
+    startFor($this->ana->id);
+    $draft = RiskAssessment::query()->sole();
+    $draft->update(['scores' => [...$draft->scores, 'footwear' => 2, 'discomfort' => 3]]);
+    $other = StandingPosition::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'default_standing_time' => null, 'default_posture_change' => null, 'default_surface' => null, 'default_movement_space' => null, 'default_pauses' => null]);
+    PositionAssignment::query()->where('employee_id', $this->ana->id)->update(['ends_on' => '2026-02-28']);
+    PositionAssignment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'position_id' => $other->id, 'starts_on' => '2026-03-01']);
+
+    startFor($this->ana->id);
+
+    expect($draft->refresh()->scores)->toBe(['footwear' => 2, 'discomfort' => 3]);
+});
