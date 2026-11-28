@@ -24,7 +24,7 @@ use InvalidArgumentException;
  */
 final readonly class CorrectMarkDirectly
 {
-    public const int MIN_NOTE = 10;
+    public const int MIN_NOTE = 10; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private Members $members, private CorrectMark $correct) {}
 

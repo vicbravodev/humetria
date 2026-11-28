@@ -185,6 +185,12 @@ describe('marking it incorrect', function (): void {
             ->and(AttendanceMark::query()->where('corrects_mark_id', $delivery->mark_id)->count())->toBe(0);
     })->with([null, '   ', 'No.', 'Cuat']);
 
+    it('takes a note of exactly 5 characters', function (): void {
+        $delivery = OfflineDeliveries::accepted($this->ana, '2026-11-02 09:00');
+
+        expect(review($delivery->mark_id ?? '', ReviewDecision::Incorrect, 'Cinco', '2026-11-02 09:20')->note)->toBe('Cinco');
+    });
+
     it('refuses a time that leaves the day out of order and leaves no review behind', function (): void {
         AttendanceMark::factory()->create([
             'tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'work_center_id' => $this->plant->id,
@@ -278,5 +284,9 @@ describe('verifying several', function (): void {
 
     it('takes at most 25 marks', function (): void {
         expect(fn () => verifyMany(array_map(fn (int $n): string => (string) fake()->uuid(), range(1, 26))))->toThrow(InvalidArgumentException::class);
+    });
+
+    it('takes a page of 25 marks', function (): void {
+        expect(verifyMany(array_map(fn (int $n): string => (string) fake()->uuid(), range(1, 25))))->toBe(['verified' => 0, 'skipped' => 25]);
     });
 });

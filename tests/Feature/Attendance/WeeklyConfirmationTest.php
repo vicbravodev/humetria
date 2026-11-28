@@ -208,6 +208,10 @@ describe('disputing', function (): void {
         expect(WeeklyConfirmation::query()->count())->toBe(0);
     })->with(['empty' => [''], 'blank' => ['          '], 'too short' => ['No es así']]);
 
+    it('takes a reason of exactly 10 characters', function (): void {
+        expect(disputeWeek($this, 'No es así.')->reason)->toBe('No es así.');
+    });
+
     it('lets the person dispute a week they had confirmed', function (): void {
         workedOn($this, '2026-11-03');
         confirmWeek($this);

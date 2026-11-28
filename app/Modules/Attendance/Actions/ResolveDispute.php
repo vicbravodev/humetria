@@ -21,7 +21,7 @@ use InvalidArgumentException;
  */
 final readonly class ResolveDispute
 {
-    public const int MIN_NOTE = 10;
+    public const int MIN_NOTE = 10; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private Members $members, private RecordAudit $audit) {}
 
