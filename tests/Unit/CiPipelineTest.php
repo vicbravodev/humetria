@@ -170,3 +170,19 @@ it('only builds and deploys from a push run in this repository, never from a for
     expect($jobs['pipeline']['if'] ?? '')->toContain($trusted)
         ->and($jobs['image']['if'] ?? '')->toContain($trusted);
 });
+
+it('gives the Postgres of the weekly mutation run room for the locks of dropping every table at once', function (): void {
+    $steps = array_values((array) (workflowJobs('mutation.yml')['mutation']['steps'] ?? []));
+    $raise = array_search(true, array_map(fn (array $step): bool => str_contains((string) ($step['run'] ?? ''), 'max_locks_per_transaction'), $steps), true);
+    $setup = array_search('./.github/actions/setup', array_map(fn (array $step): string => (string) ($step['uses'] ?? ''), $steps), true);
+
+    // max_locks_per_transaction is read only when Postgres starts: a reload does not apply it, the restart does. Without it
+    // the parallel databases die with "out of shared memory" on migrate:fresh. 256, as in the local Postgres.
+    expect($raise)->toBeInt('no step raises max_locks_per_transaction')
+        ->and($setup)->toBeInt()
+        ->and($raise)->toBeLessThan($setup, 'the restart must come before the migration of the setup')
+        ->and($steps[$raise]['run'])->toContain('ALTER SYSTEM SET max_locks_per_transaction = 256')
+        ->toContain('docker restart "$POSTGRES_CONTAINER"')
+        ->toContain('pg_isready')
+        ->and($steps[$raise]['env']['POSTGRES_CONTAINER'] ?? null)->toBe('${{ job.services.postgres.id }}');
+});
