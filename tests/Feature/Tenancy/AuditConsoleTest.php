@@ -305,3 +305,27 @@ it('shows a role of the company by the label its owner typed, never by its inter
 
     expect($roleReads)->toHaveCount(1);
 });
+
+it('names in Spanish every state, plan, kind and tool the detail stores by its code', function (): void {
+    auditRow('tenant.updated', ['metadata' => [
+        'codes' => ['not_started', 'day', 'night', 'mixed', 'onsite', 'remote', 'trial', 'active', 'trial_ended', 'expired', 'read_only', 'suspended', 'archived', 'past_due', 'cancel_scheduled', 'ended', 'jornada', 'cumplimiento', 'integral', 'sindicato', 'union', 'direct', 'consultant', 'channel_compliance', 'channel_integral', 'negotiated', 'recurring', 'one_time', 'draft', 'issued', 'owner', 'hr', 'viewer', 'committee', 'complaints', 'attendance', 'worker_access', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'pulse', 'climate', 'sso', 'whatsapp', 'replaced', 'qr_window', 'declared_interval', 'passkey', 'device_key', 'wide_interval', 'old_window', 'no_position', 'outside_zone', 'zones_not_configured', 'declared_adjusted'],
+    ]]);
+
+    $this->actingAs(superadmin())->get(route('audit.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('entries.data.0.context', [
+            'Codes' => 'Sin iniciar, Diurna, Nocturna, Mixta, Presencial, Remoto, En prueba, Activa, Prueba terminada, Vencida, Solo lectura, Suspendida, Archivada, Con saldo vencido, Cancelación programada, Terminada, Jornada, Cumplimiento, Integral, Sindicato, Cuota fija de sindicato, Directo, Consultor, Canal Cumplimiento, Canal Integral, Precio negociado, Recurrente, Una sola vez, Borrador, Emitido, Dueño, RH, Consulta, Comisión, Quejas, Asistencia, Acceso de personas, Vacaciones, Organigrama, NOM-035, NOM-037, Ley Silla, Pulso, Clima, Inicio de sesión único, WhatsApp, Reemplazada, Ventana del QR, Intervalo declarado, Llave de acceso, Llave del teléfono, Intervalo ancho, QR viejo, Sin posición, Fuera de zona, Centro sin zonas, Hora ajustada',
+        ]));
+});
+
+it('labels the keys of the detail that the code builds outside the call that audits', function (): void {
+    auditRow('employee.updated', ['metadata' => [
+        'mark_id' => 'x', 'replaced_id' => 'x', 'corrected' => 'x', 'previous_terminated_on' => 'x', 'previous_reason' => 'x',
+        'shift_type' => 'x', 'work_mode' => 'x', 'starts' => 'x', 'job_title' => 'x',
+    ]]);
+
+    $this->actingAs(superadmin())->get(route('audit.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('entries.data.0.context', [
+            'Marca' => 'x', 'Llave reemplazada' => 'x', 'Corregida' => 'x', 'Fecha de la baja anterior' => 'x',
+            'Motivo de la baja anterior' => 'x', 'Tipo de jornada' => 'x', 'Modalidad' => 'x', 'Hora de entrada' => 'x', 'Puesto' => 'x',
+        ]));
+});
