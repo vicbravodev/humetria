@@ -4,14 +4,19 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Models\User;
+use App\Modules\Announcements\Actions\EndMaintenance;
+use App\Modules\Announcements\Actions\StartMaintenance;
 use App\Modules\Announcements\Contracts\PlatformNotices;
 use App\Modules\Announcements\Models\MaintenancePeriod;
+use App\Modules\Announcements\Support\LiveNotices;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
+
+mutates(StartMaintenance::class, EndMaintenance::class, LiveNotices::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-26 15:00:00');

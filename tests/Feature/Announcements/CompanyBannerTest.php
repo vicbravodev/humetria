@@ -8,6 +8,7 @@ use App\Modules\Announcements\Data\AnnouncementData;
 use App\Modules\Announcements\Enums\AnnouncementAudience;
 use App\Modules\Announcements\Enums\AnnouncementKind;
 use App\Modules\Announcements\Models\Announcement;
+use App\Modules\Announcements\Support\LiveAnnouncement;
 use App\Modules\Announcements\Support\LiveNotices;
 use App\Modules\Billing\Enums\Plan;
 use App\Modules\Billing\Models\Subscription;
@@ -25,6 +26,8 @@ function liveAnnouncement(array $attributes = [], ?string $plan = null): Announc
 
     return $announcement;
 }
+
+mutates(LiveNotices::class, LiveAnnouncement::class, SaveAnnouncement::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-26 15:00:00');

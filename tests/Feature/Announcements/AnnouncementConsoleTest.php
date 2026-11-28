@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Models\User;
+use App\Modules\Announcements\Actions\SaveAnnouncement;
 use App\Modules\Announcements\Models\Announcement;
 use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia as Assert;
+
+mutates(SaveAnnouncement::class);
 
 beforeEach(function (): void {
     // 9:00 in Mexico City.
