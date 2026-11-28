@@ -2,9 +2,15 @@
 
 ## Convención
 
-- Cada test de lógica de dominio declara `mutates(Clase::class)`: reglas, cálculos, máquinas de estado, límites
-  (15/16, 50/51), privacidad y seguridad. No se declara en controladores, FormRequests sin reglas propias, DTOs,
-  migraciones, config ni enums que solo tienen etiquetas.
+- **Criterio: por omisión se muta.** Preferimos que sobre un test a que falte un borde crítico. Cada test de lógica
+  declara `mutates(Clase::class)`: reglas, cálculos, máquinas de estado, límites (15/16, 50/51), permisos y acceso,
+  dinero, plazos legales, privacidad y anonimato, aislamiento entre empresas, lo que cambia estado y lo que decide qué ve
+  alguien. No se declara en controladores, FormRequests sin reglas propias, migraciones, config ni enums que solo tienen
+  etiquetas.
+- **Se exime solo lo que no decide nada**, con su razón en `mutationExemptClasses()`: un DTO o valor de solo constructor,
+  un texto o catálogo fijo, un adaptador a un servicio externo (red, DNS, disco). Que cueste probarla no es razón.
+- **Todo módulo pasa `--min=95`**, el Kernel (lo de `app/` fuera de los módulos) incluido. Un módulo debajo no es una
+  decisión pendiente: es trabajo sin terminar.
 - `tests/Unit/MutationCoverageTest.php` lo hace cumplir: toda clase concreta de `Actions`, `Support`, `Listeners` o `Jobs`
   de un módulo la declara algún test en `mutates()`, o está en `mutationExemptClasses()` con su razón (o su nombre termina en
   `Pages`, `Page` o `Template`: arma props o texto fijo). Una clase exenta que un test empieza a mutar sale de la lista.
@@ -79,8 +85,8 @@ y reinicia el contenedor (`./vendor/bin/sail restart pgsql`).
 - Se reproduce con `composer mutate -- --class='App\Modules\X\Actions\Y'` y se agrega el test que mata al mutante.
 - No se baja `--min`, no se excluye la clase ni se vuelve a poner la mutación en los PR.
 - El umbral solo sube: si el score sostiene más de 2 puntos por encima, súbelo en `mutation.yml` y aquí.
-- Para dejar una clase fuera de la mutación, su test no declara `mutates()`; la lista sale de `scripts/mutation-classes.php`,
-  no hay una lista que mantener a mano.
+- La lista de clases a mutar sale de los `mutates()` (`scripts/mutation-classes.php`). Dejar una clase de lógica fuera exige
+  su razón en `mutationExemptClasses()` (`tests/Unit/MutationCoverageTest.php`), según el criterio de «Convención».
 
 ### Cobertura
 

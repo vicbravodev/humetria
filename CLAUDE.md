@@ -43,7 +43,9 @@ El detalle que no hace falta en cada sesión vive en `docs/` y se lee cuando toc
   reglas de privacidad: conteos y estados, nunca respuestas ni personas. `tests/Feature/Assistant/ModuleCoverageTest.php`
   falla con un módulo nuevo sin conexión; eximir uno exige su razón en ese test.
 - **Mutación: semanal en CI** (`mutation.yml`, `--min=95`), nunca en los PR. Entra sola la clase cuyo test declara
-  `mutates(Clase::class)`. En local **solo si el usuario la pide**, acotada: `composer mutate -- --class=…`. Nunca se baja
+  `mutates(Clase::class)`; por omisión toda clase de lógica entra (que sobre un test a que falte un borde crítico) y solo se
+  exime lo que no decide nada (DTO, texto o catálogo fijo, adaptador externo) con su razón en `MutationCoverageTest`. Todo
+  módulo, el Kernel incluido, pasa el 95. En local **solo si el usuario la pide**, acotada: `composer mutate -- --class=…`. Nunca se baja
   `--min`; si falla, falta el test que mata al mutante. Detalle: `docs/testing.md`.
 
 ## Arquitectura: monolito modular
