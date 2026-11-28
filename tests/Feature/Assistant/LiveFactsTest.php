@@ -156,6 +156,19 @@ it('reads the facts again after a minute', function (): void {
     $this->actingAs($this->hr)->getJson(factsUrl($this->a))->assertJsonPath('facts.participation', '2 de 4 cuestionarios contestados (50 %)');
 });
 
+it('keeps the facts for sixty seconds and not one more', function (): void {
+    $this->freezeSecond();
+    closingCampaign($this->a, $this->plant, 4, 1);
+    $this->actingAs($this->hr)->getJson(factsUrl($this->a));
+    ParticipantInstrument::query()->where('status', 'pending')->limit(1)->update(['status' => 'completed', 'completed_at' => now()]);
+
+    $this->travel(59)->seconds();
+    $this->actingAs($this->hr)->getJson(factsUrl($this->a))->assertJsonPath('facts.participation', '1 de 4 cuestionarios contestados (25 %)');
+
+    $this->travel(1)->seconds();
+    $this->actingAs($this->hr)->getJson(factsUrl($this->a))->assertJsonPath('facts.participation', '2 de 4 cuestionarios contestados (50 %)');
+});
+
 it('never tells the facts of another company, and keeps them apart', function (): void {
     closingCampaign($this->b, WorkCenter::factory()->create(['tenant_id' => $this->b->id]), 6, 6);
     $this->actingAs(memberOf($this->b, TenantRole::Hr))->getJson(factsUrl($this->b))->assertJsonPath('facts.participation', '6 de 6 cuestionarios contestados (100 %)');
@@ -197,6 +210,16 @@ it('does not invite to results once they are a month old', function (): void {
     $this->actingAs($this->hr)->getJson(factsUrl($this->a))
         ->assertJsonPath('facts.risk', fn (string $risk): bool => str_starts_with($risk, 'Resultados de la evaluación cerrada el '))
         ->assertJsonCount(4, 'facts');
+});
+
+it('still invites to results thirty days after they closed', function (): void {
+    $noon = now(config()->string('app.display_timezone'))->setTime(12, 0);
+    $this->travelTo($noon->subDays(30));
+    $closed = liveFactsRecordOf(evaluatedCenter($this->a, $this->plant));
+    $this->travelTo($noon);
+
+    $this->actingAs($this->hr)->getJson(factsUrl($this->a))
+        ->assertJson(['facts' => ['invite.results' => "Ya hay resultados del {$closed->closedOn}. ¿Te digo dónde está el riesgo más alto?"]]);
 });
 
 it('says why the latest closed evaluation has no results instead of inviting to them', function (): void {
