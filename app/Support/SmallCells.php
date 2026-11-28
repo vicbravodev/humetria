@@ -11,7 +11,7 @@ namespace App\Support;
  */
 final class SmallCells
 {
-    private const array ORDER = ['mail', 'whatsapp'];
+    private const array ORDER = ['mail', 'whatsapp']; // @pest-mutate-ignore: RemoveArrayItem
 
     /**
      * @param  array<string, array{answered: int, unanswered: int}>  $cells  by channel

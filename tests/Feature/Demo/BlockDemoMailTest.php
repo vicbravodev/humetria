@@ -28,10 +28,12 @@ use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Data\CompanySummary;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Support\DemoMail;
+use Illuminate\Mail\Events\MessageSending;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
+use Symfony\Component\Mime\Email;
 
 mutates(BlockDemoMail::class);
 
@@ -48,6 +50,13 @@ it('cancels a message whose recipients are all demo addresses', function (): voi
 
     expect(deliveredMail())->toBe(0);
     Log::shouldHaveReceived('debug')->with('demo.mail_blocked', ['recipients' => 2])->once();
+});
+
+it('leaves a message without recipients to the mailer: there is nobody to protect', function (): void {
+    Log::spy();
+
+    expect((new BlockDemoMail)->handle(new MessageSending(new Email)))->toBeNull();
+    Log::shouldNotHaveReceived('debug', ['demo.mail_blocked', Mockery::any()]);
 });
 
 it('lets through a message with any real recipient', function (): void {

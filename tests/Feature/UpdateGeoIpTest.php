@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Console\Commands\UpdateGeoIp;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -27,6 +28,18 @@ it('downloads this month\'s DB-IP city database and leaves it unzipped where the
 
     expect(file_get_contents($this->database))->toBe('the-database');
     Log::shouldHaveReceived('info')->with('geoip.updated', ['month' => '2026-11']);
+});
+
+it('creates the folders of the database the first time, however deep', function (): void {
+    $folder = storage_path('framework/testing/geoip-first-run');
+    File::deleteDirectory($folder);
+    config(['services.geoip.database' => "{$folder}/data/dbip-city-lite.mmdb"]);
+    Http::fake(['download.db-ip.com/free/dbip-city-lite-2026-11.mmdb.gz' => Http::response((string) gzencode('the-database'))]);
+
+    $this->artisan('geoip:update')->assertSuccessful();
+
+    expect(file_get_contents("{$folder}/data/dbip-city-lite.mmdb"))->toBe('the-database');
+    File::deleteDirectory($folder);
 });
 
 it('takes last month\'s while this month\'s is not out yet', function (): void {
