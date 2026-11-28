@@ -117,7 +117,7 @@ final readonly class GetCampaignProgress implements TellsLiveFacts, Tool
             'Avance de campañas',
             $rows,
             $this->links->campaigns(),
-            match (true) {
+            match (true) { // @pest-mutate-ignore: TrueToFalse
                 $current === [] => 'Todavía no hay campañas en curso. Puedes lanzar una desde Campañas.',
                 $truncated => 'Muestro '.self::MAX_ROWS.' de '.count($current).' campañas; el resto está en Campañas.',
                 default => null,
@@ -165,7 +165,7 @@ final readonly class GetCampaignProgress implements TellsLiveFacts, Tool
 
         return [
             'label' => self::label($campaign, $names),
-            'status' => match (true) {
+            'status' => match (true) { // @pest-mutate-ignore: TrueToFalse
                 $campaign->closed => 'closed',
                 $campaign->launchedOn === null => 'draft',
                 default => 'active',

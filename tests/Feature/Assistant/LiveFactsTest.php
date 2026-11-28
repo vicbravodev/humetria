@@ -15,6 +15,8 @@ use App\Modules\Interventions\Models\ProgramAction;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Responses\Models\AnonymousResponse;
+use App\Modules\Telework\Contracts\TeleworkStanding;
+use App\Modules\Telework\Data\TeleworkRow;
 use App\Modules\Telework\Models\Teleworker;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -123,6 +125,22 @@ it('tells how many centers with telework have their list complete, and invites t
         ->assertJson(['facts' => ['invite.work_centers' => 'A 1 centro le falta algo de su lista de NOM-037. ¿Te explico qué falta?']]);
 });
 
+it('invites to no center once every center with telework has its list complete', function (): void {
+    evaluatedCenter($this->a, $this->plant);
+    app()->instance(TeleworkStanding::class, new readonly class implements TeleworkStanding
+    {
+        public function forCenters(array $workCenterIds): array
+        {
+            return array_fill_keys($workCenterIds, [new TeleworkRow('5.1', 'Política de teletrabajo', 'done', 'Cumple', null)]);
+        }
+    });
+
+    $facts = $this->actingAs($this->hr)->getJson(factsUrl($this->a))->json('facts');
+
+    expect($facts['telework'])->toBe('Teletrabajo: 1 de 1 centro con su lista completa')
+        ->and($facts)->not->toHaveKey('invite.work_centers');
+});
+
 it('invites to the Programas de intervención when one has actions past their day', function (): void {
     $late = Program::factory()->create(['tenant_id' => $this->a->id, 'campaign_id' => evaluatedCenter($this->a, $this->plant)->id]);
     ProgramAction::factory()->create(['tenant_id' => $this->a->id, 'program_id' => $late->id, 'due_on' => now()->subDays(2)->toDateString()]);
@@ -135,6 +153,14 @@ it('tells only the norms the company has', function (): void {
     resolve(CompanyModules::class)->syncPlan($this->a->id, ['attendance'], CarbonImmutable::now(config('app.display_timezone')));
 
     $this->actingAs($this->hr)->getJson(factsUrl($this->a))->assertExactJson(['facts' => []]);
+});
+
+it('gives no participation line while the campaign running has nobody invited yet', function (): void {
+    Campaign::factory()->active(now()->addDays(3)->toDateString())->create(['tenant_id' => $this->a->id, 'work_center_id' => $this->plant->id]);
+
+    $this->actingAs($this->hr)->getJson(factsUrl($this->a))
+        ->assertOk()
+        ->assertJsonMissingPath('facts.participation');
 });
 
 it('keeps the facts of a company for a minute, so opening the panel again costs only the session', function (): void {
