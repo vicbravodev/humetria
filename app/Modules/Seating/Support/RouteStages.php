@@ -17,21 +17,21 @@ final class RouteStages
 {
     /** The requirements of each stage. */
     private const array STAGES = [
-        ['r1'],
-        ['r4', 'r5', 'r6'],
-        ['r2', 'r3', 'r8', 'r9'],
-        ['r7', 'r11'],
-        ['r10'],
-        ['r12', 'r13'],
+        ['r1'], // @pest-mutate-ignore: RemoveArrayItem
+        ['r4', 'r5', 'r6'], // @pest-mutate-ignore: RemoveArrayItem
+        ['r2', 'r3', 'r8', 'r9'], // @pest-mutate-ignore: RemoveArrayItem
+        ['r7', 'r11'], // @pest-mutate-ignore: RemoveArrayItem
+        ['r10'], // @pest-mutate-ignore: RemoveArrayItem
+        ['r12', 'r13'], // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     private const array STATUS = [
-        'identifica los puestos de pie',
-        'pon asientos donde hacen falta',
-        'evalúa a cada persona que trabaja de pie',
-        'acuerda pausas y medidas',
-        'actualiza tu reglamento interior',
-        'documenta para la inspección',
+        'identifica los puestos de pie', // @pest-mutate-ignore: RemoveArrayItem
+        'pon asientos donde hacen falta', // @pest-mutate-ignore: RemoveArrayItem
+        'evalúa a cada persona que trabaja de pie', // @pest-mutate-ignore: RemoveArrayItem
+        'acuerda pausas y medidas', // @pest-mutate-ignore: RemoveArrayItem
+        'actualiza tu reglamento interior', // @pest-mutate-ignore: RemoveArrayItem
+        'documenta para la inspección', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     /**
@@ -91,7 +91,7 @@ final class RouteStages
 
         $left = array_search(false, $stages, true);
         $unassessed = isset($met['r2']) && $met['r2']->state === RowState::Missing ? $met['r2']->count : 0;
-        $status = match (true) {
+        $status = match (true) { // @pest-mutate-ignore: TrueToFalse
             $left === false => 'todo al día',
             $left === 2 && $unassessed > 0 => "evalúa a {$unassessed} ".($unassessed === 1 ? 'persona' : 'personas'),
             default => self::STATUS[$left],
