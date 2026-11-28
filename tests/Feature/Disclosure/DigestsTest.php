@@ -7,6 +7,7 @@ use App\Modules\Disclosure\Actions\PublishResults;
 use App\Modules\Disclosure\Actions\SendDisclosureDigests;
 use App\Modules\Disclosure\Models\Document;
 use App\Modules\Disclosure\Models\DocumentCenter;
+use App\Modules\Disclosure\Models\PageLink;
 use App\Modules\Disclosure\Notifications\DisclosureDigest;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -60,7 +61,7 @@ it('tells the owner, with counts only, what waits: centers without policy, close
     staffOf($this->tenant, $this->south, 20);
     [$campaign] = closedEvaluationInAreas($this->tenant, ['Área 1' => 12]);
     $campaign->update(['work_center_id' => $this->south->id]);
-    App\Modules\Disclosure\Models\PageLink::query()->update(['expires_at' => now()->addDays(10)]);
+    PageLink::query()->update(['expires_at' => now()->addDays(10)]);
 
     $sent = resolve(SendDisclosureDigests::class)->handle();
 
@@ -177,4 +178,26 @@ it('says «Falta 1 persona» when only one is missing, with the rest of what wai
     Notification::assertSentOnDemand(DisclosureDigest::class, fn (DisclosureDigest $digest, array $channels, AnonymousNotifiable $notifiable): bool => $digest->toMail($notifiable)->subject === 'Falta 1 persona por confirmar la política'
         && $digest->toMail($notifiable)->introLines === ['0 de 1 personas confirmaron que leyeron la política de prevención. Puedes mandarles un recordatorio o imprimir la lista para que firmen en papel.', '1 centro sin política publicada.']
         && $digest->toMail($notifiable)->actionText === 'Recordar a 1');
+});
+
+it('leaves the demo company out, and tells the others even when one of them fails', function (): void {
+    Exceptions::fake();
+    // The demo goes first and the broken company second, so neither keeps the one after them from its email.
+    $demo = Tenant::factory()->demo()->create(['id' => '00000000-0000-4000-8000-000000000001']);
+    $broken = Tenant::factory()->create(['id' => '00000000-0000-4000-8000-000000000002']);
+    foreach ([$demo, $broken] as $company) {
+        workIn($company);
+        WorkCenter::factory()->for($company)->create();
+        resolve(IssuePageLink::class)->handle(ownerOf($company)->id);
+    }
+    workIn($this->tenant);
+    PageLink::retrieved(function (PageLink $link) use ($broken): void {
+        if ($link->tenant_id === $broken->id) {
+            throw new RuntimeException('boom');
+        }
+    });
+
+    expect(resolve(SendDisclosureDigests::class)->handle())->toBe(1);
+    Exceptions::assertReported(fn (RuntimeException $failure): bool => $failure->getMessage() === 'boom');
+    Notification::assertSentOnDemand(DisclosureDigest::class, fn (DisclosureDigest $digest, array $channels, AnonymousNotifiable $notifiable): bool => $notifiable->routes['mail'] === $this->owner->email);
 });
