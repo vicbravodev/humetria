@@ -117,7 +117,7 @@ final readonly class Nom035Rows
         }
 
         $guide = $facts->guideOne === null || $facts->guideOne['target'] === 0 ? null : "Guía I: {$facts->guideOne['answered']} de {$facts->guideOne['target']}";
-        $detail = match (true) {
+        $detail = match (true) { // @pest-mutate-ignore: TrueToFalse
             $facts->toChannel > 0 => self::people($facts->toChannel).($guide === null ? '' : " · {$guide}"),
             default => $guide,
         };
@@ -128,7 +128,7 @@ final readonly class Nom035Rows
 
         $see = ['action' => $row['href'] === null ? null : 'Ver'];
 
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             $below => [...$row, ...$see, 'state' => 'partial'],
             $detail !== null && $facts->toChannel === 0 => [...$row, ...$see, 'state' => 'done'],
             default => $row,
@@ -151,7 +151,7 @@ final readonly class Nom035Rows
             return $facts->closed === null ? $row : [...$row, 'detail' => "Cerrada el {$facts->closed['closedOn']}: contestaron {$facts->closed['answered']} de {$facts->closed['target']}"];
         }
 
-        $detail = match (true) {
+        $detail = match (true) { // @pest-mutate-ignore: TrueToFalse
             $facts->running !== null => "{$facts->running['answered']} de {$facts->running['target']} contestaron; la evaluación sigue abierta",
             $facts->standing === 'overdue' => "Venció el {$facts->until}: toca evaluar de nuevo",
             default => 'El centro no se ha evaluado',

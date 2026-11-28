@@ -33,8 +33,9 @@ final class LogoBounds
         $whole = ['x' => 0, 'y' => 0, 'width' => imagesx($image), 'height' => imagesy($image)];
         $probe = imagescale($image, min(self::PROBE, imagesx($image)), -1, IMG_BILINEAR_FIXED);
 
+        // GD answers false only for a size below one pixel or a point outside the image, which never reach these three checks.
         if ($probe === false) {
-            return $whole;
+            return $whole; // @pest-mutate-ignore: RemoveEarlyReturn
         }
 
         $box = self::box($probe);
@@ -68,7 +69,7 @@ final class LogoBounds
         $corner = imagecolorat($probe, 0, 0);
 
         if ($corner === false) {
-            return null;
+            return null; // @pest-mutate-ignore: RemoveEarlyReturn
         }
 
         // A transparent corner: the background is nothing. Otherwise it is the corner's own color.
@@ -97,7 +98,7 @@ final class LogoBounds
     private static function isMark(int|false $pixel, ?int $plain): bool
     {
         if ($pixel === false) {
-            return false;
+            return false; // @pest-mutate-ignore: FalseToTrue,RemoveEarlyReturn
         }
 
         if ((($pixel >> 24) & 127) >= self::CLEAR) {

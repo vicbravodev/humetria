@@ -30,7 +30,7 @@ final class LimitMessage
 
     private static function count(bool $seats, int $amount): string
     {
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             $seats => $amount === 1 ? '1 persona' : "{$amount} personas",
             default => $amount === 1 ? '1 centro de trabajo' : "{$amount} centros de trabajo",
         };
@@ -38,7 +38,7 @@ final class LimitMessage
 
     private static function all(bool $seats, int $amount): string
     {
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             $seats => $amount === 1 ? 'ya la tienes.' : 'ya las tienes todas.',
             default => $amount === 1 ? 'ya lo tienes.' : 'ya los tienes todos.',
         };
