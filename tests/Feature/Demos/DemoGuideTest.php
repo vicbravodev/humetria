@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Impersonation;
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Demos\Actions\RewindDemoStep;
 use App\Modules\Demos\Actions\SkipDemoStep;
@@ -24,7 +25,7 @@ use Inertia\Testing\AssertableInertia as Assert;
  * the poll of the dock. The current step is the first one neither done (by the real data) nor skipped.
  */
 
-mutates(SessionGuide::class, SkipDemoStep::class, RewindDemoStep::class, TourCatalog::class, SessionCenter::class);
+mutates(SessionGuide::class, SkipDemoStep::class, RewindDemoStep::class, TourCatalog::class, SessionCenter::class, HandleInertiaRequests::class);
 
 beforeEach(function (): void {
     $this->demo = Tenant::factory()->demo()->create();

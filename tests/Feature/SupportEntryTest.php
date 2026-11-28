@@ -3,13 +3,14 @@
 declare(strict_types=1);
 
 use App\Http\Impersonation;
+use App\Http\Middleware\EndRevokedImpersonation;
 use App\Models\AuditEntry;
 use App\Modules\Tenancy\Http\Requests\ImpersonateRequest;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ImpersonateRequest::class);
+mutates(ImpersonateRequest::class, Impersonation::class, EndRevokedImpersonation::class);
 
 it('asks the reason and how long before entering a real company', function (): void {
     $tenant = Tenant::factory()->create();
@@ -72,14 +73,15 @@ it('ends the entry when its time is up: back to the console as the staff, with t
     $this->assertAuthenticatedAs($owner);
 
     $this->travel(61)->seconds();
-    $this->get(route('dashboard'))->assertRedirect(route('companies.index'));
+    $this->get(route('dashboard'))->assertStatus(303)->assertRedirect(route('companies.index'));
 
     $this->assertAuthenticatedAs($superadmin);
     expect(session(Impersonation::SESSION_KEY))->toBeNull()
         ->and(AuditEntry::query()->where('event', 'impersonation.expired')->sole())
         ->actor_id->toBe($owner->id)
-        ->impersonator_id->toBe($superadmin->id);
-    Log::shouldHaveReceived('info')->with('impersonation.expired', Mockery::any())->once();
+        ->impersonator_id->toBe($superadmin->id)
+        ->subject_id->toBe((string) $owner->id);
+    Log::shouldHaveReceived('info')->with('impersonation.expired', ['subject_id' => $owner->id])->once();
 });
 
 it('never opens the personal account of whoever it works as', function (): void {
