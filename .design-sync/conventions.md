@@ -105,6 +105,7 @@ window.HumetriaPage = {
         },
         inCourse: { count: 1, daysLeft: 9, elapsed: 64 },
         firstSteps: null,
+        demoGuide: null,
         brand: null,
         sidebarOpen: true,
     },

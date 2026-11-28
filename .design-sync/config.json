@@ -96,6 +96,31 @@
         "MobileTabBar": {
             "cardMode": "single",
             "viewport": "390x300"
+        },
+        "ArcMeter": {
+            "cardMode": "column"
+        },
+        "ChoiceField": {
+            "cardMode": "column"
+        },
+        "PosterQr": {
+            "cardMode": "column"
+        },
+        "RouteInspectionCard": {
+            "cardMode": "column"
+        },
+        "StageBar": {
+            "cardMode": "column"
+        },
+        "ToolIcon": {
+            "cardMode": "column"
+        },
+        "NewVersionBanner": {
+            "cardMode": "single",
+            "primaryStory": "OverTheApp"
+        },
+        "Humi": {
+            "cardMode": "column"
         }
     },
     "readmeHeader": ".design-sync/conventions.md",
