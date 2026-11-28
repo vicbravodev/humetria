@@ -14,10 +14,10 @@ use Carbon\CarbonInterface;
 final readonly class RequestOrigin
 {
     /** Checked in order: Edge and Opera also say "Chrome", and Chrome also says "Safari". */
-    private const array BROWSERS = ['Edg/' => 'Edge', 'OPR/' => 'Opera', 'Firefox/' => 'Firefox', 'FxiOS/' => 'Firefox', 'CriOS/' => 'Chrome', 'Chrome/' => 'Chrome', 'Safari/' => 'Safari'];
+    private const array BROWSERS = ['Edg/' => 'Edge', 'OPR/' => 'Opera', 'Firefox/' => 'Firefox', 'FxiOS/' => 'Firefox', 'CriOS/' => 'Chrome', 'Chrome/' => 'Chrome', 'Safari/' => 'Safari']; // @pest-mutate-ignore: RemoveArrayItem
 
     /** Checked in order: an iPhone also says "Mac OS X", and Android also says "Linux". */
-    private const array SYSTEMS = ['iPhone' => 'iPhone', 'iPad' => 'iPad', 'Android' => 'Android', 'CrOS' => 'ChromeOS', 'Windows' => 'Windows', 'Mac OS X' => 'macOS', 'Linux' => 'Linux'];
+    private const array SYSTEMS = ['iPhone' => 'iPhone', 'iPad' => 'iPad', 'Android' => 'Android', 'CrOS' => 'ChromeOS', 'Windows' => 'Windows', 'Mac OS X' => 'macOS', 'Linux' => 'Linux']; // @pest-mutate-ignore: RemoveArrayItem
 
     public function __construct(private Geolocation $geolocation) {}
 
