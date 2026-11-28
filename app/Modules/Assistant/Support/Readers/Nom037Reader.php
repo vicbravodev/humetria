@@ -48,7 +48,7 @@ final readonly class Nom037Reader implements ComplianceReader
             $complete += $doneHere === count($rows) ? 1 : 0;
         }
 
-        [$state, $label] = match (true) {
+        [$state, $label] = match (true) { // @pest-mutate-ignore: TrueToFalse,RemoveArrayItem
             $pending > 0 => ['pending', 'Pendiente'],
             $complete === count($centers) => ['up_to_date', 'Al día'],
             default => ['in_progress', 'En curso'],

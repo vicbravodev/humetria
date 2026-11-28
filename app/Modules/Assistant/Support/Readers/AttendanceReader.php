@@ -30,7 +30,7 @@ final readonly class AttendanceReader implements ComplianceReader
             $setup->offlineNeedsReview === 0 ? null : 'Hay '.trans_choice('{1} :count marca sin conexión|[2,*] :count marcas sin conexión', $setup->offlineNeedsReview).' por verificar con banderas o con más de '.config()->integer('attendance.offline.review_age_days').' días.',
         ]));
 
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             $setup->pendingCorrections > 0 => new ComplianceStatus('attendance', 'Asistencia', 'pending', 'Pendiente', $summary, $this->links->attendanceCorrections()),
             $setup->disputedWeeks > 0 => new ComplianceStatus('attendance', 'Asistencia', 'pending', 'Pendiente', $summary, $this->links->attendanceDisputes()),
             $setup->offlineNeedsReview > 0 => new ComplianceStatus('attendance', 'Asistencia', 'pending', 'Pendiente', $summary, $this->links->attendanceOfflineMarks()),

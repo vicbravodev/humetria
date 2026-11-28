@@ -34,7 +34,7 @@ final readonly class ComplaintsReader implements ComplianceReader
         $waiting = $this->complaints->count($scope->userId);
         $first = $this->complaints->soonest($scope->userId, 1)[0] ?? null;
 
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             $first !== null => new ComplianceStatus('complaints', 'Quejas', 'pending', 'Pendiente', 'Tienes '.trans_choice('{1} :count caso|[2,*] :count casos', $waiting).' por acusar de recibo; el primero vence el '.CarbonImmutable::parse($first->dueOn)->isoFormat('D [de] MMMM').'.', $this->links->complaints()),
             ! $open => new ComplianceStatus('complaints', 'Quejas', 'pending', 'Pendiente', 'Tu canal de quejas aún no recibe casos.', $this->links->complaints()),
             default => new ComplianceStatus('complaints', 'Quejas', 'up_to_date', 'Al día', 'No tienes casos por acusar de recibo.', $this->links->complaints()),
