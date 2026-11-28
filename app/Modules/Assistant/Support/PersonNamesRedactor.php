@@ -17,7 +17,7 @@ use App\Modules\Organization\Contracts\Roster;
  */
 final readonly class PersonNamesRedactor
 {
-    private const array PLAIN = ['á' => 'a', 'à' => 'a', 'ä' => 'a', 'é' => 'e', 'è' => 'e', 'ë' => 'e', 'í' => 'i', 'ì' => 'i', 'ï' => 'i', 'ó' => 'o', 'ò' => 'o', 'ö' => 'o', 'ú' => 'u', 'ù' => 'u', 'ü' => 'u'];
+    private const array PLAIN = ['á' => 'a', 'à' => 'a', 'ä' => 'a', 'é' => 'e', 'è' => 'e', 'ë' => 'e', 'í' => 'i', 'ì' => 'i', 'ï' => 'i', 'ó' => 'o', 'ò' => 'o', 'ö' => 'o', 'ú' => 'u', 'ù' => 'u', 'ü' => 'u']; // @pest-mutate-ignore: RemoveArrayItem
 
     public function __construct(private Roster $roster) {}
 

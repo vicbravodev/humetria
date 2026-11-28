@@ -61,3 +61,9 @@ it('masks the name of a person in a company of thousands, where one pattern of e
 
     expect((new PersonNamesRedactor($roster))->redact('¿Cómo va Nombre4321 Apellido4321?'))->toBe('¿Cómo va [persona]?');
 });
+
+it('reads every accented vowel, grave, acute or with diaeresis, as the plain one', function (): void {
+    Employee::factory()->create(['tenant_id' => $this->tenant->id, 'work_center_id' => WorkCenter::factory()->for($this->tenant)->create()->id, 'area_id' => Area::factory()->create(['tenant_id' => $this->tenant->id])->id, 'name' => 'Áàäéèë Íìïóòöúùü']);
+
+    expect(resolve(PersonNamesRedactor::class)->redact('dime de aaaeee iiiooouuu'))->toBe('dime de [persona]');
+});
