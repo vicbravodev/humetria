@@ -20,6 +20,15 @@ use App\Modules\Demos\Enums\DemoSessionStatus;
 use App\Modules\Demos\Enums\TourKey;
 use App\Modules\Demos\Models\DemoSession;
 use App\Modules\Demos\Support\TourCatalog;
+use App\Modules\Demos\Support\Tours\Answers;
+use App\Modules\Demos\Support\Tours\AttendanceTour;
+use App\Modules\Demos\Support\Tours\BaseTour;
+use App\Modules\Demos\Support\Tours\ComplaintsTour;
+use App\Modules\Demos\Support\Tours\EngagementTour;
+use App\Modules\Demos\Support\Tours\HumiTour;
+use App\Modules\Demos\Support\Tours\LeaveTour;
+use App\Modules\Demos\Support\Tours\Nom035Tour;
+use App\Modules\Demos\Support\Tours\SharedAccessActivity;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Leave\Models\LeaveRequest;
@@ -35,6 +44,8 @@ use App\Modules\WorkerAccess\Models\WorkerCredential;
  * that counts something tells it live («Llegaron 3 de 5 respuestas»). What happened before the session belongs to the
  * demo's story and does not count.
  */
+
+mutates(TourCatalog::class, BaseTour::class, Nom035Tour::class, AttendanceTour::class, EngagementTour::class, ComplaintsTour::class, LeaveTour::class, HumiTour::class, SharedAccessActivity::class, Answers::class);
 
 beforeEach(function (): void {
     $this->demo = Tenant::factory()->demo()->create();

@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 use App\Modules\Demos\Enums\DemoStatus;
 use App\Modules\Demos\Models\DemoRequest;
+use App\Modules\Demos\Support\DemoCardTime;
+use App\Modules\Demos\Support\DemoListFilters;
 use Inertia\Testing\AssertableInertia as Assert;
+
+mutates(DemoCardTime::class, DemoListFilters::class);
 
 it('searches the list by contact, email, company or WhatsApp, ignoring case and accents', function (string $search, string $found): void {
     DemoRequest::factory()->create(['name' => 'José Pérez', 'email' => 'jose@acme.mx', 'company' => 'Acme Industrial', 'whatsapp' => '+525512345678']);

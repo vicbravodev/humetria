@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Models\User;
+use App\Modules\Sso\Actions\CompleteStaffSsoSignIn;
+
+mutates(CompleteStaffSsoSignIn::class);
 
 beforeEach(function (): void {
     config(['sso.staff' => [

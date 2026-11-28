@@ -8,7 +8,10 @@ use App\Modules\Telework\Models\TeleworkProfile;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
+use App\Modules\Tenancy\Support\ApplicabilityPages;
 use Inertia\Testing\AssertableInertia as Assert;
+
+mutates(ApplicabilityPages::class);
 
 // Rediseño v2 (board V3-Onboarding, docs/02 «Primera vez de una empresa»): once the company has its centers, two questions
 // per center create its routes and the certificates where a standard does not apply; NOM-035's guides follow the people
@@ -42,6 +45,22 @@ it('pages each center in use with its people, its NOM-035 guides and what it ans
             ->where('centers.data.1', [
                 'id' => $this->plant->id, 'name' => 'Planta Querétaro', 'activity' => 'Manufactura', 'people' => 30,
                 'range' => '16_to_50', 'hasTeleworkers' => true, 'standing' => true, 'sector' => 'industrial',
+            ]));
+});
+
+it('pages the centers ten at a time, and a center nobody works in yet has no one and only the Guía I', function (): void {
+    $empty = WorkCenter::factory()->for($this->tenant)->create(['name' => 'Almacén', 'main_activity' => 'Bodega']);
+    WorkCenter::factory()->for($this->tenant)->count(9)->sequence(fn ($sequence) => ['name' => 'Sucursal '.($sequence->index + 1)])->create();
+
+    $this->actingAs($this->hr)
+        ->get(route('tenant.work-centers.onboarding', $this->tenant))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('centers.total', 12)
+            ->where('centers.per_page', 10)
+            ->has('centers.data', 10)
+            ->where('centers.data.0', [
+                'id' => $empty->id, 'name' => 'Almacén', 'activity' => 'Bodega', 'people' => 0,
+                'range' => 'up_to_15', 'hasTeleworkers' => null, 'standing' => null, 'sector' => null,
             ]));
 });
 

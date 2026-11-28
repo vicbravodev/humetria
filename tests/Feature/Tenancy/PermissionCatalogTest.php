@@ -6,7 +6,10 @@ use App\Modules\Tenancy\Enums\Module;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantModule;
 use App\Modules\Tenancy\Support\PermissionCatalog;
+use App\Modules\Tenancy\Support\PermissionDefinition;
 use Illuminate\Support\Facades\DB;
+
+mutates(PermissionCatalog::class, PermissionDefinition::class);
 
 /** @return list<string> */
 function catalogNames(): array

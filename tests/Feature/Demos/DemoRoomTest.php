@@ -6,12 +6,14 @@ use App\Models\User;
 use App\Modules\Assistant\Models\AiUsage;
 use App\Modules\Assistant\Models\ConversationParticipant;
 use App\Modules\Attendance\Models\KioskDevice;
+use App\Modules\Demos\Actions\StartDemoRun;
 use App\Modules\Demos\Contracts\DoorControl;
 use App\Modules\Demos\Enums\DemoSessionStatus;
 use App\Modules\Demos\Jobs\PrepareDemo;
 use App\Modules\Demos\Jobs\ResetDemo;
 use App\Modules\Demos\Models\DemoRun;
 use App\Modules\Demos\Models\DemoSession;
+use App\Modules\Demos\Support\DemoLeadRegistry;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -24,6 +26,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\PermissionRegistrar;
+
+mutates(StartDemoRun::class, DemoLeadRegistry::class);
 
 /*
  * La sala de demostración: the console page from which the staff prepares the demo company, enters it as its owner or

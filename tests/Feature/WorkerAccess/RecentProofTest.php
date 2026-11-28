@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\WorkerAccess\Actions\ProveWithCode;
+use App\Modules\WorkerAccess\Actions\SendProofCode;
 use App\Modules\WorkerAccess\Contracts\WorkerKeys;
 use App\Modules\WorkerAccess\Enums\EntryVia;
 use App\Modules\WorkerAccess\Http\Middleware\RequireRecentProof;
@@ -12,6 +14,7 @@ use App\Modules\WorkerAccess\Http\Middleware\ResolveWorkerTenant;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
 use App\Modules\WorkerAccess\Notifications\ProofCode;
 use App\Modules\WorkerAccess\Support\ProofCodes;
+use App\Modules\WorkerAccess\Support\ProofSteps;
 use App\Modules\WorkerAccess\Support\WorkerSessionStore;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
@@ -24,7 +27,7 @@ use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Support\SoftAuthenticator;
 
-mutates(RequireRecentProof::class, ProofCodes::class);
+mutates(RequireRecentProof::class, ProofCodes::class, ProveWithCode::class, SendProofCode::class, ProofSteps::class);
 
 /*
  * What is delicate asks for a recent proof (spec «Prueba reciente», Goal 8): a signature of the person's key, or a code by

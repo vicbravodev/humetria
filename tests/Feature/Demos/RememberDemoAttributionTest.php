@@ -215,6 +215,7 @@ it('drops a keyword value that is not a short line of text', function (string $q
 })->with([
     'a term of 100 characters' => ['utm_term='.str_repeat('a', 100), ['term' => str_repeat('a', 100), 'content' => null, 'match_type' => null]],
     'a term of 101 characters' => ['utm_term='.str_repeat('a', 101), null],
+    'a match type of 20 characters' => ['matchtype='.str_repeat('b', 20), ['term' => null, 'content' => null, 'match_type' => str_repeat('b', 20)]],
     'a match type of 21 characters' => ['matchtype='.str_repeat('b', 21), null],
     'a term as an array' => ['utm_term[]=a', null],
     'a control character' => ['utm_content=a%0Ab', null],

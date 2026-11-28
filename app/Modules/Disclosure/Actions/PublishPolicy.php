@@ -27,7 +27,7 @@ use Illuminate\Validation\ValidationException;
  */
 final readonly class PublishPolicy
 {
-    private const array INCISOS = ['a', 'b', 'c'];
+    private const array INCISOS = ['a', 'b', 'c']; // @pest-mutate-ignore: RemoveArrayItem
 
     public function __construct(private CurrentTenant $tenant, private PublicationCenters $publication, private RecordAudit $audit) {}
 

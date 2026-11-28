@@ -15,6 +15,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Log;
 
 mutates(CloseDay::class, CloseDays::class, WorkedDay::class);
@@ -162,6 +163,19 @@ describe('every night', function (): void {
             Event::assertDispatched(DayClosed::class, fn (DayClosed $event): bool => $event->employeeId === $person->id && $event->date === '2026-11-09');
         }
         Log::shouldHaveReceived('info')->with('attendance.days_closed', ['closed' => 3]);
+    });
+
+    it('reports the failure of one company and still closes the others', function (): void {
+        Event::fake([DayClosed::class]);
+        Exceptions::fake();
+        $globex = Tenant::factory()->create();
+        closeMark(EmployeeFactory::new()->create(['tenant_id' => $globex->id]), MarkType::Start, '2026-11-09 09:00');
+        workIn($this->tenant);
+        failToEnter($globex->id);
+
+        expect(resolve(CloseDays::class)->handle())->toBe(1);
+
+        Exceptions::assertReported(fn (RuntimeException $failure): bool => $failure->getMessage() === 'The company could not be entered.');
     });
 
     it('closes the days and opens the week of only the company it is given, leaving every other company untouched', function (): void {

@@ -9,12 +9,13 @@ use App\Modules\Disclosure\Models\DisseminationRecord;
 use App\Modules\Disclosure\Models\Document;
 use App\Modules\Disclosure\Models\DocumentCenter;
 use App\Modules\Disclosure\Models\PageLink;
+use App\Modules\Disclosure\Support\PageUrl;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(PageLinkController::class);
+mutates(PageLinkController::class, PageUrl::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-20 18:00:00');

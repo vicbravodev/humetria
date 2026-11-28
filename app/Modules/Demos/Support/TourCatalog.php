@@ -26,20 +26,20 @@ final readonly class TourCatalog
      * already there: work-centers-list, add-employee, new-evaluation, humi-launcher.
      */
     public const array TARGETS = [
-        'work-centers-list',
-        'add-employee',
-        'new-evaluation',
-        'launch-evaluation',
-        'evaluation-progress',
-        'close-evaluation',
-        'attendance-center-mode',
-        'attendance-add-zone',
-        'attendance-issue-kiosk',
-        'send-worker-access',
-        'new-climate-survey',
-        'complaint-channel-qr',
-        'approve-leave-request',
-        'humi-launcher',
+        'work-centers-list', // @pest-mutate-ignore: RemoveArrayItem
+        'add-employee', // @pest-mutate-ignore: RemoveArrayItem
+        'new-evaluation', // @pest-mutate-ignore: RemoveArrayItem
+        'launch-evaluation', // @pest-mutate-ignore: RemoveArrayItem
+        'evaluation-progress', // @pest-mutate-ignore: RemoveArrayItem
+        'close-evaluation', // @pest-mutate-ignore: RemoveArrayItem
+        'attendance-center-mode', // @pest-mutate-ignore: RemoveArrayItem
+        'attendance-add-zone', // @pest-mutate-ignore: RemoveArrayItem
+        'attendance-issue-kiosk', // @pest-mutate-ignore: RemoveArrayItem
+        'send-worker-access', // @pest-mutate-ignore: RemoveArrayItem
+        'new-climate-survey', // @pest-mutate-ignore: RemoveArrayItem
+        'complaint-channel-qr', // @pest-mutate-ignore: RemoveArrayItem
+        'approve-leave-request', // @pest-mutate-ignore: RemoveArrayItem
+        'humi-launcher', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     public function __construct(

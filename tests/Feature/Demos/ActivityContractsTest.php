@@ -8,30 +8,38 @@ use App\Modules\Attendance\Models\AttendanceCenterMode;
 use App\Modules\Attendance\Models\AttendanceMark;
 use App\Modules\Attendance\Models\AttendanceZone;
 use App\Modules\Attendance\Models\KioskDevice;
+use App\Modules\Attendance\Support\CompanyAttendanceActivity;
 use App\Modules\Campaigns\Contracts\CampaignActivity;
 use App\Modules\Campaigns\Data\CenterCampaignActivity;
 use App\Modules\Campaigns\Enums\CampaignKind;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Models\ParticipantInstrument;
+use App\Modules\Campaigns\Support\CompanyCampaignActivity;
 use App\Modules\Complaints\Contracts\ComplaintActivity;
 use App\Modules\Complaints\Data\ComplaintCounts;
 use App\Modules\Complaints\Models\Complaint;
 use App\Modules\Complaints\Models\ComplaintChannel;
+use App\Modules\Complaints\Support\CompanyComplaintActivity;
 use App\Modules\Engagement\Contracts\EngagementActivity;
 use App\Modules\Engagement\Data\SurveyActivity;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
+use App\Modules\Engagement\Support\CompanyEngagementActivity;
 use App\Modules\Leave\Contracts\LeaveActivity;
 use App\Modules\Leave\Data\LeaveCounts;
 use App\Modules\Leave\Models\LeaveRequest;
+use App\Modules\Leave\Support\CompanyLeaveActivity;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\WorkerAccess\Contracts\WorkerAccessActivity;
 use App\Modules\WorkerAccess\Data\AccessActivity;
 use App\Modules\WorkerAccess\Models\WorkerAccessLink;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
+use App\Modules\WorkerAccess\Support\CompanyWorkerAccessActivity;
 use Carbon\CarbonImmutable;
+
+mutates(CompanyCampaignActivity::class, CompanyAttendanceActivity::class, CompanyWorkerAccessActivity::class, CompanyEngagementActivity::class, CompanyComplaintActivity::class, CompanyLeaveActivity::class);
 
 beforeEach(function (): void {
     $this->a = Tenant::factory()->create();

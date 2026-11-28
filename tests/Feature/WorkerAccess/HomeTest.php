@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Attendance\Enums\MarkType;
+use App\Modules\Attendance\Support\PunchWorkerDay;
 use App\Modules\Tenancy\Contracts\CompanyModules;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -17,7 +18,7 @@ use Database\Factories\Attendance\AttendanceMarkFactory;
 use Database\Factories\Organization\EmployeeFactory;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(WorkerSections::class);
+mutates(WorkerSections::class, PunchWorkerDay::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['trade_name' => 'Acme', 'slug' => 'acme']);

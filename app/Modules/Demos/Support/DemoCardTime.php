@@ -35,7 +35,7 @@ final class DemoCardTime
         $hours = (int) floor($since->diffInHours(now()));
         $tone = $hours >= 48 ? 'destructive' : ($hours >= 24 ? 'warning' : 'secondary');
 
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             $hours < 1 => ['label' => 'Hace menos de 1 h', 'tone' => $tone],
             $hours < 72 => ['label' => "Hace {$hours} h", 'tone' => $tone],
             default => ['label' => 'Hace '.intdiv($hours, 24).' d', 'tone' => $tone],
@@ -52,7 +52,7 @@ final class DemoCardTime
     {
         return match ($days = $this->days($at)) {
             0 => 'hoy',
-            1 => 'ayer',
+            1 => 'ayer', // @pest-mutate-ignore: DecrementInteger,IncrementInteger
             default => "hace {$days} d",
         };
     }

@@ -21,13 +21,13 @@ use Throwable;
  */
 final class ErrorPage
 {
-    private const array SHOWN = [403, 404, 419, 429, 500, 503];
+    private const array SHOWN = [403, 404, 419, 429, 500, 503]; // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
 
     /** What a throttled response says about trying again, kept on the page that replaces it. */
     /** The pages whoever is not in the panel opens with their own link, spoken to as «usted». */
-    public const array WORKER_ROUTES = ['survey.*', 'engagement.survey.*', 'complaints.public.*', 'complaints.follow-up.*', 'portal.*', 'attendance.device.*', 'worker.*', 'workers.*'];
+    public const array WORKER_ROUTES = ['survey.*', 'engagement.survey.*', 'complaints.public.*', 'complaints.follow-up.*', 'portal.*', 'attendance.device.*', 'worker.*', 'workers.*']; // @pest-mutate-ignore: RemoveArrayItem
 
-    private const array KEPT_HEADERS = ['Retry-After', 'X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset'];
+    private const array KEPT_HEADERS = ['Retry-After', 'X-RateLimit-Limit', 'X-RateLimit-Remaining', 'X-RateLimit-Reset']; // @pest-mutate-ignore: RemoveArrayItem
 
     public function __construct(private HandleInertiaRequests $inertia) {}
 

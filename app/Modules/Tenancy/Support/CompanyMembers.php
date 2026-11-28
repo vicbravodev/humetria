@@ -21,15 +21,6 @@ final class CompanyMembers implements Members
     /** @var array<string, list<MemberSummary>> */
     private array $memo = [];
 
-    /** @var array<string, list<MemberSummary>> */
-    private array $reviewing = [];
-
-    /** @var array<string, list<MemberSummary>> */
-    private array $handling = [];
-
-    /** @var array<string, list<MemberSummary>> */
-    private array $managing = [];
-
     /** @var array<string, list<MemberSummary>> by company and permission */
     private array $holders = [];
 
@@ -46,9 +37,6 @@ final class CompanyMembers implements Members
     public function forget(): void
     {
         $this->memo = [];
-        $this->reviewing = [];
-        $this->handling = [];
-        $this->managing = [];
         $this->holders = [];
     }
 
@@ -69,28 +57,22 @@ final class CompanyMembers implements Members
 
     public function reviewers(): array
     {
-        return $this->reviewing[$this->current->id()] ??= $this->loadReviewers();
+        return $this->holding('review-workplaces');
     }
 
     public function complaintHandlers(): array
     {
-        return $this->handling[$this->current->id()] ??= $this->holding('handle-complaints');
+        return $this->holding('handle-complaints');
     }
 
     public function complaintManagers(): array
     {
-        return $this->managing[$this->current->id()] ??= $this->holding('manage-complaint-channel');
+        return $this->holding('manage-complaint-channel');
     }
 
     public function screeningViewers(): array
     {
         return $this->holding('view-trauma-screenings');
-    }
-
-    /** @return list<MemberSummary> */
-    private function loadReviewers(): array
-    {
-        return $this->holding('review-workplaces');
     }
 
     public function holding(string $permission): array

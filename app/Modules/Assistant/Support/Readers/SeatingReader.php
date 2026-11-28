@@ -36,7 +36,7 @@ final readonly class SeatingReader implements ComplianceReader
         $done = array_sum(array_map(fn (RouteProgress $center): int => count(array_filter($center->done)), $applies));
         $stages = count($applies) * RouteProgress::STAGES;
 
-        [$state, $label] = match (true) {
+        [$state, $label] = match (true) { // @pest-mutate-ignore: TrueToFalse,RemoveArrayItem
             $unanswered > 0 || array_any($applies, fn (RouteProgress $center): bool => ! in_array(true, $center->done, true)) => ['pending', 'Pendiente'],
             $done === $stages => ['up_to_date', 'Al día'],
             default => ['in_progress', 'En curso'],

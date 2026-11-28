@@ -8,6 +8,8 @@ use App\Modules\Demos\Support\DemoMetrics;
 use App\Modules\Tenancy\Models\Tenant;
 use Inertia\Testing\AssertableInertia as Assert;
 
+mutates(DemoMetrics::class);
+
 beforeEach(fn () => $this->travelTo('2026-12-01 12:00 UTC'));
 
 it('gives the console its figures once the page shows', function (): void {
@@ -48,6 +50,13 @@ it('names the source most requests of the last 90 days came from, and its share 
     DemoRequest::factory()->count(5)->referredBy('www.bing.com')->create(['created_at' => now()->subDays(100)]);
 
     expect(app(DemoMetrics::class)->handle()['source'])->toBe(['label' => 'google', 'share' => 60]);
+});
+
+it('counts a request from exactly within the 90 days, and not one a minute older', function (): void {
+    DemoRequest::factory()->create(['status' => DemoStatus::Converted, 'tenant_id' => Tenant::factory()->create()->id, 'created_at' => now()->subDays(90)->addMinute()]);
+    DemoRequest::factory()->create(['created_at' => now()->subDays(90)->subMinute()]);
+
+    expect(app(DemoMetrics::class)->handle()['conversion'])->toBe(100);
 });
 
 it('says nothing it does not know when nobody asked in 90 days', function (): void {

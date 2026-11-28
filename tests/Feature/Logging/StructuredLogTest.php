@@ -117,6 +117,8 @@ it('redacts each sensitive key', function (string $key): void {
     'qr', 'justification', 'lat_e5', 'lng_e5',
     // Avisos push: the address of a phone's push service and its keys identify the phone.
     'endpoint', 'p256dh', 'auth',
+    // Clima y pulso: what a person writes, the themes drawn from it, and what a company commits to answer it.
+    'comment', 'comments', 'themes', 'heard', 'will_do', 'owner_name',
 ]);
 
 it('redacts every salary key at any depth', function (): void {

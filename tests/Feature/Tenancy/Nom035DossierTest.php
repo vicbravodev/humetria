@@ -7,6 +7,8 @@ use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Disclosure\Models\DocumentCenter;
 use App\Modules\Disclosure\Models\PageLink;
 use App\Modules\Disclosure\Models\ResultPublication;
+use App\Modules\Interventions\Models\Program;
+use App\Modules\Interventions\Models\ProgramAction;
 use App\Modules\Responses\Models\TraumaScreening;
 use App\Modules\Results\Models\ReportDetails;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -72,6 +74,16 @@ it('links the printable evidence of each module only for the rows it has', funct
         ->where('rows.0.evidence', ['label' => 'Expediente de difusión', 'href' => $disclosure])
         ->where('rows.3.evidence', ['label' => 'Expediente de difusión', 'href' => $disclosure])
         ->where('rows.5.evidence', ['label' => 'Informe 7.7', 'href' => route('tenant.campaigns.report', [$this->tenant, $this->closed->id])]));
+});
+
+it('links the Programa that has actions under way as its own evidence', function (): void {
+    $program = Program::factory()->create(['tenant_id' => $this->tenant->id, 'campaign_id' => $this->closed->id]);
+    ProgramAction::factory()->create(['tenant_id' => $this->tenant->id, 'program_id' => $program->id, 'due_on' => '2026-12-15']);
+    $this->actingAs(memberOf($this->tenant, TenantRole::Hr));
+
+    nom035Dossier()->assertInertia(fn (Assert $page) => $page
+        ->where('rows.4.state', 'partial')
+        ->where('rows.4.evidence', ['label' => 'Programa de intervención', 'href' => route('tenant.campaigns.program', [$this->tenant, $this->closed->id])]));
 });
 
 // R2-nom035-02: a row that stands prints the datum of its record, so the paper is not an index of links.

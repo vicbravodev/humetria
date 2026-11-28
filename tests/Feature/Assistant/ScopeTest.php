@@ -60,6 +60,15 @@ it('builds the scope of a person from their company, their participant and what 
         ->and($viewerScope->canSee('use-assistant'))->toBeTrue();
 });
 
+it('reads every permission that decides what Humi may tell, for an owner who has them all', function (): void {
+    expect(ownerScope($this->a)->abilities)->toBe([
+        'use-assistant', 'manage-members', 'manage-organization', 'manage-campaigns', 'manage-telework', 'review-workplaces',
+        'view-trauma-screenings', 'handle-complaints', 'view-compensation', 'view-nom035-route', 'view-interventions',
+        'view-disclosure', 'view-telework', 'view-seating', 'view-vacations', 'view-pulse', 'view-climate', 'view-attendance',
+        'view-org-chart', 'view-work-centers',
+    ]);
+});
+
 it('gives the same person a different scope in each company', function (): void {
     $consultant = memberOf($this->a, TenantRole::Hr);
     TenantMembership::factory()->for($this->b)->for($consultant)->role(TenantRole::Hr)->create();

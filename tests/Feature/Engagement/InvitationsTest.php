@@ -12,6 +12,7 @@ use App\Modules\Engagement\Jobs\SendInvitations;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Notifications\SurveyInvitation;
+use App\Modules\Engagement\Support\InvitationComposer;
 use App\Modules\Engagement\Support\SurveyClock;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
@@ -29,7 +30,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 
-mutates(RemindPending::class, SendInvitations::class, SurveyInvitation::class, SurveyClock::class);
+mutates(RemindPending::class, SendInvitations::class, SurveyInvitation::class, SurveyClock::class, InvitationComposer::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-09 15:00:00');
@@ -186,6 +187,33 @@ it('sends no link for a survey that was closed or whose last day passed', functi
     Notification::assertNothingSent();
     expect(Invitation::query()->where('invitation_status', InvitationStatus::Failed)->count())->toBe(20);
 })->with(['closed', 'late']);
+
+it('gives up on a block after three errors, as the NOM-035 invitations do', function (): void {
+    expect((new SendInvitations((string) Str::uuid(), (string) Str::uuid(), []))->maxExceptions)->toBe(3);
+});
+
+it('does nothing for a survey that no longer exists', function (): void {
+    (new SendInvitations((string) Str::uuid(), (string) Str::uuid(), [(string) Str::uuid()]))->handle();
+
+    Notification::assertNothingSent();
+});
+
+it('marks as without a way to reach them whoever lost their email or can no longer be placed in the roster after being queued, and still sends to the rest', function (): void {
+    [, $jobs] = launchedSurvey($this->tenant, $this->plant, $this->area, $this->user, 20);
+    // The first one the job meets and the first by id: a stop at the first person without a channel would leave the rest unsent.
+    $lostEmail = Invitation::query()->firstOrFail();
+    $unplaced = Invitation::query()->whereKeyNot($lostEmail->id)->orderBy('id')->firstOrFail();
+    Employee::query()->whereKey($lostEmail->employee_id)->update(['email' => null]);
+    // The roster only gives the people a company tool can place: one left without an area is not among them.
+    Employee::query()->whereKey($unplaced->employee_id)->update(['area_id' => null]);
+
+    $jobs[0]->handle();
+
+    Notification::assertSentOnDemandTimes(SurveyInvitation::class, 18);
+    expect($lostEmail->refresh()->invitation_status)->toBe(InvitationStatus::Unreachable)
+        ->and($unplaced->refresh()->invitation_status)->toBe(InvitationStatus::Unreachable)
+        ->and(Invitation::query()->where('invitation_status', InvitationStatus::Sent)->count())->toBe(18);
+});
 
 it('leaves to a newer batch whoever it queued again', function (): void {
     [, $jobs] = launchedSurvey($this->tenant, $this->plant, $this->area, $this->user, 20);

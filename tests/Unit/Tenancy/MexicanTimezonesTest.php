@@ -231,3 +231,20 @@ it('gives the options to choose from, each allowed zone once with its label', fu
         ->and($options[0])->toBe(['value' => 'America/Cancun', 'label' => 'Hora del Sureste, UTC−5 · Cancún'])
         ->and(end($options)['value'])->toBe('America/Tijuana');
 });
+
+it('names every zone of Mexico by the region the law gives its offset and by its city, east to west', function (): void {
+    expect(MexicanTimezones::options(CarbonImmutable::parse('2026-12-01 12:00', 'UTC')))->toBe([
+        ['value' => 'America/Cancun', 'label' => 'Hora del Sureste, UTC−5 · Cancún'],
+        ['value' => 'America/Bahia_Banderas', 'label' => 'Hora del Centro, UTC−6 · Bahía de Banderas'],
+        ['value' => 'America/Chihuahua', 'label' => 'Hora del Centro, UTC−6 · Chihuahua'],
+        ['value' => 'America/Mexico_City', 'label' => 'Hora del Centro, UTC−6 · Ciudad de México'],
+        ['value' => 'America/Matamoros', 'label' => 'Hora del Centro, UTC−6 · Matamoros'],
+        ['value' => 'America/Monterrey', 'label' => 'Hora del Centro, UTC−6 · Monterrey'],
+        ['value' => 'America/Merida', 'label' => 'Hora del Centro, UTC−6 · Mérida'],
+        ['value' => 'America/Ojinaga', 'label' => 'Hora del Centro, UTC−6 · Ojinaga'],
+        ['value' => 'America/Ciudad_Juarez', 'label' => 'Hora del Pacífico, UTC−7 · Ciudad Juárez'],
+        ['value' => 'America/Hermosillo', 'label' => 'Hora del Pacífico, UTC−7 · Hermosillo'],
+        ['value' => 'America/Mazatlan', 'label' => 'Hora del Pacífico, UTC−7 · Mazatlán'],
+        ['value' => 'America/Tijuana', 'label' => 'Hora del Noroeste, UTC−8 · Tijuana'],
+    ]);
+});

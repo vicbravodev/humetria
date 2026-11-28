@@ -8,8 +8,12 @@ use App\Models\User;
 use App\Modules\Billing\Contracts\Receivables;
 use App\Modules\Billing\Data\OverdueAccount;
 use App\Modules\Billing\Enums\Plan;
+use App\Modules\Billing\Enums\Profile;
 use App\Modules\Billing\Enums\SubscriptionStatus;
+use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Models\Subscription;
+use App\Modules\Billing\Support\ContractedRevenue;
+use App\Modules\Billing\Support\LedgerPlatformCost;
 use App\Modules\Demos\Enums\DemoStatus;
 use App\Modules\Demos\Models\DemoRequest;
 use App\Modules\Messaging\Contracts\PlatformDeliveries;
@@ -22,7 +26,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(PlatformOverview::class);
+mutates(PlatformOverview::class, ContractedRevenue::class, LedgerPlatformCost::class);
 
 beforeEach(fn () => $this->travelTo('2026-11-12 18:00 UTC'));
 
@@ -71,6 +75,17 @@ it('adds up the monthly income the paying subscriptions contract, before VAT', f
         ->assertInertia(fn (Assert $page) => $page->where('revenueCents', $one));
 });
 
+it('prices each channel Integral company with the discount its own account earns', function (): void {
+    $discounted = BillingAccount::factory()->consultant()->create();
+    $direct = BillingAccount::factory()->consultant()->create();
+    foreach ([$discounted, $discounted, $discounted, $direct, $direct] as $account) {
+        planFor($account, ['plan' => Plan::Integral, 'profile' => Profile::ChannelIntegral, 'centers' => 3]);
+    }
+
+    $this->actingAs(superadmin())->get(route('overview.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('revenueCents', 3 * 792_000 + 2 * 990_000));
+});
+
 it('has zero income when nobody pays', function (): void {
     $this->actingAs(superadmin())->get(route('overview.index'))
         ->assertInertia(fn (Assert $page) => $page->where('revenueCents', 0));
@@ -89,6 +104,16 @@ it('counts the companies nobody has entered for 30 days, a company that never wa
 
     $this->actingAs(superadmin())->get(route('overview.index'))
         ->assertInertia(fn (Assert $page) => $page->where('inactive', 2));
+});
+
+it('keeps out a company entered exactly 30 days ago and counts one entered a second before', function (): void {
+    $this->freezeSecond();
+    $open = fn () => Tenant::factory()->activeUntil(now()->addMonth());
+    memberOf($open()->create(), TenantRole::Owner)->forceFill(['last_login_at' => now()->subDays(30)])->save();
+    memberOf($open()->create(), TenantRole::Owner)->forceFill(['last_login_at' => now()->subDays(30)->subSecond()])->save();
+
+    $this->actingAs(superadmin())->get(route('overview.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('inactive', 1));
 });
 
 it('does not count a company that has not started: nobody could have entered it yet', function (): void {

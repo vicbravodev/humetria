@@ -11,13 +11,14 @@ use App\Modules\Campaigns\Enums\InstrumentStatus;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Models\ParticipantInstrument;
+use App\Modules\Campaigns\Support\CampaignClock;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Carbon;
 
-mutates(ExtendCampaign::class, CloseCampaign::class, CloseExpiredCampaigns::class);
+mutates(ExtendCampaign::class, CloseCampaign::class, CloseExpiredCampaigns::class, CampaignClock::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-10 17:00:00');

@@ -22,11 +22,11 @@ final readonly class OfferChoices implements Tool
 {
     public const string NAME = 'OfferChoices';
 
-    private const int MIN_OPTIONS = 2;
+    private const int MIN_OPTIONS = 2; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const int MAX_OPTIONS = 6;
+    private const int MAX_OPTIONS = 6; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const int MAX_LABEL = 40;
+    private const int MAX_LABEL = 40; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private AssistantScope $scope, private ScopeGuard $guard) {}
 

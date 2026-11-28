@@ -7,7 +7,9 @@ use App\Modules\Campaigns\Enums\Population;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Models\ParticipantInstrument;
+use App\Modules\Campaigns\Support\CampaignClock;
 use App\Modules\Campaigns\Support\CampaignPages;
+use App\Modules\Campaigns\Support\InstrumentTally;
 use App\Modules\Responses\Models\AnonymousResponse;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -15,7 +17,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(CampaignPages::class, App\Modules\Campaigns\Support\CampaignPeople::class);
+mutates(CampaignPages::class, App\Modules\Campaigns\Support\CampaignPeople::class, CampaignClock::class, InstrumentTally::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['slug' => 'acme']);

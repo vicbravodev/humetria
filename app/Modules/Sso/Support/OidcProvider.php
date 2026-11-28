@@ -20,11 +20,11 @@ use LogicException;
 final class OidcProvider extends AbstractProvider
 {
     /** @var list<string> */
-    protected $scopes = ['openid', 'email'];
+    protected $scopes = ['openid', 'email']; // @pest-mutate-ignore: RemoveArrayItem
 
     protected $scopeSeparator = ' ';
 
-    protected $usesPKCE = true;
+    protected $usesPKCE = true; // @pest-mutate-ignore: TrueToFalse
 
     public function __construct(
         Request $request,

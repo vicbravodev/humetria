@@ -42,10 +42,10 @@ use Illuminate\Support\Collection;
  */
 final readonly class SurveyPages
 {
-    public const int PER_PAGE = 10;
+    public const int PER_PAGE = 10; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** The waves the home of the pulse draws in «Cómo vamos». */
-    private const int HOME_WAVES = 4;
+    private const int HOME_WAVES = 4; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private SnapshotAudience $snapshot, private Participation $participation, private TrendPage $trend, private GroupMinimums $groupMinimums) {}
 

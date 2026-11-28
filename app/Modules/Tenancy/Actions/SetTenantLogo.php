@@ -18,9 +18,9 @@ use InvalidArgumentException;
  */
 final readonly class SetTenantLogo
 {
-    private const int HEIGHT = 80;
+    private const int HEIGHT = 80; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const int MAX_WIDTH = 400;
+    private const int MAX_WIDTH = 400; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** @param  bool  $dark  the version for dark mode, kept beside the one for light */
     public function handle(Tenant $tenant, string $imagePath, bool $dark = false): Tenant

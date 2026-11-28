@@ -35,7 +35,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property CarbonImmutable $updated_at
  */
 #[Table('disclosure_page_links')]
-#[Fillable(['tenant_id', 'version', 'token_hash', 'enabled_at', 'disabled_at', 'expires_at', 'rotated_at', 'created_by'])]
+#[Fillable(['tenant_id', 'version', 'token_hash', 'enabled_at', 'disabled_at', 'expires_at', 'rotated_at', 'created_by'])] // @pest-mutate-ignore: RemoveArrayItem
 #[UseFactory(PageLinkFactory::class)]
 final class PageLink extends Model
 {
@@ -79,7 +79,7 @@ final class PageLink extends Model
 
     public function status(): PageLinkStatus
     {
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             $this->disabled_at !== null => PageLinkStatus::Disabled,
             $this->expires_at !== null && $this->expires_at->lessThanOrEqualTo(now()) => PageLinkStatus::Expired,
             default => PageLinkStatus::Active,

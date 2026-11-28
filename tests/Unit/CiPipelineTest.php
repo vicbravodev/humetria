@@ -79,7 +79,7 @@ it('reads what a change brought without hiding a file that was moved', function 
     // --no-renames: a file of code moved into docs/ shows as a file of code deleted, not only as a new document.
     expect(jobRuns($changes))->toContain('git diff --no-renames --name-only')
         ->toContain('scripts/ci-code-changed.sh')
-        ->and($changes['outputs'] ?? null)->toBe(['code' => '${{ steps.changed.outputs.code }}']);
+        ->and($changes['outputs'] ?? null)->toBe(['code' => '${{ steps.changed.outputs.code }}', 'dependencies' => '${{ steps.changed.outputs.dependencies }}']);
 });
 
 it('runs every job of tests.yml only when the change needs the pipeline', function (): void {
@@ -104,10 +104,10 @@ it('stops every job of tests.yml that hangs', function (): void {
     }
 });
 
-it('cancels the whole run the moment a job fails, so nothing keeps running over a red pipeline', function (): void {
+it('cancels the whole run when the build or the fast checks fail, before the long jobs spend their minutes', function (): void {
     $jobs = workflowJobs('tests.yml');
 
-    foreach (['build', 'checks', 'tests', 'coverage', 'browser', 'ssr'] as $name) {
+    foreach (['build', 'checks'] as $name) {
         $steps = (array) ($jobs[$name]['steps'] ?? []);
         $last = is_array(end($steps)) ? end($steps) : [];
 
@@ -115,6 +115,87 @@ it('cancels the whole run the moment a job fails, so nothing keeps running over 
             ->and($last['if'] ?? null)->toBe('failure()', "the job {$name} does not end with a step that runs on failure")
             ->and($last['run'] ?? null)->toBe('gh run cancel "$GITHUB_RUN_ID"', "the job {$name} does not cancel the run when it fails")
             ->and($last['continue-on-error'] ?? null)->toBeTrue("the job {$name} would hide its own failure if the cancel is refused");
+    }
+});
+
+it('lets every shard finish when one fails, so a run shows every failure and only the red shard is run again', function (): void {
+    $jobs = workflowJobs('tests.yml');
+
+    foreach (['tests', 'coverage', 'browser', 'ssr'] as $name) {
+        expect(jobRuns($jobs[$name]))->not->toContain('gh run cancel', "the job {$name} cancels the run")
+            ->and($jobs[$name]['permissions'] ?? null)->toBe(['contents' => 'read'], "the job {$name} may write to Actions");
+    }
+});
+
+it('stops a hung test step at 15 minutes, while the job still uploads what it measured and saw', function (string $name): void {
+    $steps = array_values(array_filter((array) (workflowJobs('tests.yml')[$name]['steps'] ?? []), fn (mixed $step): bool => is_array($step) && str_contains((string) ($step['run'] ?? ''), '--shard=')));
+
+    expect($steps)->toHaveCount(1)
+        ->and($steps[0]['timeout-minutes'] ?? null)->toBe(15);
+})->with(['tests', 'browser']);
+
+it('keeps the build and the coverage of the shards for a week, so a job run again days later still finds them', function (): void {
+    $jobs = workflowJobs('tests.yml');
+    $uploads = array_merge(...array_map(fn (string $name): array => array_values(array_filter((array) ($jobs[$name]['steps'] ?? []), fn (mixed $step): bool => is_array($step) && in_array($step['with']['name'] ?? null, ['assets', 'coverage-${{ matrix.shard }}'], true))), ['build', 'tests']));
+
+    expect($uploads)->toHaveCount(2);
+
+    foreach ($uploads as $upload) {
+        expect($upload['with']['retention-days'] ?? null)->toBe(7);
+    }
+});
+
+it('checks out only the scripts in the jobs that read nothing else', function (string $name): void {
+    $checkout = ((array) (workflowJobs('tests.yml')[$name]['steps'] ?? []))[0] ?? [];
+
+    expect($checkout['with']['sparse-checkout'] ?? null)->toBe('scripts')
+        ->and($checkout['with']['filter'] ?? null)->toBe('blob:none');
+})->with(['changes', 'ci']);
+
+it('splits the browser tests into six shards', function (): void {
+    $browser = workflowJobs('tests.yml')['browser'];
+
+    // Three processes on the four cores: a Chromium per process, PHP and Postgres fit without a step waiting on the CPU.
+    expect($browser['strategy']['matrix']['shard'] ?? null)->toBe([1, 2, 3, 4, 5, 6])
+        ->and(jobRuns($browser))->toContain('php artisan test --testsuite=Browser --parallel --processes=3 --shard=${{ matrix.shard }}/6');
+});
+
+it('audits the dependencies of a pull request only when it changes them, and main every day', function (): void {
+    $jobs = workflowJobs('tests.yml');
+    $audit = array_values(array_filter((array) ($jobs['checks']['steps'] ?? []), fn (mixed $step): bool => is_array($step) && str_contains((string) ($step['run'] ?? ''), 'composer audit')));
+    $daily = Yaml::parseFile(dirname(__DIR__, 2).'/.github/workflows/audit.yml');
+    $dailyJobs = workflowJobs('audit.yml');
+
+    expect($jobs['changes']['outputs']['dependencies'] ?? null)->toBe('${{ steps.changed.outputs.dependencies }}')
+        ->and(jobRuns($jobs['changes']))->toContain('scripts/ci-dependencies-changed.sh')
+        ->and($audit)->toHaveCount(1)
+        ->and($audit[0]['if'] ?? null)->toBe("needs.changes.outputs.dependencies == 'true'")
+        ->and(is_array($daily) ? ($daily['on']['schedule'] ?? null) : null)->toBeArray()
+        ->and(jobRuns(reset($dailyJobs) ?: []))->toContain('composer audit')->toContain('scripts/npm-audit.sh');
+});
+
+it('keeps the result cache of PHPStan between runs', function (): void {
+    $cache = array_values(array_filter((array) (workflowJobs('tests.yml')['checks']['steps'] ?? []), fn (mixed $step): bool => is_array($step) && ($step['with']['path'] ?? null) === '/tmp/phpstan'));
+
+    expect($cache)->toHaveCount(1)
+        ->and($cache[0]['with']['restore-keys'] ?? null)->toBe('phpstan-');
+});
+
+it('turns off autovacuum on the CI Postgres, so it never analyzes a table while a test holds its rows uncommitted', function (): void {
+    $setup = Yaml::parseFile(dirname(__DIR__, 2).'/.github/actions/setup/action.yml');
+    $tune = array_values(array_filter(is_array($setup) ? (array) ($setup['runs']['steps'] ?? []) : [], fn (mixed $step): bool => is_array($step) && ($step['name'] ?? null) === 'Tune Postgres for tests'));
+
+    expect($tune)->toHaveCount(1)
+        ->and((string) ($tune[0]['run'] ?? ''))->toContain("-c 'ALTER SYSTEM SET autovacuum = off'");
+});
+
+it('caches only the layers of the images the deploy ships, so its cache does not push the CI caches out', function (): void {
+    $builds = array_values(array_filter((array) (workflowJobs('deploy.yml')['image']['steps'] ?? []), fn (mixed $step): bool => is_array($step) && isset($step['with']['cache-to'])));
+
+    expect($builds)->toHaveCount(2);
+
+    foreach ($builds as $build) {
+        expect($build['with']['cache-to'])->toContain('mode=min')->not->toContain('mode=max');
     }
 });
 
@@ -132,6 +213,15 @@ it('keeps the 90% minimum over the shards of Unit and Feature together', functio
         ->toContain('scripts/coverage-min.php coverage.xml 90')
         ->and((array) $jobs['coverage']['needs'])->toContain('tests');
 });
+
+it('keeps the time of every test class each shard measured, for scripts/shard-timings.php', function (string $name): void {
+    $job = workflowJobs('tests.yml')[$name];
+    $uploads = array_values(array_filter((array) ($job['steps'] ?? []), fn (mixed $step): bool => is_array($step) && ($step['with']['name'] ?? null) === "timings-{$name}-\${{ matrix.shard }}"));
+
+    expect(jobRuns($job))->toContain("--log-junit=junit-{$name}-\${{ matrix.shard }}.xml")
+        ->and($uploads)->toHaveCount(1)
+        ->and($uploads[0]['with']['path'] ?? null)->toBe("junit-{$name}-\${{ matrix.shard }}.xml");
+})->with(['tests', 'browser']);
 
 it('makes the required check wait for every job and decide with the verdict', function (): void {
     $jobs = workflowJobs('tests.yml');
@@ -160,4 +250,20 @@ it('only builds and deploys from a push run in this repository, never from a for
 
     expect($jobs['pipeline']['if'] ?? '')->toContain($trusted)
         ->and($jobs['image']['if'] ?? '')->toContain($trusted);
+});
+
+it('gives the Postgres of the weekly mutation run room for the locks of dropping every table at once', function (): void {
+    $steps = array_values((array) (workflowJobs('mutation.yml')['mutation']['steps'] ?? []));
+    $raise = array_search(true, array_map(fn (array $step): bool => str_contains((string) ($step['run'] ?? ''), 'max_locks_per_transaction'), $steps), true);
+    $setup = array_search('./.github/actions/setup', array_map(fn (array $step): string => (string) ($step['uses'] ?? ''), $steps), true);
+
+    // max_locks_per_transaction is read only when Postgres starts: a reload does not apply it, the restart does. Without it
+    // the parallel databases die with "out of shared memory" on migrate:fresh. 256, as in the local Postgres.
+    expect($raise)->toBeInt('no step raises max_locks_per_transaction')
+        ->and($setup)->toBeInt()
+        ->and($raise)->toBeLessThan($setup, 'the restart must come before the migration of the setup')
+        ->and($steps[$raise]['run'])->toContain('ALTER SYSTEM SET max_locks_per_transaction = 256')
+        ->toContain('docker restart "$POSTGRES_CONTAINER"')
+        ->toContain('pg_isready')
+        ->and($steps[$raise]['env']['POSTGRES_CONTAINER'] ?? null)->toBe('${{ job.services.postgres.id }}');
 });

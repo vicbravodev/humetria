@@ -62,6 +62,22 @@ it('activates a screen once, swapping the link\'s token for a secret only its co
     Log::shouldHaveReceived('info')->once()->with('attendance.kiosk_activated', ['kiosk_id' => $kiosk->id]);
 });
 
+it('gives no secret to the second of two requests opening the link at once', function (): void {
+    $link = resolve(IssueKioskDevice::class)->handle($this->center->id);
+    $kiosk = KioskDevice::query()->sole();
+    $raced = false;
+    // The other request opens the link right after this one read it as still pending.
+    DB::listen(function (Illuminate\Database\Events\QueryExecuted $query) use ($kiosk, &$raced): void {
+        if (! $raced && str_starts_with($query->sql, 'select') && str_contains($query->sql, 'attendance_kiosk_devices')) {
+            $raced = true;
+            DB::table('attendance_kiosk_devices')->where('id', $kiosk->id)->update(['token_hash' => hash('sha256', 'the other'), 'activated_at' => now()]);
+        }
+    });
+
+    expect(resolve(ActivateKioskDevice::class)->handle($link))->toBeNull()
+        ->and($kiosk->fresh()?->token_hash)->toBe(hash('sha256', 'the other'));
+});
+
 it('does not activate the link of a revoked screen or of an archived center, nor an unknown one', function (): void {
     $revoked = resolve(IssueKioskDevice::class)->handle($this->center->id);
     resolve(RevokeKioskDevice::class)->handle(KioskDevice::query()->sole()->id);

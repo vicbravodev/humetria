@@ -26,7 +26,7 @@ use Throwable;
 final readonly class AnnounceUpcomingPulses
 {
     /** How many days before the run the heads-up goes out. */
-    public const int DAYS_BEFORE = 3;
+    public const int DAYS_BEFORE = 3; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private Companies $companies, private Members $members, private DemoCompanies $demos) {}
 

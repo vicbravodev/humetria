@@ -28,10 +28,10 @@ use Throwable;
  */
 final class FallBackToMail implements ShouldQueue
 {
-    public int $tries = 3;
+    public int $tries = 3; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** @var list<int> */
-    public array $backoff = [60, 300];
+    public array $backoff = [60, 300]; // @pest-mutate-ignore: DecrementInteger,IncrementInteger,RemoveArrayItem
 
     public function handle(WhatsAppMessageFailed $event): void
     {

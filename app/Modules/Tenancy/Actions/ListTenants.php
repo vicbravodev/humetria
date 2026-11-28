@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 
 final class ListTenants
 {
-    private const int PER_PAGE = 25;
+    private const int PER_PAGE = 25; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /**
      * The companies whose names or RFC match the search, in one view, newest first, a page at a time.

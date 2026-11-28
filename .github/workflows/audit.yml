@@ -1,0 +1,30 @@
+name: audit
+
+# The advisories of the dependencies, every day on main: a new one shows up the morning it is published, without turning
+# red the pull requests that did not touch the dependencies (tests.yml audits those that do).
+on:
+  schedule:
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+        with:
+          assets: none
+          database: 'false'
+
+      - name: Audit Dependencies
+        run: |
+          composer audit
+          bash scripts/npm-audit.sh

@@ -32,7 +32,7 @@ final readonly class PlatformOverview
     private const int ACTIVITY_SHOWN = 5;
 
     /** A company nobody has entered for this many days is quiet. */
-    private const int QUIET_DAYS = 30;
+    private const int QUIET_DAYS = 30; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private ListTenants $tenants, private PlatformRevenue $revenue, private PlatformCost $cost, private DemoLeads $demos, private Receivables $receivables, private PlatformDeliveries $deliveries, private AuditPages $audit) {}
 

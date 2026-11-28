@@ -15,6 +15,7 @@ use App\Modules\WorkerAccess\Data\InvitationOutcome;
 use App\Modules\WorkerAccess\Listeners\FallBackToMail;
 use App\Modules\WorkerAccess\Models\WorkerAccessLink;
 use App\Modules\WorkerAccess\Notifications\WorkerInvitation;
+use App\Modules\WorkerAccess\Support\WorkerInvitationLinks;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Database\Factories\Tenancy\TenantChannelFactory;
@@ -24,7 +25,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
-mutates(FallBackToMail::class);
+mutates(FallBackToMail::class, WorkerInvitationLinks::class);
 
 /*
  * The invitation to the portal goes through the company's channels like a survey invitation: WhatsApp (`worker_invite_v1`) when
@@ -176,3 +177,22 @@ it('does nothing for a cause the mail does not take over from, or an invitation 
     'paused' => [FailureCause::Paused, 'worker_access_link'],
     'another module' => [FailureCause::NoWhatsappAccount, InvitationReference::CAMPAIGN_PARTICIPANT],
 ]);
+
+it('gives the WhatsApp job nothing to send once the link no longer opens, the person left or has no mobile', function (): void {
+    $links = resolve(WorkerInvitationLinks::class);
+    resolve(WorkerInvitations::class)->send($this->ana->id, $this->rh->id);
+    $link = WorkerAccessLink::query()->sole();
+
+    expect($links->whatsApp($link->id)?->mobile)->toBe('+528186875700')
+        ->and($links->whatsApp((string) Str::uuid()))->toBeNull();
+
+    App\Modules\Organization\Models\Employee::query()->whereKey($this->ana->id)->update(['mobile' => null]);
+    expect($links->whatsApp($link->id))->toBeNull();
+
+    App\Modules\Organization\Models\Employee::query()->whereKey($this->ana->id)->update(['mobile' => '+528186875700', 'deactivated_at' => now()]);
+    expect($links->whatsApp($link->id))->toBeNull();
+
+    App\Modules\Organization\Models\Employee::query()->whereKey($this->ana->id)->update(['deactivated_at' => null]);
+    $link->forceFill(['used_at' => now()])->save();
+    expect($links->whatsApp($link->id))->toBeNull();
+});

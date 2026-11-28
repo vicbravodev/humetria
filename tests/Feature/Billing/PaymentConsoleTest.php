@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Modules\Billing\Actions\ListAccountPayments;
 use App\Modules\Billing\Actions\ListOpenStatements;
+use App\Modules\Billing\Actions\SummarizeReceivable;
 use App\Modules\Billing\Http\Requests\RecordPaymentRequest;
 use App\Modules\Billing\Http\Requests\ReversePaymentRequest;
 use App\Modules\Billing\Models\BillingAccount;
@@ -15,7 +16,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ListAccountPayments::class, ListOpenStatements::class, RecordPaymentRequest::class, ReversePaymentRequest::class);
+mutates(ListAccountPayments::class, ListOpenStatements::class, RecordPaymentRequest::class, ReversePaymentRequest::class, SummarizeReceivable::class);
 
 /**
  * An account with two issued statements of $3,980 each.

@@ -28,8 +28,9 @@ El detalle que no hace falta en cada sesión vive en `docs/` y se lee cuando toc
 - **Mientras se trabaja:** solo los tests de la tarea (`php artisan test --compact --filter=…` o la ruta; `composer test:fast`
   corre lo que tu cambio afecta), Pint y PHPStan. Nunca la suite completa tras cada cambio.
 - **La verificación completa es el CI** (job `ci` de `.github/workflows/tests.yml`, que espera a `build` —el frontend, una vez—,
-  `checks`, `tests` en 3 shards, `coverage` —une los shards y aplica el 90 %—, `browser` en 4 shards y `ssr`; los shards se
-  reparten por tiempo con `tests/.pest/shards.json`, ver `docs/testing.md`). Terminado = CI en verde y cobertura ≥ 90%
+  `checks`, `tests` en 3 shards, `coverage` —une los shards y aplica el 90 %—, `browser` en 6 shards y `ssr`; los shards se
+  reparten por tiempo con `tests/.pest/shards.json`, que se escribe con los tiempos del CI y nunca con `--update-shards`:
+  `docs/testing.md`, «Los shards»). `main` solo entra por PR con `ci` en verde (ruleset). Terminado = CI en verde y cobertura ≥ 90%
   (Unit/Feature y Vitest); no se baja el umbral.
   `composer ci:check` repite el CI en local: solo si el dueño lo pide o para reproducir un fallo del CI.
 - Un cambio que solo trae documentación que nadie lee (`docs/`, `.md` de la raíz) se salta el CI y el deploy
@@ -41,9 +42,13 @@ El detalle que no hace falta en cada sesión vive en `docs/` y se lee cuando toc
   detalle, sus datos vivos si los hay, y sus criterios en `docs/normas/*/criterios.md` (entran solos al buscador). Mismas
   reglas de privacidad: conteos y estados, nunca respuestas ni personas. `tests/Feature/Assistant/ModuleCoverageTest.php`
   falla con un módulo nuevo sin conexión; eximir uno exige su razón en ese test.
-- **Mutación: semanal en CI** (`mutation.yml`, `--min=95`), nunca en los PR. Entra sola la clase cuyo test declara
-  `mutates(Clase::class)`. En local **solo si el usuario la pide**, acotada: `composer mutate -- --class=…`. Nunca se baja
-  `--min`; si falla, falta el test que mata al mutante. Detalle: `docs/testing.md`.
+- **Mutación: semanal en CI** (`mutation.yml`, `--min=95`), nunca en los PR. Entra la clase cuyo test declara
+  `mutates(Clase::class)`; por omisión toda clase de lógica entra (que sobre un test a que falte un borde crítico) y solo se
+  exime lo que no decide nada (DTO, texto o catálogo fijo, adaptador externo) con su razón en `MutationCoverageTest`. Todo
+  módulo, el Kernel incluido, pasa el 95. **Un feature termina con `composer mutate:changed` en verde**: una vez, al final,
+  antes de pedir el PR (los módulos cuyo código cambió). Fuera de ese cierre, en local solo si el usuario la pide, acotada:
+  `composer mutate -- --class=…`. Nunca se baja `--min`; si falla, falta el test que mata al mutante, y si ese test destapa
+  un bug se corrige el código, no el test. Detalle: `docs/testing.md`.
 
 ## Arquitectura: monolito modular
 

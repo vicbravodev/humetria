@@ -3,11 +3,17 @@
 declare(strict_types=1);
 
 use App\Models\AuditEntry;
+use App\Modules\Sso\Actions\SetSsoState;
+use App\Modules\Sso\Actions\VerifySsoDomain;
 use App\Modules\Sso\Models\SsoConnection;
 use App\Modules\Sso\Models\SsoDomain;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
+use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+
+mutates(SetSsoState::class, VerifySsoDomain::class);
 
 /** A company with a connection and a domain, not proven yet. */
 function ssoSetUp(string $slug = 'acme', bool $verified = false, string $name = 'acme.mx'): array
@@ -49,6 +55,37 @@ it('does not verify a domain another company already proved', function (): void 
     $this->actingAs($owner)->post(route('tenant.sso.domains.verify', [$tenant, $claim]))->assertSessionHasErrors('domain');
 
     expect($claim->fresh()?->verified_at)->toBeNull();
+});
+
+it('leaves a domain already proven as it is, without asking the DNS again', function (): void {
+    [$tenant, $owner, $domain] = ssoSetUp(verified: true);
+    $provenAt = $domain->verified_at;
+    dnsProves();
+
+    $this->actingAs($owner)->post(route('tenant.sso.domains.verify', [$tenant, $domain]))->assertSessionHasNoErrors();
+
+    expect($domain->fresh()?->verified_at?->equalTo($provenAt))->toBeTrue()
+        ->and(AuditEntry::query()->where('event', 'sso.domain_verified')->count())->toBe(0);
+});
+
+it('does not verify a domain another company proves in the same instant: the database keeps one', function (): void {
+    [$rival] = ssoSetUp('acme');
+    [$tenant, $owner, $claim] = ssoSetUp('beta');
+    dnsProves('acme.mx');
+    $won = false;
+    // The rival proves it right after the check that nobody had, before this company writes its proof.
+    DB::listen(function (QueryExecuted $query) use ($rival, &$won): void {
+        if (! $won && str_starts_with($query->sql, 'select exists') && str_contains($query->sql, '"sso_domains"')) {
+            $won = true;
+            SsoDomain::query()->where('tenant_id', $rival->id)->update(['verified_at' => now()]);
+        }
+    });
+
+    $this->actingAs($owner)->post(route('tenant.sso.domains.verify', [$tenant, $claim]))->assertSessionHasErrors('domain');
+
+    expect($claim->fresh()?->verified_at)->toBeNull()
+        ->and(SsoDomain::query()->whereNotNull('verified_at')->pluck('tenant_id')->all())->toBe([$rival->id])
+        ->and(AuditEntry::query()->where('event', 'sso.domain_verified')->count())->toBe(0);
 });
 
 it('answers 404 for the domain of another company', function (): void {

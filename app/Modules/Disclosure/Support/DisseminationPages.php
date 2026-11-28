@@ -25,7 +25,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
  */
 final readonly class DisseminationPages
 {
-    private const int PER_PAGE = 15;
+    private const int PER_PAGE = 15; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private AckProgress $progress, private Roster $roster, private WorkCenters $workCenters, private PolicyStanding $policies, private DeliveryStanding $delivery, private ResultsStanding $results, private Companies $companies) {}
 

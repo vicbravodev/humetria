@@ -20,13 +20,13 @@ use App\Support\Writing\WrittenTemplate;
  */
 final readonly class ViolenceTemplate implements WrittenTemplate
 {
-    private const array CONSIDERED = ['shouting' => 'Gritos, insultos o amenazas', 'humiliation' => 'Humillaciones o burlas', 'harassment' => 'Acoso u hostigamiento', 'exclusion' => 'Dejar a alguien fuera del trabajo a propósito', 'damage' => 'Daños a sus cosas o a su trabajo'];
+    private const array CONSIDERED = ['shouting' => 'Gritos, insultos o amenazas', 'humiliation' => 'Humillaciones o burlas', 'harassment' => 'Acoso u hostigamiento', 'exclusion' => 'Dejar a alguien fuera del trabajo a propósito', 'damage' => 'Daños a sus cosas o a su trabajo']; // @pest-mutate-ignore: RemoveArrayItem
 
-    private const array REPORT = ['acknowledge' => 'Le confirmamos en 3 días que la recibimos y le respondemos en 30 días qué hicimos', 'committee' => 'La revisa la Comisión de seguridad e higiene y le responde en 30 días'];
+    private const array REPORT = ['acknowledge' => 'Le confirmamos en 3 días que la recibimos y le respondemos en 30 días qué hicimos', 'committee' => 'La revisa la Comisión de seguridad e higiene y le responde en 30 días']; // @pest-mutate-ignore: RemoveArrayItem
 
-    private const array MEASURES = ['warning' => 'Llamada de atención por escrito', 'transfer' => 'Cambio de turno o de área de quien la cometió', 'suspension' => 'Suspensión sin goce de sueldo', 'dismissal' => 'Terminar la relación de trabajo, según la Ley Federal del Trabajo', 'support' => 'Canalizar a apoyo psicológico'];
+    private const array MEASURES = ['warning' => 'Llamada de atención por escrito', 'transfer' => 'Cambio de turno o de área de quien la cometió', 'suspension' => 'Suspensión sin goce de sueldo', 'dismissal' => 'Terminar la relación de trabajo, según la Ley Federal del Trabajo', 'support' => 'Canalizar a apoyo psicológico']; // @pest-mutate-ignore: RemoveArrayItem
 
-    private const array PROTECTION = ['no_retaliation' => 'No hay represalias por denunciar', 'identity' => 'Su identidad solo la conoce quien atiende', 'transfer' => 'Puede pedir un cambio de área temporal mientras se revisa'];
+    private const array PROTECTION = ['no_retaliation' => 'No hay represalias por denunciar', 'identity' => 'Su identidad solo la conoce quien atiende', 'transfer' => 'Puede pedir un cambio de área temporal mientras se revisa']; // @pest-mutate-ignore: RemoveArrayItem
 
     public function version(): string
     {

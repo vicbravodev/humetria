@@ -94,6 +94,14 @@ it('marks High a driver that follows the engagement and comes out low, and Mediu
     expect($priorities)->toBe([['driver' => 'recognition', 'level' => 'high'], ['driver' => 'leadership', 'level' => 'medium']]);
 });
 
+it('calls every driver Medium when no question has a favorable share to compare with', function (): void {
+    $rows = prioritiesRows(40, ['recognition' => prioritiesFollows(), 'leadership' => prioritiesFlattened(6)]);
+
+    $priorities = Priorities::compute($rows, [], resolve(Thresholds::class));
+
+    expect($priorities)->toBe([['driver' => 'recognition', 'level' => 'medium'], ['driver' => 'leadership', 'level' => 'medium']]);
+});
+
 it('leaves out a driver with no relation to the engagement', function (): void {
     $priorities = Priorities::compute(prioritiesRows(40, ['recognition' => prioritiesFollows()]), prioritiesByKey(['recognition' => 30]), resolve(Thresholds::class));
 
@@ -159,6 +167,13 @@ it('does not break when everybody answers the same: no variance, no priority', f
     );
 
     expect(Priorities::compute($rows, prioritiesByKey(), resolve(Thresholds::class)))->toBe([]);
+});
+
+it('still relates a driver that moves with the engagement in a single answer: only no variance at all is no relation', function (): void {
+    // Everybody answers 3 but the one most engaged, who answers 4: the spread is under 1, and it is still a spread.
+    $rows = prioritiesRows(40, ['recognition' => fn (int $i): int => $i === 4 ? 4 : 3]);
+
+    expect(array_column(Priorities::compute($rows, prioritiesByKey(), resolve(Thresholds::class)), 'driver'))->toBe(['recognition']);
 });
 
 it('averages the engagement questions the person answered and skips who answered none', function (): void {

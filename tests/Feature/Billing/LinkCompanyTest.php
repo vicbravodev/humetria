@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Modules\Billing\Actions\LinkCompany;
+use App\Modules\Billing\Actions\SearchLinkableCompanies;
 use App\Modules\Billing\Http\Requests\LinkCompanyRequest;
 use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(LinkCompany::class, LinkCompanyRequest::class);
+mutates(LinkCompany::class, LinkCompanyRequest::class, SearchLinkableCompanies::class);
 
 it('links an existing company to an account from a day, and logs and audits it', function (): void {
     Log::spy();
@@ -146,6 +147,18 @@ it('finds the companies that have no payer yet, by name or RFC, for the field th
         ['value' => $closed->id, 'label' => 'Zapatería Cerrada · '.$closed->rfc],
         ['value' => $free->id, 'label' => 'Zapatería Libre · ZAP010101AB1'],
     ]);
+});
+
+it('reads three times the limit before dropping the companies that already have a payer', function (): void {
+    $account = BillingAccount::factory()->create();
+    $companies = array_map(fn (int $n): Tenant => Tenant::factory()->create(['trade_name' => "Zeta {$n}"]), range(1, 8));
+    foreach ([0, 1, 2, 3, 5] as $paid) {
+        AccountCompany::factory()->for($account, 'account')->create(['tenant_id' => $companies[$paid]->id]);
+    }
+
+    $found = resolve(SearchLinkableCompanies::class)->handle('zeta', 2);
+
+    expect(array_column($found, 'value'))->toBe([$companies[4]->id]);
 });
 
 it('keeps the search of companies for the superadmin', function (): void {

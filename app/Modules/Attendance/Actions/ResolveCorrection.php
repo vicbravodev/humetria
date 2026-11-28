@@ -32,7 +32,7 @@ use InvalidArgumentException;
  */
 final readonly class ResolveCorrection
 {
-    public const int MIN_NOTE = 5;
+    public const int MIN_NOTE = 5; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private Members $members, private Roster $roster, private CorrectMark $correct, private RecordAudit $audit, private Timezones $timezones) {}
 

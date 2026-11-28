@@ -19,6 +19,7 @@ use App\Modules\Engagement\Models\Comment;
 use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Leave\Models\LeaveRequest;
+use App\Modules\Leave\Support\CompanyPendingRequests;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Seating\Contracts\SeatingRoute;
 use App\Modules\Seating\Models\PositionAssignment;
@@ -33,7 +34,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 
-mutates(AttendanceReader::class, CompensationReader::class, DisclosureReader::class, OrgChartReader::class, SeatingReader::class, VacationsReader::class, ComplaintsReader::class, PulseReader::class, ClimateReader::class, App\Modules\Assistant\Support\Readers\SurveyLine::class);
+mutates(AttendanceReader::class, CompensationReader::class, DisclosureReader::class, OrgChartReader::class, SeatingReader::class, VacationsReader::class, ComplaintsReader::class, PulseReader::class, ClimateReader::class, App\Modules\Assistant\Support\Readers\SurveyLine::class, CompanyPendingRequests::class);
 
 beforeEach(function (): void {
     $this->a = Tenant::factory()->create();

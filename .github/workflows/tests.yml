@@ -39,6 +39,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       code: ${{ steps.changed.outputs.code }}
+      dependencies: ${{ steps.changed.outputs.dependencies }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -46,6 +47,9 @@ jobs:
           # Two commits: a pull request is checked out as its merge commit and a merge to main is one commit, so the
           # first parent is what the change landed on.
           fetch-depth: 2
+          # Only the scripts it runs; git diff reads the commits, not the files (public/video alone weighs 232 MB).
+          sparse-checkout: scripts
+          filter: blob:none
 
       - name: Does this change need the pipeline?
         id: changed
@@ -60,6 +64,7 @@ jobs:
             paths=$(git diff --no-renames --name-only HEAD^1 HEAD)
           fi
           echo "code=$(printf '%s\n' "$paths" | bash scripts/ci-code-changed.sh)" >> "$GITHUB_OUTPUT"
+          echo "dependencies=$(printf '%s\n' "$paths" | bash scripts/ci-dependencies-changed.sh)" >> "$GITHUB_OUTPUT"
 
   # The frontend, built once: the client (public/build), the SSR bundle (bootstrap/ssr) and Wayfinder's generated files.
   # Every job that serves pages downloads it instead of building again.
@@ -104,7 +109,8 @@ jobs:
             resources/js/routes
             resources/js/wayfinder
           if-no-files-found: error
-          retention-days: 1
+          # A week: a job run again days later still downloads it.
+          retention-days: 7
       # The first red job stops the whole run: nothing keeps spending minutes over a pipeline that cannot pass.
       - name: Cancel the run
         if: failure()
@@ -133,10 +139,20 @@ jobs:
         with:
           assets: none
 
+      # Only when the change touches the dependencies: an advisory published today does not turn red a change that did not
+      # touch them. audit.yml audits main every day.
       - name: Audit Dependencies
+        if: needs.changes.outputs.dependencies == 'true'
         run: |
           composer audit
           bash scripts/npm-audit.sh
+
+      # PHPStan's result cache: it analyses again only the files that changed since the last run it restores.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: /tmp/phpstan
+          key: phpstan-${{ github.sha }}
+          restore-keys: phpstan-
 
       - name: Pint and PHPStan
         run: |
@@ -167,7 +183,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      actions: write
     timeout-minutes: 30
     services: *postgres
     strategy:
@@ -184,22 +199,26 @@ jobs:
           coverage: pcov
           assets: download
 
+      # A hung test stops here, not at the job's 30 minutes.
       - name: Unit and Feature with coverage (shard ${{ matrix.shard }}/3)
-        run: vendor/bin/pest --parallel --exclude-testsuite=Browser,Ssr --shard=${{ matrix.shard }}/3 --coverage-php=coverage-${{ matrix.shard }}.cov
+        timeout-minutes: 15
+        run: vendor/bin/pest --parallel --exclude-testsuite=Browser,Ssr --shard=${{ matrix.shard }}/3 --coverage-php=coverage-${{ matrix.shard }}.cov --log-junit=junit-tests-${{ matrix.shard }}.xml
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: coverage-${{ matrix.shard }}
           path: coverage-${{ matrix.shard }}.cov
           if-no-files-found: error
-          retention-days: 1
-      # The first red job stops the whole run: nothing keeps spending minutes over a pipeline that cannot pass.
-      - name: Cancel the run
-        if: failure()
-        continue-on-error: true  # a pull request from a fork has a read-only token; the job still fails by itself
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh run cancel "$GITHUB_RUN_ID"
+          retention-days: 7
+
+      # The time of each test class this shard measured: scripts/shard-timings.php writes it into tests/.pest/shards.json
+      # (docs/testing.md, «Los shards»).
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: timings-tests-${{ matrix.shard }}
+          path: junit-tests-${{ matrix.shard }}.xml
+          if-no-files-found: error
+          retention-days: 30
 
   # The coverage of the three shards together. Pest does not apply --min in parallel, so the script reads the report.
   coverage:
@@ -208,7 +227,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      actions: write
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -229,28 +247,20 @@ jobs:
         run: |
           php scripts/coverage-merge.php coverage.xml coverage-*.cov
           php scripts/coverage-min.php coverage.xml 90
-      # The first red job stops the whole run: nothing keeps spending minutes over a pipeline that cannot pass.
-      - name: Cancel the run
-        if: failure()
-        continue-on-error: true  # a pull request from a fork has a read-only token; the job still fails by itself
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh run cancel "$GITHUB_RUN_ID"
 
-  # The browser tests, in four shards balanced by the time of each file (tests/.pest/shards.json).
+  # The browser tests, in six shards balanced by the time of each file (tests/.pest/shards.json).
   browser:
     needs: [changes, build]
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      actions: write
     timeout-minutes: 30
     services: *postgres
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -261,8 +271,20 @@ jobs:
           assets: download
           playwright: 'true'
 
-      - name: Browser tests (shard ${{ matrix.shard }}/4)
-        run: composer test:browser -- --shard=${{ matrix.shard }}/4
+      # A hung test stops here, not at the job's 30 minutes.
+      - name: Browser tests (shard ${{ matrix.shard }}/6)
+        timeout-minutes: 15
+        # Three processes, not the four of composer test:browser: on the 4 cores of the runner, four Chromium, four PHP and
+        # Postgres fought for the CPU and steps timed out at random.
+        run: php artisan test --testsuite=Browser --parallel --processes=3 --shard=${{ matrix.shard }}/6 --log-junit=junit-browser-${{ matrix.shard }}.xml
+
+      # The time of each test class this shard measured (docs/testing.md, «Los shards»).
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: timings-browser-${{ matrix.shard }}
+          path: junit-browser-${{ matrix.shard }}.xml
+          if-no-files-found: error
+          retention-days: 30
 
       # What the page looked like when an assertion failed (Pest Browser saves it on every failure).
       - name: Screenshots of the failures
@@ -273,13 +295,6 @@ jobs:
           path: tests/Browser/Screenshots
           if-no-files-found: ignore
           retention-days: 7
-      # The first red job stops the whole run: nothing keeps spending minutes over a pipeline that cannot pass.
-      - name: Cancel the run
-        if: failure()
-        continue-on-error: true  # a pull request from a fork has a read-only token; the job still fails by itself
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh run cancel "$GITHUB_RUN_ID"
 
   # The tests that need a real Node and a real Docker: the SSR bundle served by Node under the browser (composer test:ssr) and
   # the `ssr` image, built and run with the restrictions of compose.production.yaml (scripts/ssr/container-test.sh). A broken
@@ -290,7 +305,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      actions: write
     timeout-minutes: 30
     services: *postgres
     steps:
@@ -320,13 +334,6 @@ jobs:
           path: tests/Browser/Screenshots
           if-no-files-found: ignore
           retention-days: 7
-      # The first red job stops the whole run: nothing keeps spending minutes over a pipeline that cannot pass.
-      - name: Cancel the run
-        if: failure()
-        continue-on-error: true  # a pull request from a fork has a read-only token; the job still fails by itself
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh run cancel "$GITHUB_RUN_ID"
 
   # The required check: every job passed, or the change was only documentation and they were skipped.
   ci:
@@ -340,6 +347,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # Only the script of the verdict.
+          sparse-checkout: scripts
+          filter: blob:none
 
       - name: Every job passed
         env:

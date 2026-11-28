@@ -9,6 +9,7 @@ use App\Modules\Billing\Exceptions\WhatsAppQuotaExceeded;
 use App\Modules\Billing\Listeners\CountWhatsApp;
 use App\Modules\Billing\Models\UsageCounter;
 use App\Modules\Billing\Models\UsageEvent;
+use App\Modules\Billing\Support\CounterHold;
 use App\Modules\Billing\Support\LedgerWhatsAppQuota;
 use App\Modules\Messaging\Data\FailureCause;
 use App\Modules\Messaging\Data\InvitationReference;
@@ -23,7 +24,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
-mutates(LedgerWhatsAppQuota::class, CountWhatsApp::class, ReleaseBulkHolds::class);
+mutates(LedgerWhatsAppQuota::class, CountWhatsApp::class, ReleaseBulkHolds::class, CounterHold::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-18 18:00:00');

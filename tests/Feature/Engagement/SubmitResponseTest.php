@@ -10,6 +10,7 @@ use App\Modules\Engagement\Models\Invitation;
 use App\Modules\Engagement\Models\Response;
 use App\Modules\Engagement\Models\Survey;
 use App\Modules\Engagement\Support\Bank\Questionnaire;
+use App\Modules\Engagement\Support\OpenedInvitation;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
@@ -22,7 +23,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(SubmitResponse::class, SubmitResponseRequest::class, RespondentController::class);
+mutates(SubmitResponse::class, SubmitResponseRequest::class, RespondentController::class, OpenedInvitation::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-09 15:00:00');
@@ -89,6 +90,18 @@ it('stores one response with the group of the invitation and each comment on its
         ->and(Comment::query()->where('item_key', 'manager.change')->sole()->comment_group_id)->toBe($this->groupId)
         ->and(Comment::query()->where('item_key', 'open.best')->sole()->comment_group_id)->toBeNull()
         ->and($this->invitation->fresh()?->answered)->toBeTrue();
+});
+
+it('retries the whole survey up to 3 times when it deadlocks with another write', function (): void {
+    $real = app('db');
+    $db = Mockery::mock($real);
+    $db->shouldReceive('transaction')->once()->withArgs(fn (Closure $callback, int $attempts = 1): bool => $attempts === 3)
+        ->andReturnUsing(fn (Closure $callback, int $attempts) => $real->transaction($callback, $attempts));
+    DB::swap($db);
+
+    resolve(SubmitResponse::class)->handle('the-token', submittedAnswers(), [], 9);
+
+    expect(Response::query()->count())->toBe(1);
 });
 
 it('stores an all-omitted response', function (): void {

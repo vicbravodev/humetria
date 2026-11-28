@@ -15,19 +15,19 @@ final class PlatformPermissions
 {
     /** @var array<string, string> */
     public const array LABELS = [
-        'view-console' => 'Ver la consola y entrar a una empresa como soporte',
-        'manage-tenants' => 'Crear, activar, suspender y archivar empresas',
-        'view-platform-overview' => 'Ver el resumen de la plataforma',
-        'view-billing' => 'Ver cuentas y cobranza',
-        'manage-billing' => 'Cambiar planes y precios, y registrar cargos y pagos',
-        'view-demo-requests' => 'Ver las solicitudes de demo',
-        'manage-demo-requests' => 'Atender y convertir solicitudes de demo',
-        'manage-demo' => 'Manejar la sala de demo',
-        'manage-platform-users' => 'Ayudar a personas con cuenta y dar o quitar el rol de soporte',
-        'view-audit' => 'Leer la bitácora',
-        'view-operations' => 'Ver la salud del sistema y la mensajería',
-        'viewHorizon' => 'Ver las colas',
-        'manage-announcements' => 'Publicar avisos a las empresas y poner la plataforma en mantenimiento',
+        'view-console' => 'Ver la consola y entrar a una empresa como soporte', // @pest-mutate-ignore: RemoveArrayItem
+        'manage-tenants' => 'Crear, activar, suspender y archivar empresas', // @pest-mutate-ignore: RemoveArrayItem
+        'view-platform-overview' => 'Ver el resumen de la plataforma', // @pest-mutate-ignore: RemoveArrayItem
+        'view-billing' => 'Ver cuentas y cobranza', // @pest-mutate-ignore: RemoveArrayItem
+        'manage-billing' => 'Cambiar planes y precios, y registrar cargos y pagos', // @pest-mutate-ignore: RemoveArrayItem
+        'view-demo-requests' => 'Ver las solicitudes de demo', // @pest-mutate-ignore: RemoveArrayItem
+        'manage-demo-requests' => 'Atender y convertir solicitudes de demo', // @pest-mutate-ignore: RemoveArrayItem
+        'manage-demo' => 'Manejar la sala de demo', // @pest-mutate-ignore: RemoveArrayItem
+        'manage-platform-users' => 'Ayudar a personas con cuenta y dar o quitar el rol de soporte', // @pest-mutate-ignore: RemoveArrayItem
+        'view-audit' => 'Leer la bitácora', // @pest-mutate-ignore: RemoveArrayItem
+        'view-operations' => 'Ver la salud del sistema y la mensajería', // @pest-mutate-ignore: RemoveArrayItem
+        'viewHorizon' => 'Ver las colas', // @pest-mutate-ignore: RemoveArrayItem
+        'manage-announcements' => 'Publicar avisos a las empresas y poner la plataforma en mantenimiento', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     /**

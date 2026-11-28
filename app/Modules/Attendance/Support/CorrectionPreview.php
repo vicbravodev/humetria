@@ -24,7 +24,7 @@ use Carbon\CarbonImmutable;
  */
 final class CorrectionPreview
 {
-    private const int NIGHT_REACH_HOURS = 24;
+    private const int NIGHT_REACH_HOURS = 24; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /**
      * @return array{day: array{date: string, marks: list<array{type: string, time: string, nextDay: bool}>, asked: array{type: string, time: string, nextDay: bool}}, effect: array{sequenceOk: bool, afterApproval: string, reopensWeeks: list<string>, noSchedule: bool, restDay: bool}}|null

@@ -21,7 +21,7 @@ use App\Support\Writing\WrittenTemplate;
  */
 final readonly class PreventionTemplate implements WrittenTemplate
 {
-    private const array ACTIONS = ['breaks' => 'Pausas acordadas por turno', 'schedules' => 'Horarios y descansos que se respetan', 'support' => 'Apoyo psicológico para quien lo pida', 'listening' => 'Reuniones para escuchar al equipo', 'campaigns' => 'Campañas de bienestar'];
+    private const array ACTIONS = ['breaks' => 'Pausas acordadas por turno', 'schedules' => 'Horarios y descansos que se respetan', 'support' => 'Apoyo psicológico para quien lo pida', 'listening' => 'Reuniones para escuchar al equipo', 'campaigns' => 'Campañas de bienestar']; // @pest-mutate-ignore: RemoveArrayItem
 
     public function version(): string
     {

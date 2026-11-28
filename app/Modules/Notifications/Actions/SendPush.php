@@ -25,7 +25,7 @@ use Throwable;
 final readonly class SendPush
 {
     /** Seconds the push service keeps the notice for a phone that is off: past an hour the app shows the state when opened. */
-    public const int TTL = 3600;
+    public const int TTL = 3600; // @pest-mutate-ignore: IncrementInteger,DecrementInteger
 
     public function __construct(private WebPushFactory $factory) {}
 

@@ -3,9 +3,15 @@
 declare(strict_types=1);
 
 use App\Http\Impersonation;
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Modules\Campaigns\Models\Campaign;
+use App\Modules\Demos\Actions\RewindDemoStep;
+use App\Modules\Demos\Actions\SkipDemoStep;
 use App\Modules\Demos\Enums\DemoSessionStatus;
 use App\Modules\Demos\Models\DemoSession;
+use App\Modules\Demos\Support\SessionCenter;
+use App\Modules\Demos\Support\SessionGuide;
+use App\Modules\Demos\Support\TourCatalog;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -18,6 +24,8 @@ use Inertia\Testing\AssertableInertia as Assert;
  * through impersonation) with a session under way gets it, in every panel page (the shared prop `demoGuide`) and from
  * the poll of the dock. The current step is the first one neither done (by the real data) nor skipped.
  */
+
+mutates(SessionGuide::class, SkipDemoStep::class, RewindDemoStep::class, TourCatalog::class, SessionCenter::class, HandleInertiaRequests::class);
 
 beforeEach(function (): void {
     $this->demo = Tenant::factory()->demo()->create();

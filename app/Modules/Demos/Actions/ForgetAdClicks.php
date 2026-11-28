@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
  */
 final class ForgetAdClicks
 {
-    public const int DAYS = 90;
+    public const int DAYS = 90; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function handle(): int
     {

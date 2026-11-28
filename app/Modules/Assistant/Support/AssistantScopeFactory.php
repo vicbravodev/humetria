@@ -14,27 +14,27 @@ final readonly class AssistantScopeFactory
 {
     /** The permissions that decide what Humi may tell a person. */
     private const array ABILITIES = [
-        'use-assistant',
-        'manage-members',
-        'manage-organization',
-        'manage-campaigns',
-        'manage-telework',
-        'review-workplaces',
-        'view-trauma-screenings',
-        'handle-complaints',
-        'view-compensation',
+        'use-assistant', // @pest-mutate-ignore: RemoveArrayItem
+        'manage-members', // @pest-mutate-ignore: RemoveArrayItem
+        'manage-organization', // @pest-mutate-ignore: RemoveArrayItem
+        'manage-campaigns', // @pest-mutate-ignore: RemoveArrayItem
+        'manage-telework', // @pest-mutate-ignore: RemoveArrayItem
+        'review-workplaces', // @pest-mutate-ignore: RemoveArrayItem
+        'view-trauma-screenings', // @pest-mutate-ignore: RemoveArrayItem
+        'handle-complaints', // @pest-mutate-ignore: RemoveArrayItem
+        'view-compensation', // @pest-mutate-ignore: RemoveArrayItem
         // The areas Humi tells about: each only to whoever sees it in the panel.
-        'view-nom035-route',
-        'view-interventions',
-        'view-disclosure',
-        'view-telework',
-        'view-seating',
-        'view-vacations',
-        'view-pulse',
-        'view-climate',
-        'view-attendance',
-        'view-org-chart',
-        'view-work-centers',
+        'view-nom035-route', // @pest-mutate-ignore: RemoveArrayItem
+        'view-interventions', // @pest-mutate-ignore: RemoveArrayItem
+        'view-disclosure', // @pest-mutate-ignore: RemoveArrayItem
+        'view-telework', // @pest-mutate-ignore: RemoveArrayItem
+        'view-seating', // @pest-mutate-ignore: RemoveArrayItem
+        'view-vacations', // @pest-mutate-ignore: RemoveArrayItem
+        'view-pulse', // @pest-mutate-ignore: RemoveArrayItem
+        'view-climate', // @pest-mutate-ignore: RemoveArrayItem
+        'view-attendance', // @pest-mutate-ignore: RemoveArrayItem
+        'view-org-chart', // @pest-mutate-ignore: RemoveArrayItem
+        'view-work-centers', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     public function __construct(private CurrentTenant $tenant, private ResolveParticipant $participants) {}

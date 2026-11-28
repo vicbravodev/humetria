@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Http\Middleware\HandleInertiaRequests;
 use Inertia\Testing\AssertableInertia as Assert;
+
+mutates(HandleInertiaRequests::class);
 
 test('the landing shares no social links while none is configured', function () {
     config(['app.social' => ['linkedin' => null, 'facebook' => '', 'instagram' => null]]);

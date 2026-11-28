@@ -10,6 +10,7 @@ use App\Modules\Complaints\Models\Complaint;
 use App\Modules\Complaints\Models\ComplaintAssignment;
 use App\Modules\Complaints\Models\ComplaintChannel;
 use App\Modules\Complaints\Models\ComplaintEntry;
+use App\Modules\Complaints\Support\CaseThread;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Carbon;
@@ -17,7 +18,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(OpenFollowUp::class, SendReporterMessage::class, WithdrawComplaint::class);
+mutates(OpenFollowUp::class, SendReporterMessage::class, WithdrawComplaint::class, CaseThread::class);
 
 const REFERENCE = 'ABCD2345';
 const KEY = 'KEYK1234KEYK5678KEYK';

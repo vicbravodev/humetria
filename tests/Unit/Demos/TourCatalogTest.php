@@ -13,6 +13,8 @@ use Tests\TestCase;
  * copy is fixed (driver.js writes it as HTML): no placeholder and nothing of the demo company.
  */
 
+mutates(TourCatalog::class);
+
 uses(TestCase::class);
 
 /** @return list<TourStep> every step of every tour */

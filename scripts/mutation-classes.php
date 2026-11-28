@@ -14,11 +14,15 @@ declare(strict_types=1);
  * test it runs and gives each mutant's process one alternative per covering test: a line the whole suite touches
  * overflows the OS argument limit (128 KB) and the run dies ("Argument list too long").
  *
- * Usage: php scripts/mutation-classes.php tests [--plan]
+ * With --plan --changed it reads changed paths from stdin (one per line) and keeps only the modules whose application
+ * code (app/) changed: composer mutate:changed, the mutation that closes a feature.
+ *
+ * Usage: php scripts/mutation-classes.php tests [--plan [--changed]]
  */
 
-$plan = in_array('--plan', $argv ?? [], true);
-$testsDirectory = rtrim($argv[1] ?? 'tests', '/');
+$arguments = $argv ?? [];
+$plan = in_array('--plan', $arguments, true);
+$testsDirectory = rtrim($arguments[1] ?? 'tests', '/');
 $testFilesByClass = [];
 
 foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($testsDirectory, FilesystemIterator::SKIP_DOTS)) as $file) {
@@ -33,7 +37,9 @@ $classes = array_keys($testFilesByClass);
 sort($classes);
 
 if ($plan) {
-    echo planByModule($testFilesByClass);
+    $lines = planByModule($testFilesByClass);
+
+    echo in_array('--changed', $arguments, true) ? onlyChangedModules($lines, (string) stream_get_contents(STDIN)) : $lines;
 
     return;
 }
@@ -71,7 +77,8 @@ function planByModule(array $testFilesByClass): string
     $modules = [];
 
     foreach ($testFilesByClass as $class => $files) {
-        if (preg_match('/\\\\(Http\\\\(Controllers|Requests)|Notifications)\\\\/', $class) === 1) {
+        // A module's notifications are thin; a module called Notifications is not.
+        if (preg_match('/\\\\(Http\\\\(Controllers|Requests)|(?<!Modules\\\\)Notifications)\\\\/', $class) === 1) {
             continue;
         }
 
@@ -93,6 +100,26 @@ function planByModule(array $testFilesByClass): string
     }
 
     return $lines;
+}
+
+/** The lines of the plan whose module has a changed file under app/ (App\Modules\X, or Kernel for the rest). */
+function onlyChangedModules(string $lines, string $changedPaths): string
+{
+    $modules = [];
+
+    foreach (array_filter(explode("\n", $changedPaths)) as $path) {
+        if (str_starts_with($path, 'app/')) {
+            $modules[] = preg_match('#^app/Modules/(\w+)/#', $path, $match) === 1 ? $match[1] : 'Kernel';
+        }
+    }
+
+    $kept = '';
+
+    foreach (array_filter(explode("\n", $lines)) as $line) {
+        $kept .= in_array(explode("\t", $line)[0], $modules, true) ? $line."\n" : '';
+    }
+
+    return $kept;
 }
 
 /**

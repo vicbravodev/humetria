@@ -1358,3 +1358,34 @@ function assertPrintLetterhead(AwaitableWebpage $page, string $center): void
         ->assertScript("() => document.querySelector('[data-slot=\"print-letterhead\"]').innerText.includes(".json_encode($center).')', true)
         ->assertScript('() => getComputedStyle(document.querySelector(\'[data-slot="print-letterhead"]\').parentElement).page', 'dossier');
 }
+
+/** Makes entering the company `$tenantId` fail, as a sweep over every company meets it; the others enter as always. */
+function failToEnter(string $tenantId): void
+{
+    $directory = resolve(App\Modules\Tenancy\Contracts\Companies::class);
+
+    app()->instance(App\Modules\Tenancy\Contracts\Companies::class, new readonly class($directory, $tenantId) implements App\Modules\Tenancy\Contracts\Companies
+    {
+        public function __construct(private App\Modules\Tenancy\Contracts\Companies $directory, private string $failing) {}
+
+        public function enter(string $tenantId): App\Modules\Tenancy\Data\CompanySummary
+        {
+            return $tenantId === $this->failing ? throw new RuntimeException('The company could not be entered.') : $this->directory->enter($tenantId);
+        }
+
+        public function enterBySlug(string $slug): ?App\Modules\Tenancy\Data\CompanySummary
+        {
+            return $this->directory->enterBySlug($slug);
+        }
+
+        public function current(): App\Modules\Tenancy\Data\CompanySummary
+        {
+            return $this->directory->current();
+        }
+
+        public function contact(): ?string
+        {
+            return $this->directory->contact();
+        }
+    });
+}

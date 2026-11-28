@@ -186,6 +186,10 @@ it('is Failed when the provider is down, and the failure keeps no text', functio
     expect(summaryOf($this->survey)?->status)->toBe(SummaryStatus::Failed);
 });
 
+it('tries a summary three times before giving up', function (): void {
+    expect((new SummarizeComments($this->survey->id, null))->tries)->toBe(3);
+});
+
 it('marks the summary as pending while it is retried', function (): void {
     CommentScreener::fake(fn () => throw new RuntimeException('down'));
     summaryComments($this->survey, 5, 5);

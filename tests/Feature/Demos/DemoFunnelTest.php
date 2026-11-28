@@ -6,12 +6,15 @@ use App\Models\AuditEntry;
 use App\Models\User;
 use App\Modules\Demos\Enums\DemoStatus;
 use App\Modules\Demos\Models\DemoRequest;
+use App\Modules\Demos\Support\DemoListFilters;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Testing\AssertableInertia as Assert;
+
+mutates(DemoListFilters::class);
 
 it('names the stages of the funnel', function (DemoStatus $status, string $label): void {
     expect($status->label())->toBe($label);

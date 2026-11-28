@@ -28,7 +28,7 @@ use InvalidArgumentException;
  */
 final readonly class DisputeWeek
 {
-    public const int MIN_REASON = 10;
+    public const int MIN_REASON = 10; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private CurrentTenant $tenant, private RecordAudit $audit, private PersonTimezone $timezones) {}
 

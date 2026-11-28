@@ -7,6 +7,7 @@ use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Models\ParticipantInstrument;
 use App\Modules\Campaigns\Support\ChannelAnswers;
+use App\Modules\Campaigns\Support\InstrumentTally;
 use App\Modules\Messaging\Enums\DeliveryStatus;
 use App\Modules\Messaging\Support\ChannelDeliveryTallies;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -15,7 +16,7 @@ use App\Modules\Tenancy\Models\WorkCenter;
 use Database\Factories\Messaging\DeliveryFactory;
 use Database\Factories\Tenancy\TenantChannelFactory;
 
-mutates(ChannelDeliveryTallies::class, ChannelAnswers::class);
+mutates(ChannelDeliveryTallies::class, ChannelAnswers::class, InstrumentTally::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['slug' => 'acme']);

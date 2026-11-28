@@ -12,6 +12,7 @@ use App\Modules\Seating\Models\RiskAcknowledgment;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Models\StandingPosition;
 use App\Modules\Seating\Notifications\RisksToConfirm;
+use App\Modules\Seating\Support\PortalAssessment;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -26,7 +27,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(RequestAcknowledgment::class, RequestAcknowledgmentsForCenter::class, AcknowledgeRisks::class, SendRisksToConfirm::class, PortalAcknowledgmentController::class);
+mutates(RequestAcknowledgment::class, RequestAcknowledgmentsForCenter::class, AcknowledgeRisks::class, SendRisksToConfirm::class, PortalAcknowledgmentController::class, PortalAssessment::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-03-01 12:00:00');
@@ -45,7 +46,7 @@ function signedFor(string $employeeId, array $overrides = []): RiskAssessment
     return RiskAssessment::factory()->signed()->create(['tenant_id' => test()->tenant->id, 'employee_id' => $employeeId, 'position_id' => test()->position->id, 'work_center_id' => test()->center->id, ...$overrides]);
 }
 
-it('queues the link once when an assessment is signed', function (): void {
+it('queues the link once when an assessment is signed, with two more tries after a mail hiccup', function (): void {
     Queue::fake();
     $draft = RiskAssessment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'position_id' => $this->position->id, 'work_center_id' => $this->center->id,
         'scores' => ['standing_time' => 1, 'posture_change' => 1, 'surface' => 1, 'footwear' => 1, 'movement_space' => 1, 'discomfort' => 1, 'pauses' => 1], 'other_aspects' => 'Ninguno.', 'verified_on' => '2026-02-27']);
@@ -56,7 +57,8 @@ it('queues the link once when an assessment is signed', function (): void {
     $this->post(route('tenant.seating.assessments.sign', [$this->tenant, $draft->id]));
 
     Queue::assertPushed(SendRisksToConfirm::class, 1);
-    Queue::assertPushed(SendRisksToConfirm::class, fn (SendRisksToConfirm $job): bool => $job->tenantId === $this->tenant->id && $job->employeeId === $this->ana->id);
+    Queue::assertPushed(SendRisksToConfirm::class, fn (SendRisksToConfirm $job): bool => $job->tenantId === $this->tenant->id && $job->employeeId === $this->ana->id
+        && $job->tries === 3 && $job->backoff === [60, 300] && $job->uniqueFor === 600);
 });
 
 it('emails the person, as usted, the address of their Ley Silla page with no credential, when the job runs', function (): void {
@@ -248,4 +250,17 @@ it('queues the mail of the center when it fits the quota exactly', function (): 
     expect(resolve(RequestAcknowledgmentsForCenter::class)->handle($this->center->id))->toBe(['queued' => 1, 'withoutEmail' => 0]);
 
     Queue::assertPushed(SendRisksToConfirm::class, 1);
+});
+
+it('skips who left the company when it sends to a center, and still sends to the rest', function (): void {
+    Queue::fake();
+    signedFor($this->ana->id);
+    // One who left sorts before Ana and one after, by id and by name, so whatever the order the roster gives, one comes first.
+    foreach ([['00000000-0000-4000-8000-000000000001', 'Aarón Paz'], ['ffffffff-ffff-4fff-bfff-ffffffffffff', 'Zulema Ríos']] as [$id, $name]) {
+        $left = EmployeeFactory::new()->deactivated()->create(['id' => $id, 'tenant_id' => $this->tenant->id, 'work_center_id' => $this->center->id, 'name' => $name]);
+        signedFor($left->id);
+    }
+
+    expect(resolve(RequestAcknowledgmentsForCenter::class)->handle($this->center->id))->toBe(['queued' => 1, 'withoutEmail' => 0]);
+    Queue::assertPushed(SendRisksToConfirm::class, fn (SendRisksToConfirm $job): bool => $job->employeeId === $this->ana->id);
 });

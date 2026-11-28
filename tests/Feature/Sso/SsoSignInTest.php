@@ -4,11 +4,21 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Models\User;
+use App\Modules\Sso\Actions\CompleteSsoSignIn;
+use App\Modules\Sso\Actions\FindSsoCompany;
+use App\Modules\Sso\Actions\OpenSsoSignIn;
 use App\Modules\Sso\Models\SsoConnection;
 use App\Modules\Sso\Models\SsoDomain;
+use App\Modules\Sso\Support\IdentityClaims;
+use App\Modules\Sso\Support\IdToken;
+use App\Modules\Sso\Support\OidcDiscovery;
+use App\Modules\Sso\Support\OidcEndpoints;
+use App\Modules\Sso\Support\OidcProvider;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
 use Illuminate\Support\Facades\Log;
+
+mutates(CompleteSsoSignIn::class, FindSsoCompany::class, OpenSsoSignIn::class, IdentityClaims::class, IdToken::class, OidcDiscovery::class, OidcEndpoints::class, OidcProvider::class);
 
 const SSO_GENERIC = 'No pudimos iniciar tu sesión con SSO. Si el problema sigue, pide ayuda a quien administra tu cuenta.';
 
@@ -133,6 +143,19 @@ it('gives the same generic answer, and no session, to everything that cannot sig
     'the provider refusing the code' => ['the provider refusing the code', 'token_exchange_failed'],
     'a provider that names another issuer' => ['a provider that names another issuer', 'discovery_issuer_mismatch'],
     'a provider whose token endpoint is not https' => ['a provider whose token endpoint is not https', 'discovery_endpoints_invalid'],
+]);
+
+it('takes a token up to a minute past its expiry, for the clocks that drift, and not a second more', function (int $secondsAgo, bool $signsIn): void {
+    $this->freezeTime();
+    [$tenant] = ssoReady();
+    idpAnswers(['exp' => now()->subSeconds($secondsAgo)->timestamp]);
+
+    $response = ssoCallback($tenant);
+
+    $signsIn ? $this->assertAuthenticated() : $response->assertSessionHasErrors(['sso' => SSO_GENERIC]);
+})->with([
+    'expired a minute ago' => [60, true],
+    'expired a minute and a second ago' => [61, false],
 ]);
 
 it('never lets Humetría staff in through a company provider', function (): void {

@@ -7,6 +7,8 @@ use App\Modules\Disclosure\Models\DisseminationRecord;
 use App\Modules\Disclosure\Models\Document;
 use App\Modules\Disclosure\Models\DocumentCenter;
 use App\Modules\Disclosure\Support\CenterFacts;
+use App\Modules\Disclosure\Support\DeliveryStanding;
+use App\Modules\Disclosure\Support\Requirement;
 use App\Modules\Disclosure\Support\Requirements;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -14,7 +16,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(Requirements::class, CenterFacts::class);
+mutates(Requirements::class, CenterFacts::class, DeliveryStanding::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['slug' => 'acme']);
@@ -115,4 +117,10 @@ it('does not judge delivery of a center without policy', function (): void {
 
     $this->actingAs($this->hr)->get(route('tenant.disclosure.index', $this->tenant))
         ->assertInertia(fn (Assert $page) => $page->where('centers.data.0.requirements', fn ($rows) => collect($rows)->pluck('code')->all() === ['D1', 'D4', 'D5', 'D6', 'D7', 'D8']));
+});
+
+it('does not judge the results of a center when nothing is known of its evaluations', function (): void {
+    $codes = array_map(fn (Requirement $requirement): string => $requirement->code, resolve(Requirements::class)->for(new CenterFacts(null)));
+
+    expect($codes)->toBe(['D1', 'D4', 'D5', 'D6', 'D8']);
 });

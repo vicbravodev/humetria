@@ -72,3 +72,20 @@ it('searches companies by trade name, legal name or RFC, without regard to case 
         ->and(count($registry->search('', 2)))->toBe(2)
         ->and(array_map(fn ($brief): string => $brief->tradeName, $registry->search('', 1)))->toBe(['Acme']);
 });
+
+it('finds a company by the slug of its address, and nothing for a slug that is no company', function (): void {
+    $tenant = Tenant::factory()->create(['trade_name' => 'Acme', 'slug' => 'acme']);
+    Tenant::factory()->create(['slug' => 'otra']);
+    $registry = resolve(CompanyRegistry::class);
+
+    expect($registry->findBySlug('acme')?->id)->toBe($tenant->id)
+        ->and($registry->findBySlug('acme')?->tradeName)->toBe('Acme')
+        ->and($registry->findBySlug('nadie'))->toBeNull();
+});
+
+it('lists the id of every company, as a list', function (): void {
+    $a = Tenant::factory()->create();
+    $b = Tenant::factory()->create();
+
+    expect(resolve(CompanyRegistry::class)->ids())->toBeList()->toEqualCanonicalizing([$a->id, $b->id]);
+});

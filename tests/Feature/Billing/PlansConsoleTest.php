@@ -3,11 +3,15 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Billing\Actions\DescribeCatalog;
 use App\Modules\Billing\Enums\Plan;
 use App\Modules\Billing\Enums\SubscriptionStatus;
 use App\Modules\Billing\Models\Subscription;
+use App\Modules\Tenancy\Contracts\CompanyRegistry;
 use App\Modules\Tenancy\Models\Tenant;
 use Inertia\Testing\AssertableInertia as Assert;
+
+mutates(DescribeCatalog::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-26 15:00:00');
@@ -83,6 +87,13 @@ it('searches the negotiated prices by the company', function (): void {
         ->where('negotiated.total', 1)
         ->where('negotiated.data.0.company', 'Acme Industrial')
         ->where('filters', ['q' => 'acme']));
+});
+
+it('reads at most 200 companies by name for a search', function (): void {
+    $this->mock(CompanyRegistry::class)->shouldReceive('search')->once()->with('acme', 200)->andReturn([])
+        ->getMock()->shouldReceive('many')->andReturn([]);
+
+    $this->actingAs(superadmin())->get(route('billing.plans.index', ['q' => 'acme']))->assertOk();
 });
 
 it('pages the negotiated prices 25 at a time', function (): void {

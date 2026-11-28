@@ -10,6 +10,7 @@ use App\Modules\Disclosure\Actions\IssuePageLink;
 use App\Modules\Disclosure\Actions\PublishResults;
 use App\Modules\Disclosure\Actions\WithdrawResults;
 use App\Modules\Disclosure\Models\ResultPublication;
+use App\Modules\Disclosure\Support\ResultsStanding;
 use App\Modules\Results\Contracts\RiskResults;
 use App\Modules\Results\Data\AreaRisk;
 use App\Modules\Results\Data\RiskBreakdown;
@@ -17,14 +18,17 @@ use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\Events\TransactionBeginning;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(PublishResults::class, WithdrawResults::class);
+mutates(PublishResults::class, WithdrawResults::class, ResultsStanding::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-20 18:00:00');
@@ -231,6 +235,14 @@ it('titles the results by the guide: the work environment is evaluated only abov
     $this->get(route('workers.center', [$token, $big->id]))->assertInertia(fn (Assert $page) => $page->where('results.title', 'Resultados de la identificación y análisis de los factores de riesgo psicosocial y de la evaluación del entorno organizacional'));
 });
 
+it('titles the results of a center of exactly 50 people by Guía II: no evaluation of the work environment', function (): void {
+    $limit = WorkCenter::factory()->for($this->tenant)->create();
+    staffOf($this->tenant, $limit, 50);
+    $token = (string) resolve(IssuePageLink::class)->handle($this->hr->id)->token();
+
+    $this->get(route('workers.center', [$token, $limit->id]))->assertInertia(fn (Assert $page) => $page->where('results.title', 'Resultados de la identificación y análisis de los factores de riesgo psicosocial'));
+});
+
 it('says whether the page of the people is active, so publishing warns they have nowhere to read the results yet', function (): void {
     disclosureResultsEvaluation($this);
     $page = fn () => $this->actingAs($this->hr)->get(route('tenant.disclosure.results', $this->tenant));
@@ -287,4 +299,19 @@ it('scopes the publications to the current company', function (): void {
 
     expect(ResultPublication::query()->pluck('id')->all())->toBe([$own->id])
         ->and(app(CampaignRecords::class)->find($own->campaign_id))->not->toBeNull();
+});
+
+it('gives the request that lost a race the publication of the one that won, and writes no second one', function (): void {
+    $campaign = disclosureResultsEvaluation($this);
+    // The other request writes its publication between this one's check and its insert: as the transaction of the insert begins.
+    Event::listen(TransactionBeginning::class, function () use ($campaign): void {
+        if (DB::table('disclosure_result_publications')->where('campaign_id', $campaign->id)->doesntExist()) {
+            DB::table('disclosure_result_publications')->insert(['id' => (string) Str::uuid(), 'tenant_id' => $this->tenant->id, 'campaign_id' => $campaign->id, 'work_center_id' => $campaign->work_center_id, 'show_measures' => false, 'published_at' => now(), 'published_by' => $this->hr->id, 'created_at' => now(), 'updated_at' => now()]);
+        }
+    });
+
+    $publication = resolve(PublishResults::class)->handle($campaign->id, $this->hr->id);
+
+    expect(ResultPublication::query()->where('campaign_id', $campaign->id)->count())->toBe(1)
+        ->and($publication->id)->toBe(ResultPublication::query()->where('campaign_id', $campaign->id)->value('id'));
 });

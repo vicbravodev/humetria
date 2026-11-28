@@ -6,12 +6,13 @@ use App\Modules\Organization\Actions\PlanEmployeeImport;
 use App\Modules\Organization\Data\EmployeeImportPlan;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Support\EmployeeCsv;
+use App\Modules\Organization\Support\ImportChanges;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\Http\UploadedFile;
 use Inertia\Support\SessionKey;
 
-mutates(PlanEmployeeImport::class, EmployeeCsv::class);
+mutates(PlanEmployeeImport::class, EmployeeCsv::class, ImportChanges::class);
 
 const MANAGER_HEADER = 'nombre,correo,celular,genero,centro_de_trabajo,area,puesto,numero_de_empleado,fecha_de_ingreso,jefe';
 

@@ -8,7 +8,10 @@ use App\Modules\Billing\Models\Payment;
 use App\Modules\Billing\Models\PaymentAllocation;
 use App\Modules\Billing\Models\Statement;
 use App\Modules\Billing\Models\Subscription;
+use App\Modules\Billing\Support\OpenBalances;
 use Inertia\Testing\AssertableInertia as Assert;
+
+mutates(OpenBalances::class);
 
 /** An issued statement of the account for this many pesos, issued that many days (and hours) ago. */
 function agedStatement(BillingAccount $account, int $pesos, int $days, int $hours = 0): Statement

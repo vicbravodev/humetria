@@ -8,6 +8,7 @@ use App\Modules\Compensation\Models\GradeSalary;
 use App\Modules\Compensation\Models\ReportShare;
 use App\Modules\Compensation\Models\SalaryOverride;
 use App\Modules\Compensation\Models\Scenario;
+use App\Modules\Compensation\Support\ShareMoments;
 use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Models\JobGrade;
@@ -16,7 +17,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(SharedReportController::class);
+mutates(SharedReportController::class, ShareMoments::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-04 10:00:00');

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Modules\Assistant\Exceptions\ScopeMismatch;
+use App\Modules\Assistant\Support\ScopeGuard;
 use App\Modules\Assistant\Tools\GetFirstSteps;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -11,7 +12,7 @@ use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Illuminate\JsonSchema\JsonSchemaTypeFactory;
 
-mutates(GetFirstSteps::class);
+mutates(GetFirstSteps::class, ScopeGuard::class);
 
 beforeEach(function (): void {
     config(['first_steps.enabled' => true]);
@@ -31,6 +32,7 @@ it('gives the owner each step with its state and its link', function (): void {
         ->and($card['rows'][0]['link'])->toBe("/admin/{$this->a->slug}/work-centers")
         ->and($card['rows'][1]['title'])->toBe('Carga a tu gente')
         ->and($card['rows'][1]['link'])->toStartWith("/admin/{$this->a->slug}/")
+        ->and($card['rows'][3]['title'])->toBe('Invita a alguien de tu equipo')
         ->and($card['rows'][4]['title'])->toBe('Conoce a Humi')
         ->and($card['rows'][4]['link'])->toBe("/admin/{$this->a->slug}");
 });

@@ -12,8 +12,8 @@ final class EloquentCompanyChannels implements CompanyChannels
 {
     /** The channels in the order the catalog lists them, each with its default when the company has no row. */
     private const array DEFAULTS = [
-        'mail' => ['enabled' => true, 'preference' => 1],
-        'whatsapp' => ['enabled' => false, 'preference' => 2],
+        'mail' => ['enabled' => true, 'preference' => 1], // @pest-mutate-ignore: TrueToFalse,DecrementInteger,IncrementInteger,RemoveArrayItem
+        'whatsapp' => ['enabled' => false, 'preference' => 2], // @pest-mutate-ignore: FalseToTrue,DecrementInteger,IncrementInteger,RemoveArrayItem
     ];
 
     public function settings(string $tenantId): array

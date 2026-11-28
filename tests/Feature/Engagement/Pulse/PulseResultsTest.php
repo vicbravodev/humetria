@@ -8,11 +8,14 @@ use App\Modules\Engagement\Events\SurveyClosed;
 use App\Modules\Engagement\Jobs\SummarizeComments;
 use App\Modules\Engagement\Listeners\QueueCommentSummaries;
 use App\Modules\Engagement\Support\Bank\ItemBank;
+use App\Modules\Engagement\Support\Results\ResultsPresenter;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
+
+mutates(ResultsPresenter::class);
 
 beforeEach(function (): void {
     workIn($this->tenant = Tenant::factory()->create(['slug' => 'acme']));

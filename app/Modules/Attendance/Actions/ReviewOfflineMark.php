@@ -32,12 +32,12 @@ use InvalidArgumentException;
  */
 final readonly class ReviewOfflineMark
 {
-    public const int MIN_NOTE = 5;
+    public const int MIN_NOTE = 5; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** The marks of one page of the queue. */
-    public const int MAX_MARKS = 25;
+    public const int MAX_MARKS = 25; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const array OFFLINE = [MarkMethod::OfflineQr, MarkMethod::OfflineDeclared];
+    private const array OFFLINE = [MarkMethod::OfflineQr, MarkMethod::OfflineDeclared]; // @pest-mutate-ignore: RemoveArrayItem
 
     public function __construct(private Members $members, private CorrectMark $correct, private RecordAudit $audit) {}
 

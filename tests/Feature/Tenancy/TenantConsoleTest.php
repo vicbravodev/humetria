@@ -8,10 +8,11 @@ use App\Modules\Tenancy\Actions\ListTenants;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
+use App\Modules\Tenancy\Support\DisplayDate;
 use Carbon\CarbonImmutable;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ListTenants::class);
+mutates(ListTenants::class, DisplayDate::class);
 
 it('lives at /admin/companies', function (): void {
     expect(route('companies.index', absolute: false))->toBe('/admin/companies');

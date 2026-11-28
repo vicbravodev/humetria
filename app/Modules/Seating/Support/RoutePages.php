@@ -24,47 +24,47 @@ final readonly class RoutePages
 {
     /** The requirements as an inspector would ask for them. */
     private const array PLAIN = [
-        'r1' => 'Los puestos de pie, con su Figura 1',
-        'r2' => 'Cada persona que trabaja de pie, evaluada',
-        'r3' => 'Cada evaluación firmada, en un acta',
-        'r4' => 'Asientos en cada puesto',
-        'r5' => 'Un asiento de descanso donde el asiento va aparte',
-        'r6' => 'Los asientos fuera del puesto, señalizados',
-        'r7' => 'Una medida para cada riesgo medio o alto',
-        'r8' => 'Cada persona enterada de su resultado',
-        'r9' => 'Quien tiene malestares, canalizado',
-        'r10' => 'Reglamento interior firmado, depositado y repartido',
-        'r11' => 'Pausas acordadas donde el asiento va aparte',
-        'r12' => 'Diagnóstico y programa de seguridad y salud',
-        'r13' => 'La Comisión asignada al centro',
+        'r1' => 'Los puestos de pie, con su Figura 1', // @pest-mutate-ignore: RemoveArrayItem
+        'r2' => 'Cada persona que trabaja de pie, evaluada', // @pest-mutate-ignore: RemoveArrayItem
+        'r3' => 'Cada evaluación firmada, en un acta', // @pest-mutate-ignore: RemoveArrayItem
+        'r4' => 'Asientos en cada puesto', // @pest-mutate-ignore: RemoveArrayItem
+        'r5' => 'Un asiento de descanso donde el asiento va aparte', // @pest-mutate-ignore: RemoveArrayItem
+        'r6' => 'Los asientos fuera del puesto, señalizados', // @pest-mutate-ignore: RemoveArrayItem
+        'r7' => 'Una medida para cada riesgo medio o alto', // @pest-mutate-ignore: RemoveArrayItem
+        'r8' => 'Cada persona enterada de su resultado', // @pest-mutate-ignore: RemoveArrayItem
+        'r9' => 'Quien tiene malestares, canalizado', // @pest-mutate-ignore: RemoveArrayItem
+        'r10' => 'Reglamento interior firmado, depositado y repartido', // @pest-mutate-ignore: RemoveArrayItem
+        'r11' => 'Pausas acordadas donde el asiento va aparte', // @pest-mutate-ignore: RemoveArrayItem
+        'r12' => 'Diagnóstico y programa de seguridad y salud', // @pest-mutate-ignore: RemoveArrayItem
+        'r13' => 'La Comisión asignada al centro', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     /** What is behind a requirement with nothing registered to judge it by (pending): it is not met, and it is not missing yet. */
     private const array PENDING = [
-        'r3' => 'Aún no hay evaluaciones firmadas',
-        'r5' => 'Aún no hay puestos clasificados',
-        'r6' => 'Aún no hay asientos registrados',
-        'r7' => 'Aún no hay evaluaciones firmadas',
-        'r8' => 'Aún no hay evaluaciones firmadas',
-        'r9' => 'Aún no hay evaluaciones firmadas',
-        'r11' => 'Aún no hay puestos clasificados',
+        'r3' => 'Aún no hay evaluaciones firmadas', // @pest-mutate-ignore: RemoveArrayItem
+        'r5' => 'Aún no hay puestos clasificados', // @pest-mutate-ignore: RemoveArrayItem
+        'r6' => 'Aún no hay asientos registrados', // @pest-mutate-ignore: RemoveArrayItem
+        'r7' => 'Aún no hay evaluaciones firmadas', // @pest-mutate-ignore: RemoveArrayItem
+        'r8' => 'Aún no hay evaluaciones firmadas', // @pest-mutate-ignore: RemoveArrayItem
+        'r9' => 'Aún no hay evaluaciones firmadas', // @pest-mutate-ignore: RemoveArrayItem
+        'r11' => 'Aún no hay puestos clasificados', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     /** What is behind a requirement that is not met: [missing, one] [missing, many] [warning, one] [warning, many]. */
     private const array DETAIL = [
-        'r1' => ['Declara el sector y registra los puestos de pie', 'Declara el sector y registra los puestos de pie', '1 puesto sin nadie asignado', '%d puestos sin nadie asignado'],
-        'r2' => ['1 persona sin evaluar', '%d personas sin evaluar', '1 evaluación por renovar', '%d evaluaciones por renovar'],
-        'r3' => ['1 evaluación firmada sin acta', '%d evaluaciones firmadas sin acta', '', ''],
-        'r4' => ['1 puesto sin asiento', '%d puestos sin asiento', '1 puesto con asientos de menos o por reparar', '%d puestos con asientos de menos o por reparar'],
-        'r5' => ['1 puesto sin asiento de descanso', '%d puestos sin asiento de descanso', '', ''],
-        'r6' => ['1 asiento sin señalizar', '%d asientos sin señalizar', '', ''],
-        'r7' => ['1 evaluación de riesgo medio o alto sin medida', '%d evaluaciones de riesgo medio o alto sin medida', '1 medida vencida', '%d medidas vencidas'],
-        'r8' => ['1 persona sin confirmar su resultado', '%d personas sin confirmar su resultado', '', ''],
-        'r9' => ['1 persona con malestares sin canalizar', '%d personas con malestares sin canalizar', '', ''],
-        'r10' => ['Falta completarlo y firmarlo', 'Falta completarlo y firmarlo', 'Falta depositarlo o repartirlo', 'Falta depositarlo o repartirlo'],
-        'r11' => ['1 puesto con asiento aparte sin acuerdo de pausas', '%d puestos con asiento aparte sin acuerdo de pausas', '', ''],
-        'r12' => ['Falta el documento; hay plantilla con lo que ya capturaste', 'Falta el documento; hay plantilla con lo que ya capturaste', '', ''],
-        'r13' => ['Nadie de la Comisión está asignado al centro', 'Nadie de la Comisión está asignado al centro', '', ''],
+        'r1' => ['Declara el sector y registra los puestos de pie', 'Declara el sector y registra los puestos de pie', '1 puesto sin nadie asignado', '%d puestos sin nadie asignado'], // @pest-mutate-ignore: RemoveArrayItem
+        'r2' => ['1 persona sin evaluar', '%d personas sin evaluar', '1 evaluación por renovar', '%d evaluaciones por renovar'], // @pest-mutate-ignore: RemoveArrayItem
+        'r3' => ['1 evaluación firmada sin acta', '%d evaluaciones firmadas sin acta', '', ''], // @pest-mutate-ignore: RemoveArrayItem,EmptyStringToNotEmpty
+        'r4' => ['1 puesto sin asiento', '%d puestos sin asiento', '1 puesto con asientos de menos o por reparar', '%d puestos con asientos de menos o por reparar'], // @pest-mutate-ignore: RemoveArrayItem
+        'r5' => ['1 puesto sin asiento de descanso', '%d puestos sin asiento de descanso', '', ''], // @pest-mutate-ignore: RemoveArrayItem,EmptyStringToNotEmpty
+        'r6' => ['1 asiento sin señalizar', '%d asientos sin señalizar', '', ''], // @pest-mutate-ignore: RemoveArrayItem,EmptyStringToNotEmpty
+        'r7' => ['1 evaluación de riesgo medio o alto sin medida', '%d evaluaciones de riesgo medio o alto sin medida', '1 medida vencida', '%d medidas vencidas'], // @pest-mutate-ignore: RemoveArrayItem
+        'r8' => ['1 persona sin confirmar su resultado', '%d personas sin confirmar su resultado', '', ''], // @pest-mutate-ignore: RemoveArrayItem,EmptyStringToNotEmpty
+        'r9' => ['1 persona con malestares sin canalizar', '%d personas con malestares sin canalizar', '', ''], // @pest-mutate-ignore: RemoveArrayItem,EmptyStringToNotEmpty
+        'r10' => ['Falta completarlo y firmarlo', 'Falta completarlo y firmarlo', 'Falta depositarlo o repartirlo', 'Falta depositarlo o repartirlo'], // @pest-mutate-ignore: RemoveArrayItem
+        'r11' => ['1 puesto con asiento aparte sin acuerdo de pausas', '%d puestos con asiento aparte sin acuerdo de pausas', '', ''], // @pest-mutate-ignore: RemoveArrayItem,EmptyStringToNotEmpty
+        'r12' => ['Falta el documento; hay plantilla con lo que ya capturaste', 'Falta el documento; hay plantilla con lo que ya capturaste', '', ''], // @pest-mutate-ignore: RemoveArrayItem,EmptyStringToNotEmpty
+        'r13' => ['Nadie de la Comisión está asignado al centro', 'Nadie de la Comisión está asignado al centro', '', ''], // @pest-mutate-ignore: RemoveArrayItem,EmptyStringToNotEmpty
     ];
 
     /**

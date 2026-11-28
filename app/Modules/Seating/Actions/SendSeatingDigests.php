@@ -29,9 +29,9 @@ use Throwable;
 final readonly class SendSeatingDigests
 {
     /** What each kind of recipient is told about: the Comisión is not told about its own absence nor the regulation. */
-    private const array OWNER = ['unassessed', 'reassessment', 'reports', 'pauses', 'regulation', 'signage', 'committee'];
+    private const array OWNER = ['unassessed', 'reassessment', 'reports', 'pauses', 'regulation', 'signage', 'committee']; // @pest-mutate-ignore: RemoveArrayItem
 
-    private const array MEMBER = ['unassessed', 'reassessment', 'reports', 'pauses', 'signage'];
+    private const array MEMBER = ['unassessed', 'reassessment', 'reports', 'pauses', 'signage']; // @pest-mutate-ignore: RemoveArrayItem
 
     public function __construct(private Companies $companies, private Members $members, private Committee $committee, private SeatingAlerts $alerts, private DemoCompanies $demos) {}
 

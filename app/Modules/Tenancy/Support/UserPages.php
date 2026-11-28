@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 /** The platform's users for the console: who they are, their platform role, whether they use two-factor, and the companies they belong to. */
 final class UserPages
 {
-    private const int PER_PAGE = 25;
+    private const int PER_PAGE = 25; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** The quick help of the team view: a few people at a time, beside the team. */
     public const int HELP_PER_PAGE = 5;

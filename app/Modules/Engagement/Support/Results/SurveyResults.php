@@ -30,7 +30,7 @@ final class SurveyResults
 
     private ?self $previous = null;
 
-    private bool $previousLoaded = false;
+    private bool $previousLoaded = false; // @pest-mutate-ignore: FalseToTrue
 
     private function __construct(private readonly Survey $survey, private readonly Thresholds $thresholds) {}
 

@@ -11,6 +11,7 @@ use App\Modules\Campaigns\Listeners\FallBackToMail;
 use App\Modules\Campaigns\Models\Campaign;
 use App\Modules\Campaigns\Models\Participant;
 use App\Modules\Campaigns\Notifications\SurveyInvitation;
+use App\Modules\Campaigns\Support\InvitationComposer;
 use App\Modules\Messaging\Data\FailureCause;
 use App\Modules\Messaging\Data\InvitationReference;
 use App\Modules\Messaging\Events\WhatsAppMessageFailed;
@@ -28,7 +29,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
-mutates(FallBackToMail::class);
+mutates(FallBackToMail::class, InvitationComposer::class);
 
 beforeEach(function (): void {
     Carbon::setTestNow('2026-11-02 17:00:00');

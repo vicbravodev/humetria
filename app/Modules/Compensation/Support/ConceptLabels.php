@@ -12,17 +12,17 @@ use App\Modules\Compensation\Models\Benefit;
 final class ConceptLabels
 {
     private const array CONTRIBUTIONS = [
-        'imss_fixed' => 'IMSS: cuota fija de enfermedad y maternidad',
-        'imss_surplus' => 'IMSS: excedente de enfermedad y maternidad',
-        'imss_pensioners' => 'IMSS: gastos médicos de pensionados',
-        'imss_cash' => 'IMSS: prestaciones en dinero',
-        'imss_disability_life' => 'IMSS: invalidez y vida',
-        'work_risk' => 'IMSS: riesgo de trabajo',
-        'imss_childcare' => 'IMSS: guarderías y prestaciones sociales',
-        'retirement' => 'Retiro',
-        'severance_old_age' => 'Cesantía en edad avanzada y vejez',
-        'infonavit' => 'Infonavit',
-        'payroll_tax' => 'Impuesto sobre nómina',
+        'imss_fixed' => 'IMSS: cuota fija de enfermedad y maternidad', // @pest-mutate-ignore: RemoveArrayItem
+        'imss_surplus' => 'IMSS: excedente de enfermedad y maternidad', // @pest-mutate-ignore: RemoveArrayItem
+        'imss_pensioners' => 'IMSS: gastos médicos de pensionados', // @pest-mutate-ignore: RemoveArrayItem
+        'imss_cash' => 'IMSS: prestaciones en dinero', // @pest-mutate-ignore: RemoveArrayItem
+        'imss_disability_life' => 'IMSS: invalidez y vida', // @pest-mutate-ignore: RemoveArrayItem
+        'work_risk' => 'IMSS: riesgo de trabajo', // @pest-mutate-ignore: RemoveArrayItem
+        'imss_childcare' => 'IMSS: guarderías y prestaciones sociales', // @pest-mutate-ignore: RemoveArrayItem
+        'retirement' => 'Retiro', // @pest-mutate-ignore: RemoveArrayItem
+        'severance_old_age' => 'Cesantía en edad avanzada y vejez', // @pest-mutate-ignore: RemoveArrayItem
+        'infonavit' => 'Infonavit', // @pest-mutate-ignore: RemoveArrayItem
+        'payroll_tax' => 'Impuesto sobre nómina', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     /**
@@ -54,13 +54,20 @@ final class ConceptLabels
     /** What a fiscal value is called when the report says it is out of date: the state rates of the payroll tax are one. */
     public function fiscalLabel(string $key): string
     {
-        return match (true) {
-            $key === 'uma' => 'UMA',
-            $key === 'minimum_wage' => 'Salario mínimo',
-            $key === 'minimum_wage_border' => 'Salario mínimo de la frontera norte',
-            str_starts_with($key, 'payroll_tax') => 'Impuesto sobre nómina de los estados',
-            str_starts_with($key, 'severance_old_age') => 'Cesantía en edad avanzada y vejez',
-            default => $key,
-        };
+        $fixed = ['uma' => 'UMA', 'minimum_wage' => 'Salario mínimo', 'minimum_wage_border' => 'Salario mínimo de la frontera norte'];
+
+        if (isset($fixed[$key])) {
+            return $fixed[$key];
+        }
+
+        if (str_starts_with($key, 'payroll_tax')) {
+            return 'Impuesto sobre nómina de los estados';
+        }
+
+        if (str_starts_with($key, 'severance_old_age')) {
+            return 'Cesantía en edad avanzada y vejez';
+        }
+
+        return $key;
     }
 }

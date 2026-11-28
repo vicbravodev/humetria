@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Middleware\ForbidWhileImpersonating;
 use App\Models\AuditEntry;
 use App\Models\User;
+use App\Modules\Tenancy\Actions\ExportAuditTrail;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Support\AuditPages;
 use Carbon\CarbonImmutable;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(AuditPages::class);
+mutates(AuditPages::class, ExportAuditTrail::class);
 
 /** One audit row, written straight to the table: its time and who did it are the point of each test. */
 function auditRow(string $event, array $attributes = []): AuditEntry
@@ -285,6 +286,22 @@ it('exports what the filters find as CSV, newest first, and records the export i
         ->where('entries.data.0.context', ['Empresa' => 'Acme', 'Tipo de evento' => 'tenant', 'Filas' => '2']));
 });
 
+it('exports at most ten thousand entries', function (): void {
+    foreach (array_chunk(range(1, ExportAuditTrail::LIMIT + 1), 1000) as $chunk) {
+        DB::table('audit_entries')->insert(array_map(fn (int $n): array => [
+            'id' => (string) Illuminate\Support\Str::uuid(),
+            'event' => 'tenant.updated',
+            'metadata' => '{}',
+            'created_at' => now()->subSeconds($n),
+        ], $chunk));
+    }
+
+    $csv = $this->actingAs(superadmin())->get(route('audit.export'))->streamedContent();
+
+    expect(substr_count($csv, "\n"))->toBe(10_001)
+        ->and(AuditEntry::query()->where('event', 'audit.exported')->sole()->metadata)->toMatchArray(['rows' => 10_000]);
+});
+
 it('lets only the superadmin export the trail', function (User $user): void {
     $this->actingAs($user)->get(route('audit.export'))->assertForbidden();
 
@@ -449,6 +466,30 @@ it('shows a role of the company by the label its owner typed, never by its inter
     DB::disableQueryLog();
 
     expect($roleReads)->toHaveCount(1);
+});
+
+it('names in Spanish every state, plan, kind and tool the detail stores by its code', function (): void {
+    auditRow('tenant.updated', ['metadata' => [
+        'codes' => ['not_started', 'day', 'night', 'mixed', 'onsite', 'remote', 'trial', 'active', 'trial_ended', 'expired', 'read_only', 'suspended', 'archived', 'past_due', 'cancel_scheduled', 'ended', 'jornada', 'cumplimiento', 'integral', 'sindicato', 'union', 'direct', 'consultant', 'channel_compliance', 'channel_integral', 'negotiated', 'recurring', 'one_time', 'draft', 'issued', 'owner', 'hr', 'viewer', 'committee', 'complaints', 'attendance', 'worker_access', 'vacations', 'org_chart', 'nom035', 'nom037', 'seating', 'pulse', 'climate', 'sso', 'whatsapp', 'replaced', 'qr_window', 'declared_interval', 'passkey', 'device_key', 'wide_interval', 'old_window', 'no_position', 'outside_zone', 'zones_not_configured', 'declared_adjusted'],
+    ]]);
+
+    $this->actingAs(superadmin())->get(route('audit.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('entries.data.0.context', [
+            'Codes' => 'Sin iniciar, Diurna, Nocturna, Mixta, Presencial, Remoto, En prueba, Activa, Prueba terminada, Vencida, Solo lectura, Suspendida, Archivada, Con saldo vencido, Cancelación programada, Terminada, Jornada, Cumplimiento, Integral, Sindicato, Cuota fija de sindicato, Directo, Consultor, Canal Cumplimiento, Canal Integral, Precio negociado, Recurrente, Una sola vez, Borrador, Emitido, Dueño, RH, Consulta, Comisión, Quejas, Asistencia, Acceso de personas, Vacaciones, Organigrama, NOM-035, NOM-037, Ley Silla, Pulso, Clima, Inicio de sesión único, WhatsApp, Reemplazada, Ventana del QR, Intervalo declarado, Llave de acceso, Llave del teléfono, Intervalo ancho, QR viejo, Sin posición, Fuera de zona, Centro sin zonas, Hora ajustada',
+        ]));
+});
+
+it('labels the keys of the detail that the code builds outside the call that audits', function (): void {
+    auditRow('employee.updated', ['metadata' => [
+        'mark_id' => 'x', 'replaced_id' => 'x', 'corrected' => 'x', 'previous_terminated_on' => 'x', 'previous_reason' => 'x',
+        'shift_type' => 'x', 'work_mode' => 'x', 'starts' => 'x', 'job_title' => 'x',
+    ]]);
+
+    $this->actingAs(superadmin())->get(route('audit.index'))->assertInertia(fn (Assert $page) => $page
+        ->where('entries.data.0.context', [
+            'Marca' => 'x', 'Llave reemplazada' => 'x', 'Corregida' => 'x', 'Fecha de la baja anterior' => 'x',
+            'Motivo de la baja anterior' => 'x', 'Tipo de jornada' => 'x', 'Modalidad' => 'x', 'Hora de entrada' => 'x', 'Puesto' => 'x',
+        ]));
 });
 
 it('gives each entry its local day as the table groups it, its local time, and its view of the trail', function (): void {

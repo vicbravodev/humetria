@@ -7,11 +7,15 @@ use App\Modules\Compensation\Models\Benefit;
 use App\Modules\Compensation\Models\ContractTerm;
 use App\Modules\Compensation\Models\Scenario;
 use App\Modules\Compensation\Models\WorkRiskPremium;
+use App\Modules\Compensation\Support\AverageExample;
+use App\Modules\Compensation\Support\AveragePayroll;
 use App\Modules\Compensation\Support\Calculation\ScenarioCost;
+use App\Modules\Compensation\Support\CurrentRiskPremium;
+use App\Modules\Compensation\Support\ScenarioEditor;
 use App\Modules\Compensation\Support\ScenarioInputBuilder;
 use App\Modules\Tenancy\Models\Tenant;
 
-mutates(ScenarioInputBuilder::class);
+mutates(ScenarioInputBuilder::class, AveragePayroll::class, AverageExample::class, CurrentRiskPremium::class, ScenarioEditor::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();

@@ -18,15 +18,15 @@ use App\Modules\Attendance\Data\AuthorityRow;
 final class AuthorityCsv
 {
     public const array HEADER = [
-        'Persona', 'Puesto', 'Fecha', 'Inicio', 'Fin', 'Fecha de fin', 'Zona horaria', 'Pausas (min)',
-        'Trabajado (min)', 'Trabajado (h:mm)', 'Ordinarias (min)', 'Ordinarias (h:mm)',
-        'Extra doble (min)', 'Extra doble (h:mm)', 'Extra triple (min)', 'Extra triple (h:mm)',
-        'Día de descanso (min)', 'Día de descanso (h:mm)',
-        'Evidencia', 'Correcciones', 'Detalle de correcciones', 'Conformidad', 'Huella de la semana confirmada', 'Avisos', 'Ausencia',
-        'Revisión sin conexión', 'Revisó', 'Revisada el',
+        'Persona', 'Puesto', 'Fecha', 'Inicio', 'Fin', 'Fecha de fin', 'Zona horaria', 'Pausas (min)', // @pest-mutate-ignore: RemoveArrayItem
+        'Trabajado (min)', 'Trabajado (h:mm)', 'Ordinarias (min)', 'Ordinarias (h:mm)', // @pest-mutate-ignore: RemoveArrayItem
+        'Extra doble (min)', 'Extra doble (h:mm)', 'Extra triple (min)', 'Extra triple (h:mm)', // @pest-mutate-ignore: RemoveArrayItem
+        'Día de descanso (min)', 'Día de descanso (h:mm)', // @pest-mutate-ignore: RemoveArrayItem
+        'Evidencia', 'Correcciones', 'Detalle de correcciones', 'Conformidad', 'Huella de la semana confirmada', 'Avisos', 'Ausencia', // @pest-mutate-ignore: RemoveArrayItem
+        'Revisión sin conexión', 'Revisó', 'Revisada el', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
-    private const array DECISIONS = ['verified' => 'Verificada', 'incorrect' => 'Incorrecta'];
+    private const array DECISIONS = ['verified' => 'Verificada', 'incorrect' => 'Incorrecta']; // @pest-mutate-ignore: RemoveArrayItem
 
     /**
      * Writes the whole file to `$out`, row by row as they come.

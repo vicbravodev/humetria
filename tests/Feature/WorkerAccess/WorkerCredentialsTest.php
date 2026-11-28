@@ -6,8 +6,11 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Contracts\WorkerCredentials;
 use App\Modules\WorkerAccess\Data\CredentialSummary;
 use App\Modules\WorkerAccess\Models\WorkerCredential;
+use App\Modules\WorkerAccess\Support\CompanyWorkerCredentials;
 use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
+
+mutates(CompanyWorkerCredentials::class);
 
 beforeEach(function (): void {
     $this->travelTo(CarbonImmutable::parse('2026-11-07 15:00:00', 'UTC'));

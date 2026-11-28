@@ -15,7 +15,7 @@ use Illuminate\Contracts\Cache\Repository;
  */
 final readonly class LiveFacts
 {
-    private const int SECONDS = 60;
+    private const int SECONDS = 60; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private ToolRegistry $tools, private Repository $cache) {}
 

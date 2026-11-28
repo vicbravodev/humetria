@@ -3,10 +3,13 @@
 declare(strict_types=1);
 
 use App\Modules\Seating\Models\SeatingProfile;
+use App\Modules\Seating\Support\CenterAccess;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Inertia\Testing\AssertableInertia as Assert;
+
+mutates(CenterAccess::class);
 
 /*
  * Company A can read and change nothing of company B's Ley Silla data, by query or by URL (a 404, never a 403 that would

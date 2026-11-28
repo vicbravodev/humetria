@@ -13,13 +13,14 @@ use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Models\TenantModule;
 use App\Modules\Tenancy\Support\CompanyRoles;
+use App\Modules\Tenancy\Support\PermissionGroups;
 use App\Modules\Tenancy\Support\RoutePermissions;
 use Illuminate\Support\Facades\DB;
 use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia as Assert;
 use Spatie\Permission\Models\Role;
 
-mutates(RoleController::class);
+mutates(RoleController::class, PermissionGroups::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['slug' => 'acme', 'trade_name' => 'Acme']);

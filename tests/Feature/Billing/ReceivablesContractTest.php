@@ -10,6 +10,10 @@ use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Models\Statement;
 use App\Modules\Billing\Models\Subscription;
+use App\Modules\Billing\Support\LedgerReceivables;
+use App\Modules\Billing\Support\OpenBalances;
+
+mutates(LedgerReceivables::class, OpenBalances::class);
 
 /** An issued statement of the account for this many pesos, issued that many days ago. */
 function contractStatement(BillingAccount $account, int $pesos, int $days): void

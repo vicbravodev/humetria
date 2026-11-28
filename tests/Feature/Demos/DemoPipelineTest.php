@@ -4,18 +4,23 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Models\User;
+use App\Modules\Demos\Actions\DiscardDemoRequest;
+use App\Modules\Demos\Actions\ListDemoRequests;
+use App\Modules\Demos\Actions\ScheduleDemo;
 use App\Modules\Demos\Actions\UpdateDemoRequest;
 use App\Modules\Demos\Contracts\DemoLeads;
 use App\Modules\Demos\Enums\DemoStatus;
 use App\Modules\Demos\Models\DemoRequest;
 use App\Modules\Demos\Notifications\DemoRequested;
+use App\Modules\Demos\Support\DemoLeadRegistry;
+use App\Modules\Demos\Support\DemoOwners;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(UpdateDemoRequest::class);
+mutates(UpdateDemoRequest::class, DemoLeadRegistry::class, ListDemoRequests::class, ScheduleDemo::class, DiscardDemoRequest::class, DemoOwners::class);
 
 /** The landing's form, as a visitor fills it. */
 function landingDemoForm(array $overrides = []): array
@@ -204,6 +209,26 @@ it('offers the contract of other modules a request by id, and not one that does 
         ->and($lead->tenantId)->toBeNull()
         ->and($leads->find('no-es-un-uuid'))->toBeNull()
         ->and($leads->find((string) Illuminate\Support\Str::uuid()))->toBeNull();
+});
+
+it('offers the contract of other modules the request each company came from, and nothing for the others', function (): void {
+    $converted = Tenant::factory()->create();
+    $direct = Tenant::factory()->create();
+    $request = DemoRequest::factory()->create(['company' => 'Empresa Ejemplo', 'status' => DemoStatus::Converted, 'tenant_id' => $converted->id]);
+    DemoRequest::factory()->create();
+
+    $leads = app(DemoLeads::class)->forCompanies([$converted->id, $direct->id]);
+
+    expect(array_keys($leads))->toBe([$converted->id])
+        ->and($leads[$converted->id]->id)->toBe($request->id)
+        ->and($leads[$converted->id]->tenantId)->toBe($converted->id);
+});
+
+it('offers the contract of other modules how many requests each status holds', function (): void {
+    DemoRequest::factory()->count(2)->create();
+    DemoRequest::factory()->create(['status' => DemoStatus::Contacted]);
+
+    expect(app(DemoLeads::class)->countsByStatus())->toBe(['all' => 3, 'new' => 2, 'contacted' => 1, 'scheduled' => 0, 'trial' => 0, 'converted' => 0, 'discarded' => 0]);
 });
 
 it('marks a request converted once: the second try changes nothing and says so', function (): void {

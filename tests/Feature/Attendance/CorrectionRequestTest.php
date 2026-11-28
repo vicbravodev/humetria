@@ -179,6 +179,12 @@ describe('asking', function (): void {
             ->and(CorrectionRequest::query()->count())->toBe(10);
     });
 
+    it('refuses a reason of 9 characters and takes one of 10', function (): void {
+        expect(fn () => anaAsks(null, MarkType::Start, '2026-11-10 09:00', 'Me olvidé'))->toThrow(InvalidArgumentException::class);
+
+        expect(anaAsks(null, MarkType::Start, '2026-11-10 09:00', 'Me olvidé.')->reason)->toBe('Me olvidé.');
+    });
+
     it('needs a reason of 10 characters, without its spaces', function (): void {
         expect(fn () => anaAsks(null, MarkType::Start, '2026-11-10 09:00', '  Olvidé.   '))->toThrow(InvalidArgumentException::class);
     });

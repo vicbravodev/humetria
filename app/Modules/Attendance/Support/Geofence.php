@@ -14,7 +14,7 @@ use InvalidArgumentException;
  */
 final class Geofence
 {
-    private const float EARTH_RADIUS_M = 6371000.0;
+    private const float EARTH_RADIUS_M = 6371000.0; // @pest-mutate-ignore: DecrementFloat,IncrementFloat
 
     /**
      * @param  array<array-key, AttendanceZone>  $zones

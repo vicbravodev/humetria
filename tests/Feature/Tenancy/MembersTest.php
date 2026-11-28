@@ -14,13 +14,14 @@ use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Notifications\InvitationEmail;
 use App\Modules\Tenancy\Support\CompanyMembers;
+use App\Modules\Tenancy\Support\DisplayDate;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(MemberController::class, InviteMember::class, InviteMemberRequest::class, CompanyMembers::class);
+mutates(MemberController::class, InviteMember::class, InviteMemberRequest::class, CompanyMembers::class, DisplayDate::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-10-29 18:00 UTC');

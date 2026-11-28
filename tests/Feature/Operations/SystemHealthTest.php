@@ -9,14 +9,19 @@ use App\Modules\Messaging\Models\Delivery;
 use App\Modules\Messaging\Models\Pause;
 use App\Modules\Messaging\Models\WebhookEvent;
 use App\Modules\Operations\Contracts\SchedulerHeartbeat;
+use App\Modules\Operations\Support\CachedHeartbeat;
+use App\Modules\Operations\Support\FailedJobs;
+use App\Modules\Operations\Support\LocalCalendar;
+use App\Modules\Operations\Support\QueueWorkload;
 use App\Modules\Operations\Support\SystemHealth;
+use App\Modules\Operations\Support\TrafficRows;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Horizon\Contracts\MasterSupervisorRepository;
 use Laravel\Horizon\Contracts\WorkloadRepository;
 
-mutates(SystemHealth::class);
+mutates(SystemHealth::class, CachedHeartbeat::class, FailedJobs::class, LocalCalendar::class, QueueWorkload::class, TrafficRows::class);
 
 beforeEach(function (): void {
     // 12:00 in Mexico City: the day there began at 06:00 UTC.
@@ -107,13 +112,29 @@ it('sums the failed jobs of the day and groups those of the week by job, never w
     expect($response->getContent())->not->toContain('ana@example.com');
 });
 
+it('names at most ten kinds of failed job, the ones that failed most', function (): void {
+    foreach (range(1, 11) as $kind) {
+        foreach (range(1, $kind) as $failure) {
+            failedJob("App\\Modules\\Campaigns\\Jobs\\Job{$kind}", 'default', '2026-11-25 17:00:00');
+        }
+    }
+
+    health()->assertInertia(fn (Assert $page) => $page
+        ->count('failedJobs.week', 10)
+        ->where('failedJobs.week.0.job', 'Job11')
+        ->where('failedJobs.week.9.job', 'Job2'));
+});
+
 it('reads the last beat of the scheduler and says it is late after 15 minutes', function (): void {
     health()->assertInertia(fn (Assert $page) => $page->where('heartbeat', ['lastAt' => null, 'late' => true]));
 
     app(SchedulerHeartbeat::class)->beat();
     health()->assertInertia(fn (Assert $page) => $page->where('heartbeat', ['lastAt' => '2026-11-25T18:00:00+00:00', 'late' => false]));
 
-    $this->travel(16)->minutes();
+    $this->travel(15)->minutes();
+    health()->assertInertia(fn (Assert $page) => $page->where('heartbeat.late', false));
+
+    $this->travel(1)->minutes();
     health()->assertInertia(fn (Assert $page) => $page->where('heartbeat.late', true));
 });
 

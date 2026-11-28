@@ -6,13 +6,14 @@ use App\Modules\Billing\Actions\ReleaseBulkHolds;
 use App\Modules\Billing\Contracts\MailQuota;
 use App\Modules\Billing\Exceptions\MailQuotaExceeded;
 use App\Modules\Billing\Models\UsageCounter;
+use App\Modules\Billing\Support\CounterHold;
 use App\Modules\Billing\Support\LedgerMailQuota;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Notifications\Events\NotificationSent;
 use Illuminate\Support\Facades\Context;
 
-mutates(LedgerMailQuota::class, ReleaseBulkHolds::class);
+mutates(LedgerMailQuota::class, ReleaseBulkHolds::class, CounterHold::class);
 
 final class MailQuotaCampaignNote extends Illuminate\Notifications\Notification implements App\Modules\Billing\Contracts\MailBag
 {

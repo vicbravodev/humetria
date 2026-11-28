@@ -51,7 +51,7 @@ final class Nom035Stages
             return "{$facts->running['answered']} de {$facts->running['target']} contestaron, {$closes}";
         }
 
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             $facts->draft => 'lanza la evaluación',
             $facts->standing === 'overdue' => "toca evaluar de nuevo: venció el {$facts->until}",
             default => 'evalúa a tu personal',

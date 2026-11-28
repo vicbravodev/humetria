@@ -8,6 +8,7 @@ use App\Modules\Disclosure\Actions\StartPolicyDraft;
 use App\Modules\Disclosure\Enums\DocumentKind;
 use App\Modules\Disclosure\Enums\DocumentStatus;
 use App\Modules\Disclosure\Models\Document;
+use App\Modules\Disclosure\Support\DocumentTemplates;
 use App\Modules\Instruments\Contracts\Nom035Policy;
 use App\Modules\Instruments\Data\PolicySection;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
-mutates(StartPolicyDraft::class, SaveDraft::class, DiscardDraft::class);
+mutates(StartPolicyDraft::class, SaveDraft::class, DiscardDraft::class, DocumentTemplates::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create();

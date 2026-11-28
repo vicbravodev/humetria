@@ -27,7 +27,7 @@ final readonly class CompanyDisclosureStanding implements DisclosureStanding
         $summaries = [];
 
         foreach ($inForce as $center => $fact) {
-            $summaries[$center] = ['version' => $fact->version, 'publishedOn' => Days::moment($fact->publishedAt), 'confirmed' => $acknowledgments[$center]['confirmed'] ?? 0, 'expected' => $acknowledgments[$center]['active'] ?? 0];
+            $summaries[$center] = ['version' => $fact->version, 'publishedOn' => Days::moment($fact->publishedAt), 'confirmed' => $acknowledgments[$center]['confirmed'], 'expected' => $acknowledgments[$center]['active']];
         }
 
         return $summaries;

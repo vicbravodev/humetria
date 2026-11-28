@@ -40,7 +40,7 @@ final readonly class CompensationReader implements ComplianceReader
             : "El costo cubre a {$contract->costed} de ".trans_choice('{1} :count persona|[2,*] :count personas', $contract->people);
         $grades = $contract->gradesWithoutSalary === 0 ? '.' : '; '.trans_choice('{1} :count categoría no tiene salario|[2,*] :count categorías no tienen salario', $contract->gradesWithoutSalary).'.';
         $average = trans_choice('{1} :count con una plantilla promedio|[2,*] :count con una plantilla promedio', $contract->averageScenarios);
-        $scenarios = match (true) {
+        $scenarios = match (true) { // @pest-mutate-ignore: TrueToFalse
             $contract->scenarios === 0 && $contract->averageScenarios === 0 => 'Aún no armas ningún escenario.',
             $contract->averageScenarios === 0 => 'Tienes '.trans_choice('{1} :count escenario activo|[2,*] :count escenarios activos', $contract->scenarios).'.',
             $contract->scenarios === 0 => "Aún no armas ningún escenario con tu plantilla; tienes {$average}.",

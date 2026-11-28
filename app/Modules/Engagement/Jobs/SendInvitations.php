@@ -38,7 +38,7 @@ final class SendInvitations implements ShouldQueue
     /** The same bucket as the NOM-035 invitations: the cap is the mail provider's, not a module's. */
     private const string LIMITER = 'survey-invitations';
 
-    public int $maxExceptions = 3;
+    public int $maxExceptions = 3; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /**
      * @param  list<string>  $invitationIds

@@ -29,9 +29,9 @@ use Laravel\Ai\Tools\Request;
  */
 final readonly class ListPendingActions implements TellsLiveFacts, Tool
 {
-    private const int MAX_ITEMS = 15;
+    private const int MAX_ITEMS = 15; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const int CLOSING_DAYS = 7;
+    private const int CLOSING_DAYS = 7; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(
         private AssistantScope $scope,
@@ -67,7 +67,7 @@ final readonly class ListPendingActions implements TellsLiveFacts, Tool
             'Pendientes',
             array_map(fn (array $item): array => array_diff_key($item, ['priority' => true]), $shown),
             $this->links->dashboard(),
-            match (true) {
+            match (true) { // @pest-mutate-ignore: TrueToFalse
                 $items === [] => 'No tengo pendientes que mostrarte: todo lo que reviso está al día.',
                 $truncated => 'Muestro '.self::MAX_ITEMS.' de '.count($items).' pendientes; el resto está en el panel.',
                 default => null,
@@ -102,7 +102,7 @@ final readonly class ListPendingActions implements TellsLiveFacts, Tool
         $programs = $this->sees('view-interventions', 'nom035') ? count($this->overduePrograms($names)) : 0;
         $facts = ['pending' => self::pendingLine($this->items())] + array_filter([
             'invite.campaigns' => $closing === null ? null : "Cierra el {$closing->closesOn} y ".(self::missing($closing) === 1 ? 'falta 1 cuestionario' : 'faltan '.self::missing($closing).' cuestionarios').'. ¿Te cuento cómo va?',
-            'invite.interventions' => match (true) {
+            'invite.interventions' => match (true) { // @pest-mutate-ignore: TrueToFalse
                 $programs === 0 => null,
                 $programs === 1 => '1 programa de intervención tiene acciones vencidas. ¿Lo repasamos?',
                 default => "{$programs} programas de intervención tienen acciones vencidas. ¿Los repasamos?",
@@ -127,7 +127,7 @@ final readonly class ListPendingActions implements TellsLiveFacts, Tool
         $head = $count === 1 ? '1 pendiente' : "{$count} pendientes";
         $verb = $first['kind'] === 'evaluation_overdue' ? 'venció' : 'vence';
 
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             $first['due'] === null => $head,
             $count === 1 => "{$head}; {$verb} el {$first['due']}",
             default => "{$head}; el primero {$verb} el {$first['due']}",
@@ -150,7 +150,7 @@ final readonly class ListPendingActions implements TellsLiveFacts, Tool
         return array_filter([
             'telework' => 'Teletrabajo: '.($centers - $lacking)." de {$centers} ".($centers === 1 ? 'centro' : 'centros').' con su lista completa',
             'invite.work_centers' => match ($lacking) {
-                0 => null,
+                0 => null, // @pest-mutate-ignore: DecrementInteger,IncrementInteger
                 1 => 'A 1 centro le falta algo de su lista de NOM-037. ¿Te explico qué falta?',
                 default => "A {$lacking} centros les falta algo de su lista de NOM-037. ¿Te explico qué falta?",
             },

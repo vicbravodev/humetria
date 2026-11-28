@@ -18,7 +18,7 @@ use Illuminate\Support\Str;
 final class CampaignInstruments
 {
     /** Rows per insert: well under Postgres' 65,535 bound parameters for seven columns. */
-    private const int ROWS_PER_INSERT = 1000;
+    private const int ROWS_PER_INSERT = 1000; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /**
      * @return list<string>

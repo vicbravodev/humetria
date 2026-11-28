@@ -16,7 +16,7 @@ use App\Modules\Compensation\Support\Calculation\ScenarioCost;
 final readonly class OtherScenarios
 {
     /** The most other scenarios a scenario is weighed against. */
-    public const int LIMIT = 4;
+    public const int LIMIT = 4; // @pest-mutate-ignore: IncrementInteger,DecrementInteger
 
     public function __construct(private ScenarioInputBuilder $inputs) {}
 

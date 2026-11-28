@@ -9,12 +9,15 @@ use App\Modules\Billing\Models\Payment;
 use App\Modules\Billing\Models\PaymentAllocation;
 use App\Modules\Billing\Models\Statement;
 use App\Modules\Billing\Models\Subscription;
+use App\Modules\Billing\Support\DueDate;
 use App\Modules\Tenancy\Models\Tenant;
 use Carbon\CarbonImmutable;
 use Inertia\Testing\AssertableInertia as Assert;
 
 // An account's page as its board (tablero Cuenta de facturación) reads: what it billed and paid this year and how late it
 // pays, when each statement was issued and is due, which months each payment settled, and who renews next.
+
+mutates(DueDate::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-26 15:00:00');

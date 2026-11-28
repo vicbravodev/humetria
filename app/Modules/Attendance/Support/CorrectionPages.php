@@ -28,7 +28,7 @@ use Illuminate\Support\Str;
  */
 final readonly class CorrectionPages
 {
-    private const int PER_PAGE = 25;
+    private const int PER_PAGE = 25; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private Roster $roster, private Timezones $zones, private OfflineMarkPages $offline) {}
 

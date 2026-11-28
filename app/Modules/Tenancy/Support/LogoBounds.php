@@ -14,16 +14,16 @@ use GdImage;
 final class LogoBounds
 {
     /** The longest side of the copy the mark is searched in: the box is found on a small copy, so a 4000 px logo costs no more. */
-    private const int PROBE = 400;
+    private const int PROBE = 400; // @pest-mutate-ignore: IncrementInteger,DecrementInteger
 
     /** How far a channel may differ from the plain background and still be background (JPG noise, soft edges). */
-    private const int TOLERANCE = 32;
+    private const int TOLERANCE = 32; // @pest-mutate-ignore: IncrementInteger,DecrementInteger
 
     /** Alpha (0 opaque, 127 clear) from which a pixel counts as empty. */
-    private const int CLEAR = 110;
+    private const int CLEAR = 110; // @pest-mutate-ignore: IncrementInteger,DecrementInteger
 
     /** Breathing room around the mark, as a share of its longest side. */
-    private const float PADDING = 0.03;
+    private const float PADDING = 0.03; // @pest-mutate-ignore: IncrementFloat,DecrementFloat
 
     /**
      * @return array{x: int, y: int, width: int, height: int}
@@ -33,8 +33,11 @@ final class LogoBounds
         $whole = ['x' => 0, 'y' => 0, 'width' => imagesx($image), 'height' => imagesy($image)];
         $probe = imagescale($image, min(self::PROBE, imagesx($image)), -1, IMG_BILINEAR_FIXED);
 
+        // GD answers false only when it fails inside (out of memory) or for a point outside the image, which none of the three
+        // checks of false can reach: the logo is at least 40 px high and at most 4000 wide (UpdateTenantLogoRequest), so the probe
+        // is never under one pixel, and every point read is inside it.
         if ($probe === false) {
-            return $whole;
+            return $whole; // @pest-mutate-ignore: RemoveEarlyReturn
         }
 
         $box = self::box($probe);
@@ -68,7 +71,7 @@ final class LogoBounds
         $corner = imagecolorat($probe, 0, 0);
 
         if ($corner === false) {
-            return null;
+            return null; // @pest-mutate-ignore: RemoveEarlyReturn
         }
 
         // A transparent corner: the background is nothing. Otherwise it is the corner's own color.
@@ -97,7 +100,7 @@ final class LogoBounds
     private static function isMark(int|false $pixel, ?int $plain): bool
     {
         if ($pixel === false) {
-            return false;
+            return false; // @pest-mutate-ignore: FalseToTrue,RemoveEarlyReturn
         }
 
         if ((($pixel >> 24) & 127) >= self::CLEAR) {

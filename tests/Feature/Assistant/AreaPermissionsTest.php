@@ -18,6 +18,8 @@ use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Models\WorkCenter;
 use App\Modules\Tenancy\Support\CompanyRoles;
 
+mutates(GetCampaignProgress::class, GetComplianceOverview::class, GetRiskResults::class, ListPendingActions::class);
+
 /*
  * Humi tells a person only the areas their role lets them see in the panel: a role of the company's own that may use
  * Humi and nothing else learns no figure of any area, and the templates keep telling what they always told.

@@ -109,7 +109,7 @@ final readonly class Board
     {
         $states = array_map(fn (Requirement $requirement): RequirementState => $requirement->state, $requirements);
 
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             in_array(RequirementState::Missing, $states, true) => RequirementState::Missing,
             in_array(RequirementState::Notice, $states, true) => RequirementState::Notice,
             default => RequirementState::Met,

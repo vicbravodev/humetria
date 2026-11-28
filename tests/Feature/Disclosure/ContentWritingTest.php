@@ -10,6 +10,7 @@ use App\Modules\Disclosure\Support\ContentPages;
 use App\Modules\Disclosure\Support\Writing\ComplaintTemplate;
 use App\Modules\Disclosure\Support\Writing\HealthTemplate;
 use App\Modules\Disclosure\Support\Writing\PreventionTemplate;
+use App\Modules\Disclosure\Support\Writing\Sentence;
 use App\Modules\Disclosure\Support\Writing\Templates;
 use App\Modules\Disclosure\Support\Writing\ViolenceTemplate;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -19,7 +20,7 @@ use App\Support\Writing\Field;
 use App\Support\Writing\Writer;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ViolenceTemplate::class, PreventionTemplate::class, ComplaintTemplate::class, HealthTemplate::class, Templates::class, PublishContent::class, ContentPages::class);
+mutates(ViolenceTemplate::class, PreventionTemplate::class, ComplaintTemplate::class, HealthTemplate::class, Templates::class, PublishContent::class, ContentPages::class, Sentence::class);
 
 // Rediseño v2 (board V4-Difusion-Contenidos, decisión A3): the blocks of 5.7 the company tells its people (b, c, d and f) are
 // written by answering questions, with how the people will read it on their phone beside them. The health effects have no
@@ -119,4 +120,31 @@ it('refuses to publish a block whose questions wrote nothing', function (): void
 
     $this->post(route('tenant.disclosure.contents.publish', [$this->tenant, 'complaint_mechanism', Document::query()->sole()->id]), ['all_centers' => true])
         ->assertSessionHasErrors('body');
+});
+
+/** @return array<string, array<string, string>> The options of every field of the kind's questions, by field. */
+function contentOptions(DocumentKind $kind): array
+{
+    $options = [];
+
+    foreach (resolve(Templates::class)->template($kind)?->questions() ?? [] as $question) {
+        foreach ($question->fields as $field) {
+            $options[$field->key] = $field->options;
+        }
+    }
+
+    return $options;
+}
+
+it('offers the measures against violence their options in plain words', function (): void {
+    expect(contentOptions(DocumentKind::ViolenceMeasures))->toMatchArray([
+        'considered' => ['shouting' => 'Gritos, insultos o amenazas', 'humiliation' => 'Humillaciones o burlas', 'harassment' => 'Acoso u hostigamiento', 'exclusion' => 'Dejar a alguien fuera del trabajo a propósito', 'damage' => 'Daños a sus cosas o a su trabajo'],
+        'report' => ['acknowledge' => 'Le confirmamos en 3 días que la recibimos y le respondemos en 30 días qué hicimos', 'committee' => 'La revisa la Comisión de seguridad e higiene y le responde en 30 días'],
+        'measures' => ['warning' => 'Llamada de atención por escrito', 'transfer' => 'Cambio de turno o de área de quien la cometió', 'suspension' => 'Suspensión sin goce de sueldo', 'dismissal' => 'Terminar la relación de trabajo, según la Ley Federal del Trabajo', 'support' => 'Canalizar a apoyo psicológico'],
+        'protection' => ['no_retaliation' => 'No hay represalias por denunciar', 'identity' => 'Su identidad solo la conoce quien atiende', 'transfer' => 'Puede pedir un cambio de área temporal mientras se revisa'],
+    ]);
+});
+
+it('offers the prevention measures what else the company does, in plain words', function (): void {
+    expect(contentOptions(DocumentKind::PreventionMeasures)['actions'])->toBe(['breaks' => 'Pausas acordadas por turno', 'schedules' => 'Horarios y descansos que se respetan', 'support' => 'Apoyo psicológico para quien lo pida', 'listening' => 'Reuniones para escuchar al equipo', 'campaigns' => 'Campañas de bienestar']);
 });

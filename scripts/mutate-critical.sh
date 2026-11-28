@@ -6,16 +6,27 @@
 #
 # Every module runs even if one fails, and the exit code is 1 if any did. Extra arguments go to Pest (--min=95 ...).
 #
+# With --changed first (composer mutate:changed) it runs only the modules whose app/ code differs from origin/main,
+# committed or not: the mutation that closes a feature, before its PR.
+#
 # Usage: composer mutate:critical [-- --min=95 --ignore-min-score-on-zero-mutations]
 set -uo pipefail
 
 status=0
 
+if [ "${1:-}" = "--changed" ]; then
+    shift
+    plan=$( { git diff --name-only origin/main...HEAD; git diff --name-only HEAD; git ls-files --others --exclude-standard; } | php scripts/mutation-classes.php tests --plan --changed)
+else
+    plan=$(php scripts/mutation-classes.php tests --plan)
+fi
+
 while IFS=$'\t' read -r module classes filter; do
+    [ -n "$module" ] || continue
     echo
     echo "=== mutation: $module"
     vendor/bin/pest --mutate --parallel --processes=4 --exclude-testsuite=Browser,Ssr --group=__pest_mutate_only \
         --filter="$filter" --class="$classes" "$@" </dev/null || status=1
-done < <(php scripts/mutation-classes.php tests --plan)
+done <<< "$plan"
 
 exit $status

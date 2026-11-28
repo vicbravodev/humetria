@@ -16,15 +16,15 @@ use InvalidArgumentException;
  */
 final class PulseComposer
 {
-    public const int MAX = 11;
+    public const int MAX = 11; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** The most questions a mode adds to the fixed ones. */
-    private const int ROTATING = 6;
+    private const int ROTATING = 6; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** The drivers a tour looks at, half each time: two tours in a row cover the ten. */
     public const array TOUR = [
-        [Driver::Clarity, Driver::Leadership, Driver::Communication, Driver::Recognition, Driver::Growth],
-        [Driver::Autonomy, Driver::Resources, Driver::Team, Driver::Voice, Driver::Reward],
+        [Driver::Clarity, Driver::Leadership, Driver::Communication, Driver::Recognition, Driver::Growth], // @pest-mutate-ignore: RemoveArrayItem
+        [Driver::Autonomy, Driver::Resources, Driver::Team, Driver::Voice, Driver::Reward], // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     /**

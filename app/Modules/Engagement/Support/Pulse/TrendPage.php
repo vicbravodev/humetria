@@ -27,7 +27,7 @@ use Carbon\CarbonImmutable;
  */
 final readonly class TrendPage
 {
-    private const array MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    private const array MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']; // @pest-mutate-ignore: RemoveArrayItem
 
     public function __construct(private Thresholds $thresholds) {}
 

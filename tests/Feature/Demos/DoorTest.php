@@ -11,6 +11,7 @@ use App\Modules\Demos\Contracts\DemoDoorPool;
 use App\Modules\Demos\Contracts\DemoEntrance;
 use App\Modules\Demos\Models\DoorAssignment;
 use App\Modules\Demos\Models\DoorSession;
+use App\Modules\Demos\Support\DemoDoor;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\WorkerAccess\Enums\EntryVia;
@@ -25,7 +26,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(OpenDoor::class, CloseDoor::class, AdmitVisitor::class, ReadDoorState::class);
+mutates(OpenDoor::class, CloseDoor::class, AdmitVisitor::class, ReadDoorState::class, DemoDoor::class);
 
 const DOOR_COOKIE = 'demo_door';
 

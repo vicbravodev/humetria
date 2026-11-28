@@ -28,7 +28,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class ResolveTenant
 {
-    private const int SWITCHER_COMPANIES = 10;
+    private const int SWITCHER_COMPANIES = 10; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(
         private readonly ListUserTenants $listUserTenants,

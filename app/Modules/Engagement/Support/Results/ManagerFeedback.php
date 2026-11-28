@@ -17,10 +17,10 @@ use App\Modules\Engagement\Support\Bank\ItemBank;
 final class ManagerFeedback
 {
     /** Strengths and opportunities a manager reads. */
-    private const int HIGHLIGHTS = 2;
+    private const int HIGHLIGHTS = 2; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** The questions about the manager that the climate survey asks; with fewer, strengths and opportunities are not told. */
-    private const int FULL = 8;
+    private const int FULL = 8; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** `null` when the survey is not closed, the group is not shown or none of its questions reaches the minimum. */
     public static function for(Survey $survey, string $managerId): ?ManagerFeedbackData

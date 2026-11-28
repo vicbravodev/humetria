@@ -8,6 +8,7 @@ use App\Modules\Organization\Models\Area;
 use App\Modules\Organization\Models\Employee;
 use App\Modules\Organization\Models\JobGrade;
 use App\Modules\Organization\Support\EmployeeCsv;
+use App\Modules\Organization\Support\ImportChanges;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\Log;
 use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(EmployeeImportController::class, ImportEmployees::class, EmployeeCsv::class);
+mutates(EmployeeImportController::class, ImportEmployees::class, EmployeeCsv::class, ImportChanges::class);
 
 const CSV_HEADER = 'nombre,correo,celular,genero,centro_de_trabajo,area,puesto,numero_de_empleado';
 

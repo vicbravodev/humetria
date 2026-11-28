@@ -6,9 +6,10 @@ use App\Modules\Assistant\Actions\CheckAllowance;
 use App\Modules\Assistant\Exceptions\AssistantUnavailable;
 use App\Modules\Assistant\Models\AiUsage;
 use App\Modules\Assistant\Models\TenantAiSettings;
+use App\Modules\Assistant\Support\MonthlyUsage;
 use App\Modules\Tenancy\Models\Tenant;
 
-mutates(CheckAllowance::class);
+mutates(CheckAllowance::class, MonthlyUsage::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-18 18:00:00');
@@ -110,6 +111,18 @@ it('limits the messages of one person per day', function (): void {
     }
 
     expect(allowanceRefusal(fn () => resolve(CheckAllowance::class)->handle($this->scope))->reason)->toBe(AssistantUnavailable::RATE);
+});
+
+it('counts the limit per minute over sixty seconds and the one per day over a whole day, and says so when it refuses', function (): void {
+    config(['humi.rate_per_minute' => 1]);
+    resolve(CheckAllowance::class)->handle($this->scope);
+
+    expect(allowanceRefusal(fn () => resolve(CheckAllowance::class)->handle($this->scope))->retryAfter)->toBe(60);
+
+    config(['humi.rate_per_minute' => 100, 'humi.rate_per_day' => 1]);
+    $this->travel(2)->minutes();
+
+    expect(allowanceRefusal(fn () => resolve(CheckAllowance::class)->handle($this->scope))->retryAfter)->toBe(86400 - 120);
 });
 
 it('does not let the limit of one person stop another of the same company', function (): void {

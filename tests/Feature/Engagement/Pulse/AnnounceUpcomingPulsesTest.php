@@ -11,6 +11,7 @@ use App\Modules\Engagement\Notifications\PulseUpcoming;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Notification;
 
 mutates(AnnounceUpcomingPulses::class, PulseUpcoming::class);
@@ -95,6 +96,26 @@ it('stays quiet in a suspended company', function (): void {
     Illuminate\Support\Facades\DB::table('tenants')->where('id', $this->tenant->id)->update(['restriction' => 'suspended', 'restriction_reason' => 'Prueba', 'restricted_at' => now()]);
 
     expect(pulseAnnounceRun())->toBe(0);
+});
+
+it('skips the demo company and still tells the companies after it', function (): void {
+    becomeDemo($this->tenant);
+    $globex = Tenant::factory()->create();
+    $globexOwner = memberOf($globex, TenantRole::Owner);
+    PulseSchedule::factory()->create(['tenant_id' => $globex->id, 'next_run_on' => '2026-11-18']);
+
+    expect(pulseAnnounceRun())->toBe(1)->and(pulseAnnouncedTo())->toBe([$globexOwner->email]);
+});
+
+it('reports the failure of one company and still tells the others', function (): void {
+    Exceptions::fake();
+    $globex = Tenant::factory()->create();
+    PulseSchedule::factory()->create(['tenant_id' => $globex->id, 'next_run_on' => '2026-11-18']);
+    failToEnter($globex->id);
+
+    expect(pulseAnnounceRun())->toBe(2);
+
+    Exceptions::assertReported(fn (RuntimeException $failure): bool => $failure->getMessage() === 'The company could not be entered.');
 });
 
 it('says how many commitments are still open, only when there are', function (int $open, ?string $line): void {

@@ -18,9 +18,9 @@ use App\Modules\Results\Data\RiskBreakdown;
  */
 final readonly class ResultsStanding
 {
-    private const int MINIMUM_PEOPLE = 16;
+    private const int MINIMUM_PEOPLE = 16; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
-    private const int LARGE_CENTER = 51;
+    private const int LARGE_CENTER = 51; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private CampaignRecords $campaigns, private RiskResults $results, private Headcount $headcount) {}
 

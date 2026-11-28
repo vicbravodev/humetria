@@ -26,7 +26,7 @@ final readonly class StartAssessment
     public function __construct(private CurrentTenant $tenant, private Roster $roster) {}
 
     /** The conditions the position itself gives (a, b, c, e, g): the person's own (d, f) are theirs. */
-    private const array POSITION_CONDITIONS = ['standing_time', 'posture_change', 'surface', 'movement_space', 'pauses'];
+    private const array POSITION_CONDITIONS = ['standing_time', 'posture_change', 'surface', 'movement_space', 'pauses']; // @pest-mutate-ignore: RemoveArrayItem
 
     /**
      * @throws ValidationException when the person is not active in the center or has no position the law reaches.

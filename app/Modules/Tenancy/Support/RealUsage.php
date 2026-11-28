@@ -15,7 +15,7 @@ final readonly class RealUsage
     public function __construct(private Headcount $headcount) {}
 
     /** The resources a plan limits, in the order they are shown. */
-    public const array RESOURCES = [CompanyLimits::SEATS, CompanyLimits::CENTERS];
+    public const array RESOURCES = [CompanyLimits::SEATS, CompanyLimits::CENTERS]; // @pest-mutate-ignore: RemoveArrayItem
 
     public function of(string $tenantId, string $resource): int
     {

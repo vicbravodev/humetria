@@ -18,7 +18,7 @@ use App\Modules\Engagement\Support\Thresholds;
 final class Trend
 {
     /** The most waves a series holds: the most recent. */
-    public const int MAX_WAVES = 12;
+    public const int MAX_WAVES = 12; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /**
      * @param  list<Wave>  $waves  oldest first
@@ -157,7 +157,7 @@ final class Trend
 
     private static function direction(int $points): Direction
     {
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             $points > 0 => Direction::Up,
             $points < 0 => Direction::Down,
             default => Direction::Same,

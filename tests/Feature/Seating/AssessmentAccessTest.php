@@ -5,12 +5,16 @@ declare(strict_types=1);
 use App\Modules\Seating\Models\PositionAssignment;
 use App\Modules\Seating\Models\RiskAssessment;
 use App\Modules\Seating\Models\StandingPosition;
+use App\Modules\Seating\Support\AssessmentAccess;
+use App\Modules\Seating\Support\CenterAccess;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
 use Database\Factories\Organization\EmployeeFactory;
 use Inertia\Testing\AssertableInertia as Assert;
+
+mutates(CenterAccess::class, AssessmentAccess::class);
 
 beforeEach(function (): void {
     $this->tenant = Tenant::factory()->create(['slug' => 'acme']);

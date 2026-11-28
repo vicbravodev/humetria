@@ -12,12 +12,14 @@ use App\Modules\Billing\Models\UsageCounter;
 use App\Modules\Billing\Models\UsageEvent;
 use App\Modules\Billing\Models\UsageGrant;
 use App\Modules\Billing\Models\UsageReservation;
+use App\Modules\Billing\Support\LedgerUsageMeter;
+use App\Modules\Billing\Support\UsagePeriod;
 use App\Modules\Billing\Support\UsageQuota;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
-mutates(ReserveUsage::class, SettleUsage::class, ReleaseUsage::class, ExpireUsageReservations::class, UsageQuota::class);
+mutates(ReserveUsage::class, SettleUsage::class, ReleaseUsage::class, ExpireUsageReservations::class, UsageQuota::class, LedgerUsageMeter::class, UsagePeriod::class);
 
 const TOKENS = 'assistant_tokens';
 

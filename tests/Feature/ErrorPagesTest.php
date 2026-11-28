@@ -48,6 +48,8 @@ it('keeps saying when to try again on its page for too many attempts', function 
         ->assertTooManyRequests()
         ->assertHeader('Retry-After', '60')
         ->assertHeader('X-RateLimit-Limit', '1')
+        ->assertHeader('X-RateLimit-Remaining', '0')
+        ->assertHeader('X-RateLimit-Reset', (string) now()->addSeconds(60)->getTimestamp())
         ->assertInertia(fn (Assert $page) => $page->component('error')->where('status', 429));
 });
 
@@ -126,7 +128,10 @@ it('speaks «usted» on the error page of every page a worker opens with a link'
     $this->get('/test/worker-gone')
         ->assertNotFound()
         ->assertInertia(fn (Assert $page) => $page->component('error')->where('survey', true));
-})->with(['portal.vacations.show', 'workers.show', 'attendance.device.kiosk.show', 'portal.team.show']);
+})->with([
+    'portal.vacations.show', 'workers.show', 'attendance.device.kiosk.show', 'portal.team.show', 'survey.show',
+    'engagement.survey.show', 'complaints.public.create', 'complaints.follow-up.show', 'worker.enter',
+]);
 
 it('says which error page is of the time clock screen, for it to ask RH for a new link (hallazgo 24)', function (string $name, bool $screen): void {
     Route::middleware('web')->get('/test/screen-gone', fn () => abort(404))->name($name);

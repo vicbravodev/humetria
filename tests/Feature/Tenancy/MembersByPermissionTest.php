@@ -69,3 +69,12 @@ it('asks who holds a permission once per request, and again after a role or perm
     expect($repeated)->toBe(0)
         ->and(userIdsOf($members->holding('manage-organization')))->toContain($this->given->id);
 });
+
+it('lists as managers of the complaint channel and as viewers of Guía I whoever holds that permission, and nobody else', function (): void {
+    app(GrantMemberPermissions::class)->handle(TenantMembership::query()->where('user_id', $this->given->id)->sole(), ['manage-complaint-channel', 'view-trauma-screenings'], $this->owner);
+    $members = resolve(Members::class);
+
+    expect(userIdsOf($members->complaintManagers()))->toContain($this->given->id, $this->owner->id)->not->toContain($this->plain->id)
+        ->and(userIdsOf($members->screeningViewers()))->toContain($this->given->id, $this->owner->id)->not->toContain($this->plain->id)
+        ->and(userIdsOf($members->reviewers()))->not->toContain($this->given->id, $this->plain->id);
+});

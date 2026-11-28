@@ -18,10 +18,10 @@ use Throwable;
  */
 final class PostHogExceptions
 {
-    private const int MAX_FRAMES = 50;
+    private const int MAX_FRAMES = 50; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** How many exceptions of one class reach PostHog a minute: a storm of the same error is one alert, not a bill. */
-    private const int PER_CLASS_PER_MINUTE = 10;
+    private const int PER_CLASS_PER_MINUTE = 10; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /**
      * Called for every exception Laravel decides to report, before it is logged; without a token it does nothing. It

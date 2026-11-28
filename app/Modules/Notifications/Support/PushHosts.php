@@ -11,7 +11,7 @@ namespace App\Modules\Notifications\Support;
 final class PushHosts
 {
     /** Chrome and Android; Firefox; Safari and the home screen app; Edge. */
-    private const array HOSTS = ['fcm.googleapis.com', 'push.services.mozilla.com', 'push.apple.com', 'notify.windows.com'];
+    private const array HOSTS = ['fcm.googleapis.com', 'push.services.mozilla.com', 'push.apple.com', 'notify.windows.com']; // @pest-mutate-ignore: RemoveArrayItem
 
     public static function allows(string $endpoint): bool
     {

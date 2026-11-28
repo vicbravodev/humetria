@@ -291,6 +291,17 @@ it('stops asking for more steps when the person pressed stop, and starts clean a
     expect(Cache::has("assistant:stop:{$participant->id}"))->toBeFalse();
 });
 
+it('lets the stop mark lapse by itself after five minutes', function (): void {
+    $this->freezeSecond();
+    resolve(StopSwitch::class)->request(7);
+
+    $this->travel(299)->seconds();
+    expect(resolve(StopSwitch::class)->requested(7))->toBeTrue();
+
+    $this->travel(1)->seconds();
+    expect(resolve(StopSwitch::class)->requested(7))->toBeFalse();
+});
+
 it('wires the stop switch into the steps of the agent', function (): void {
     $scope = assistantScopeIn($this->a);
     $agent = HumiAssistant::make(scope: $scope);

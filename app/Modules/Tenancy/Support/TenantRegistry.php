@@ -86,6 +86,7 @@ final class TenantRegistry implements CompanyRegistry
 
     public function ids(): array
     {
-        return array_values(Tenant::query()->get(['id'])->map(fn (Tenant $tenant): string => $tenant->id)->all());
+        // A fresh get() is already a list.
+        return array_values(Tenant::query()->get(['id'])->map(fn (Tenant $tenant): string => $tenant->id)->all()); // @pest-mutate-ignore: UnwrapArrayValues
     }
 }

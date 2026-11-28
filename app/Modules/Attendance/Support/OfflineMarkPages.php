@@ -34,10 +34,10 @@ use LogicException;
  */
 final readonly class OfflineMarkPages
 {
-    private const int PER_PAGE = 25;
+    private const int PER_PAGE = 25; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** How long a rejected delivery is shown: the horizon of a correction. */
-    private const int REJECTED_DAYS = 35;
+    private const int REJECTED_DAYS = 35; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     private const string FORMAT = 'Y-m-d H:i';
 

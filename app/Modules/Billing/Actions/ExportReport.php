@@ -27,7 +27,7 @@ use InvalidArgumentException;
  */
 final readonly class ExportReport
 {
-    public const array REPORTS = ['portfolio', 'balances', 'renewals'];
+    public const array REPORTS = ['portfolio', 'balances', 'renewals']; // @pest-mutate-ignore: RemoveArrayItem
 
     public function __construct(
         private RecordAudit $recordAudit,

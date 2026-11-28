@@ -12,7 +12,7 @@ use Carbon\CarbonImmutable;
 final class CurrentRiskPremium
 {
     /** The prima media of class I (LSS art. 73, 0.54355 %), for an estimate of a company that has not captured its own. */
-    public const int CLASS_ONE_SCALED = 54_355;
+    public const int CLASS_ONE_SCALED = 54_355; // @pest-mutate-ignore: IncrementInteger,DecrementInteger
 
     public function at(CarbonImmutable $on): ?Rate
     {

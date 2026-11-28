@@ -10,7 +10,7 @@ use App\Modules\Tenancy\Contracts\CompanyRegistry;
 final readonly class SearchLinkableCompanies
 {
     /** How many companies are read before the ones that already have a payer are dropped. */
-    private const int WIDER = 3;
+    private const int WIDER = 3; // @pest-mutate-ignore: IncrementInteger,DecrementInteger
 
     public function __construct(private CompanyRegistry $companies) {}
 

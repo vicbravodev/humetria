@@ -208,7 +208,7 @@ describe('workflows', function (): void {
                 ->and($with['tags'])->toContain("ghcr.io/\${{ github.repository }}{$suffix}:latest")
                 ->and($with['tags'])->toContain("ghcr.io/\${{ github.repository }}{$suffix}:sha-{$sha}")
                 ->and($with['cache-from'])->toBe("type=gha,scope={$target}")
-                ->and($with['cache-to'])->toBe("type=gha,mode=max,scope={$target}");
+                ->and($with['cache-to'])->toBe("type=gha,mode=min,scope={$target}");
         }
 
         $names = array_map(fn (array $step): string => (string) ($step['name'] ?? $step['uses'] ?? ''), deploySteps());

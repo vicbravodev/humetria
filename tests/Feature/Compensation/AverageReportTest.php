@@ -5,12 +5,15 @@ declare(strict_types=1);
 use App\Modules\Compensation\Models\ReportShare;
 use App\Modules\Compensation\Models\Scenario;
 use App\Modules\Compensation\Models\WorkRiskPremium;
+use App\Modules\Compensation\Support\AverageExample;
+use App\Modules\Compensation\Support\OtherScenarios;
 use App\Modules\Compensation\Support\ReportBuilder;
+use App\Modules\Compensation\Support\ReportImpact;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ReportBuilder::class);
+mutates(ReportBuilder::class, AverageExample::class, ReportImpact::class, OtherScenarios::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-11-04 10:00:00');
@@ -141,6 +144,13 @@ it('has no worker to walk through for the roster, only its totals', function ():
 
     $this->get(route('tenant.compensation.scenarios.report', [$this->tenant, $scenario->id]))
         ->assertInertia(fn (Assert $page) => $page->where('example', null)->has('impact'));
+});
+
+it('has no worker to walk through when the payroll of an average scenario has nobody in it', function (): void {
+    $scenario = Scenario::factory()->average()->make();
+
+    expect(AverageExample::of($scenario, scenarioInput(['cells' => []])))->toBeNull()
+        ->and(AverageExample::of($scenario, scenarioInput(['gradeSalaries' => []])))->toBeNull();
 });
 
 it('puts the raise on a ladder of two points apart, the current one among them', function (): void {

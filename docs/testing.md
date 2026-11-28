@@ -2,15 +2,32 @@
 
 ## Convención
 
-- Cada test de lógica de dominio declara `mutates(Clase::class)`: reglas, cálculos, máquinas de estado, límites
-  (15/16, 50/51), privacidad y seguridad. No se declara en controladores, FormRequests sin reglas propias, DTOs,
-  migraciones, config ni enums que solo tienen etiquetas.
+- **Criterio: por omisión se muta.** Preferimos que sobre un test a que falte un borde crítico. Cada test de lógica
+  declara `mutates(Clase::class)`: reglas, cálculos, máquinas de estado, límites (15/16, 50/51), permisos y acceso,
+  dinero, plazos legales, privacidad y anonimato, aislamiento entre empresas, lo que cambia estado y lo que decide qué ve
+  alguien. No se declara en controladores, FormRequests sin reglas propias, migraciones, config ni enums que solo tienen
+  etiquetas.
+- **Se exime solo lo que no decide nada**, con su razón en `mutationExemptClasses()`: un DTO o valor de solo constructor,
+  un texto o catálogo fijo, un adaptador a un servicio externo (red, DNS, disco). Que cueste probarla no es razón.
+- **Todo módulo pasa `--min=95`**, el Kernel (lo de `app/` fuera de los módulos) incluido. Un módulo debajo no es una
+  decisión pendiente: es trabajo sin terminar.
+- `tests/Unit/MutationCoverageTest.php` lo hace cumplir: toda clase concreta de `Actions`, `Support`, `Listeners` o `Jobs`
+  de un módulo la declara algún test en `mutates()`, o está en `mutationExemptClasses()` con su razón (o su nombre termina en
+  `Pages`, `Page` o `Template`: arma props o texto fijo). Una clase exenta que un test empieza a mutar sale de la lista.
 - `mutates()` compara por prefijo: `mutates(Tenant::class)` también muta `TenantInvitation` y `TenantMembership`.
-- En modelos, las listas que PHP resuelve al compilar (`#[Fillable]`, `$casts`, `$hidden`) llevan
-  `// @pest-mutate-ignore: RemoveArrayItem` en su línea: la cobertura nunca las marca y saldrían como "uncovered".
+- Lo que PHP resuelve al compilar nunca lo marca la cobertura y saldría como "uncovered": las listas de los modelos
+  (`#[Fillable]`, `$casts`, `$hidden`), las constantes (`private const int LEEWAY_SECONDS = 60;`) y los valores por omisión
+  de propiedades (`protected $usesPKCE = true;`). Llevan `// @pest-mutate-ignore: <Mutador>` en su línea **y** un test que
+  fije el valor (el límite exacto de la constante, la lista que se ve en la respuesta): el comentario solo dice que la
+  mutación no puede medirlo, no que no se prueba.
 - Mientras desarrollas, la mutación se corre en local **solo por clase**. La corrida de las clases críticas vive en CI, cada semana.
-- Si un mutante escapa, falta un test. Si el mutante es equivalente (no cambia el comportamiento), se reporta; no se
-  escribe un test artificial para matarlo.
+- **Un feature no está terminado sin su mutación.** La sesión que lo construye corre `composer mutate:changed` una vez, al
+  final y antes de pedir el PR: muta cada módulo cuyo código de `app/` cambió respecto de `origin/main`, y cada uno pasa el
+  95. Una clase nueva sin `mutates()` ni razón la frena el CI en el PR (`MutationCoverageTest`); el score lo confirma la
+  corrida semanal, que no debe descubrir nada.
+- Si un mutante escapa, falta un test. Si al escribirlo el comportamiento resulta mal (el mutante destapa un bug), primero
+  el test en rojo y luego se corrige el código: nunca se ajusta el test a lo que el código hace. Si el mutante es
+  equivalente (no cambia el comportamiento), se reporta; no se escribe un test artificial para matarlo.
 
 ## Comandos
 
@@ -19,6 +36,7 @@ composer test:fast                                                       # Tia: 
 composer mutate -- --class='App\Modules\Tenancy\Actions\AcceptInvitation' # una clase (o un namespace), 4 procesos
 composer mutate:retry -- --class='App\Modules\Tenancy\Actions\AcceptInvitation' # lo que escapó, primero
 composer mutate:critical                                                 # las clases de lógica de negocio, un módulo a la vez; CI le pone --min=95
+composer mutate:changed                                                  # cierre del feature: los módulos que cambiaron, --min=95
 composer mutate:full                                                     # todas las clases de mutates(), --min=95
 ```
 
@@ -30,7 +48,7 @@ Cada checkout usa su propia base de pruebas (ver `docs/setup.md`, "Worktrees en 
 |---|---|---|
 | Local, a mano | La clase que pasas con `--class` | — |
 | `tests.yml` (PR y `main`) | Nada: la mutación no bloquea el merge | — |
-| `mutation.yml`, domingo 23:00 (CDMX) y a mano | Las clases de `mutates()` sin controladores, FormRequests ni notificaciones, un módulo a la vez (`composer mutate:critical`) | 95% por módulo |
+| `mutation.yml`, domingo 23:00 (CDMX) y a mano | Las clases de `mutates()` sin controladores, FormRequests ni notificaciones (las carpetas `Notifications/` de cada módulo; el módulo `Notifications` sí entra), un módulo a la vez (`composer mutate:critical`) | 95% por módulo |
 
 ### Por qué un módulo a la vez
 
@@ -53,13 +71,28 @@ declaran `mutates()` de ellas. Eso fija el tamaño del filtro al de un módulo, 
 
 Si la corrida semanal falla, el workflow queda en rojo y GitHub avisa al correo de quien editó el cron; no toca ningún PR.
 
+### Postgres con `max_locks_per_transaction = 256`
+
+`migrate:fresh` borra todas las tablas (más de 600 relaciones con índices y secuencias) en una sola sentencia, y la mutación
+lo hace en cada base paralela (`testing_test_N`) a la vez. Con el valor por omisión (64 por conexión) Postgres se queda sin
+tabla de candados: `SQLSTATE[53200] out of shared memory` y la pista `increase max_locks_per_transaction`. Así pasó cuatro
+domingos seguidos hasta el 23 nov 2026: 12 de 22 módulos no llegaron a tener score. El valor solo se lee al arrancar (un `pg_reload_conf()` no
+basta), así que `mutation.yml` lo sube con `ALTER SYSTEM` y **reinicia** el servicio antes de migrar
+(`tests/Unit/CiPipelineTest.php` lo exige). El Postgres local de Sail ya tiene 256; en una base nueva:
+
+```bash
+docker exec humetria-pgsql-1 psql -U sail -d testing -c 'ALTER SYSTEM SET max_locks_per_transaction = 256'
+```
+
+y reinicia el contenedor (`./vendor/bin/sail restart pgsql`).
+
 ### Si la corrida falla
 
 - Se reproduce con `composer mutate -- --class='App\Modules\X\Actions\Y'` y se agrega el test que mata al mutante.
 - No se baja `--min`, no se excluye la clase ni se vuelve a poner la mutación en los PR.
 - El umbral solo sube: si el score sostiene más de 2 puntos por encima, súbelo en `mutation.yml` y aquí.
-- Para dejar una clase fuera de la mutación, su test no declara `mutates()`; la lista sale de `scripts/mutation-classes.php`,
-  no hay una lista que mantener a mano.
+- La lista de clases a mutar sale de los `mutates()` (`scripts/mutation-classes.php`). Dejar una clase de lógica fuera exige
+  su razón en `mutationExemptClasses()` (`tests/Unit/MutationCoverageTest.php`), según el criterio de «Convención».
 
 ### Cobertura
 
@@ -151,21 +184,69 @@ Los jobs corren en paralelo; `ci`, el check obligatorio, espera a todos:
 
 | Job | Qué hace |
 |---|---|
-| `changes` | Decide si el cambio necesita el pipeline (`scripts/ci-code-changed.sh`). |
+| `changes` | Decide si el cambio necesita el pipeline (`scripts/ci-code-changed.sh`) y si toca las dependencias (`scripts/ci-dependencies-changed.sh`). Solo baja `scripts/`. |
 | `build` | Construye el frontend una vez (`npm run build:ssr`) y lo sube como artefacto `assets`: `public/build`, `bootstrap/ssr` y los archivos de Wayfinder. |
-| `checks` | Auditoría, Pint, PHPStan, `vp check`, tsc y Vitest. No construye: genera Wayfinder con `wayfinder:generate --with-form`. |
-| `tests` (3 shards) | Unit y Feature con PCOV; cada shard guarda su cobertura (`--coverage-php`). |
+| `checks` | Auditoría (solo si el cambio toca `composer.*`, `package*.json` o `scripts/npm-audit.sh`; `audit.yml` audita `main` cada día), Pint, PHPStan (con su caché de resultados), `vp check`, tsc y Vitest. No construye: genera Wayfinder con `wayfinder:generate --with-form`. |
+| `tests` (3 shards) | Unit y Feature con PCOV; cada shard guarda su cobertura (`--coverage-php`) y sus tiempos (`timings-tests-N`). |
 | `coverage` | Junta la cobertura de los shards (`scripts/coverage-merge.php`, con el merger de php-code-coverage) y aplica el 90 % (`scripts/coverage-min.php`). |
-| `browser` (4 shards) | Pest Browser. Si falla, sube las capturas (`tests/Browser/Screenshots`) como artefacto. |
+| `browser` (6 shards) | Pest Browser con 3 procesos por shard (con 4, cuatro Chromium, cuatro PHP y Postgres se peleaban los 4 núcleos y los pasos vencían al azar); guarda sus tiempos (`timings-browser-N`). Si falla, sube las capturas (`tests/Browser/Screenshots`) como artefacto. |
 | `ssr` | El bundle SSR con un Node real (usa el del job `build`: `SSR_PREBUILT=true`) y la imagen `ssr` con Docker. |
 
-- Los shards se reparten por **tiempo** con `tests/.pest/shards.json` (Pest: `--shard` usa los tiempos de cada clase).
-  Un archivo de prueba nuevo sin tiempo va por turno y Pest avisa que el archivo está viejo; se regenera de vez en cuando,
-  con la suite completa en verde: `php artisan test --update-shards --parallel --processes=4 --exclude-testsuite=Ssr`
-  (con `artisan test`: el servidor de Playwright lo arranca él). Los tiempos son de una Mac; en CI cambian las magnitudes, no
-  las proporciones.
-- Postgres en CI vive en un tmpfs y con `fsync`, `synchronous_commit` y `full_page_writes` apagados (la acción `setup`):
-  la base muere con el job.
+## Los shards
+
+Un shard dura lo que duran sus pruebas, y la corrida, lo que dura el shard más lento: un reparto disparejo es tiempo perdido
+y, si un shard pasa sus 30 min, una corrida roja (sale como «cancelled»). Pest reparte por **tiempo** con
+`tests/.pest/shards.json`: de mayor a menor, cada clase al shard con menos carga. Un archivo nuevo sin tiempo va por turno y
+Pest avisa que el archivo está viejo.
+
+- **Los tiempos salen del CI, no de una Mac.** Cada shard guarda su JUnit (`--log-junit`) como artefacto `timings-*` por
+  30 días. Para actualizar el archivo, con la última corrida verde de `main`:
+
+  ```bash
+  gh run download "$(gh run list --workflow tests.yml --branch main --status success --limit 1 --json databaseId -q '.[0].databaseId')" -p 'timings-*' -D /tmp/timings
+  php scripts/shard-timings.php tests/.pest/shards.json /tmp/timings/*/*.xml
+  ```
+
+- **Nunca con `--update-shards` de Pest.** Reescribe el archivo entero con una sola corrida, y una corrida de Browser y Feature
+  a la vez mide su pelea por la CPU, no las pruebas: el 17 nov 2026 le dio 1270 s a `DemoStoriesTest` (tarda 146 s), Pest
+  la dejó casi sola en un shard y los otros dos cargaron 7000 pruebas cada uno. (Esos 1270 s eran reales en parte: ver
+  «Autovacuum», abajo.) `scripts/shard-timings.php`
+  conserva las clases que los reportes no traen: se puede medir una suite sin perder la otra.
+- Se actualiza cuando un shard tarda notablemente más que los otros, o cuando Pest avisa de muchos archivos nuevos.
+
+## El runner
+
+- `ubuntu-latest` de GitHub: **4 vCPU y 16 GB en un repo público; 2 vCPU y 7 GB en uno privado.** Con `--parallel` Pest abre
+  un proceso por núcleo, así que pasar el repo a privado duplica el tiempo de cada shard (pasó el 26 nov 2026: de ~16 a
+  ~28 min). En privado, además, los minutos salen del crédito del plan.
+- Las pruebas esperan a Postgres más que a la CPU (~40 % de uso en la historia de la demo): Postgres corre en el mismo runner.
+- `main` está protegido con un ruleset: solo entra por PR, con `ci` en verde y la rama al día con `main` (así `main` queda
+  probado tal como entra); nadie empuja directo ni reescribe su historia. La cola de merge solo existe en repos de una
+  organización: el `merge_group` de `tests.yml` queda listo para cuando lo sea.
+
+## Autovacuum
+
+Una prueba corre dentro de una transacción que nunca se confirma (`RefreshDatabase`). Si autovacuum analiza una tabla a
+media prueba, no cuenta las filas que esa transacción insertó: guarda la tabla como vacía (`reltuples = 0`) y el planner
+elige planes para tablas vacías (nested loops que recorren cada fila por fila). Así, la historia de la demo pasó de ~2.5 min
+a más de 30 en ~1 de cada 4 corridas del CI desde el 25 nov 2026, sin poderse reproducir sola en una Mac: hacen falta cambios
+previos en ese worker para que el análisis se dispare. El mecanismo lo confirma Tom Lane
+(https://www.postgresql.org/message-id/28701.1556221558%40sss.pgh.pa.us) y otros proyectos lo arreglaron igual.
+
+- En CI, autovacuum está apagado (la acción `setup`): la base muere con el job.
+- Una prueba que siembra mucho y luego consulta mucho corre `ANALYZE` dentro de su transacción tras sembrar (lo hace
+  `DemoStoriesTest`): cuenta sus propias filas y deja fuera a autovacuum hasta el final, también en local.
+
+## Lo demás
+
+- Postgres en CI vive en un tmpfs y con `fsync`, `synchronous_commit`, `full_page_writes` y `autovacuum` apagados (la acción
+  `setup`): la base muere con el job.
+- Solo `build` y `checks` cancelan la corrida al fallar (son los rápidos). Los shards terminan aunque otro falle: la corrida
+  muestra todos los fallos de una vez, cada uno con su log, y «Re-run failed jobs» repite solo el shard rojo.
+- El paso de pruebas de `tests` y `browser` se corta a los 15 min: un cuelgue no quema los 30 del job.
+- `assets` y la cobertura de cada shard se guardan 7 días: un job que se repite días después todavía los encuentra.
+- `deploy.yml` guarda en caché solo las capas de las imágenes que publica (`mode=min`): con `mode=max` la caché de BuildKit
+  pasaba los 10 GB del repo y empujaba fuera las de vendor, npm y Playwright.
 - Los navegadores de Playwright se guardan en caché por la versión de Playwright.
-- Cada job tiene `timeout-minutes`; el flujo también corre en `merge_group`, listo para una cola de merge.
+- Cada job tiene `timeout-minutes`.
 - En local nada cambia: `composer test` mide la cobertura en una sola corrida (`test:coverage`) y `composer setup` construye.

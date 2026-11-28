@@ -8,7 +8,7 @@ use App\Notifications\ResetPasswordNotification;
 use App\Notifications\VerifyEmailNotification;
 use Illuminate\Support\Facades\Notification;
 
-mutates(ResetPasswordNotification::class, VerifyEmailNotification::class);
+mutates(ResetPasswordNotification::class, VerifyEmailNotification::class, User::class);
 
 beforeEach(function (): void {
     $this->travelTo('2026-10-30 20:02 UTC');
@@ -21,12 +21,12 @@ it('asks for a new password, saying from where and when it was requested', funct
     {
         public function place(string $ip): ?string
         {
-            return 'Monterrey, Nuevo León';
+            return $ip === '201.141.1.1' ? 'Monterrey, Nuevo León' : null;
         }
     });
     $user = User::factory()->create(['email' => 'rita@autopartes.mx']);
 
-    $this->withHeader('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36')
+    $this->withServerVariables(['REMOTE_ADDR' => '201.141.1.1'])->withHeader('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36')
         ->post(route('password.email'), ['email' => 'rita@autopartes.mx']);
 
     Notification::assertSentTo($user, ResetPasswordNotification::class, function (ResetPasswordNotification $notification) use ($user): bool {
@@ -49,6 +49,33 @@ it('asks for a new password, saying from where and when it was requested', funct
 
         return true;
     });
+});
+
+it('says from where a person asked for the link only when it was them: never the device of support sending it', function (): void {
+    Notification::fake();
+    config(['services.geoip.database' => storage_path('framework/testing/missing.mmdb')]);
+    $user = User::factory()->create();
+    $chrome = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36';
+    request()->headers->set('User-Agent', $chrome);
+
+    $support = User::factory()->create();
+
+    request()->setUserResolver(fn (): User => $support);
+    $user->sendPasswordResetNotification('del-soporte');
+    request()->setUserResolver(fn (): User => $user);
+    $user->sendPasswordResetNotification('de-la-persona');
+
+    Notification::assertSentTo($user, ResetPasswordNotification::class, fn (ResetPasswordNotification $notification): bool => $notification->token === 'del-soporte' && $notification->origin === null);
+    Notification::assertSentTo($user, ResetPasswordNotification::class, fn (ResetPasswordNotification $notification): bool => $notification->token === 'de-la-persona' && $notification->origin === 'Chrome en macOS · 30 oct, 14:02');
+});
+
+it('sends the email to verify the address', function (): void {
+    Notification::fake();
+    $user = User::factory()->unverified()->create();
+
+    $user->sendEmailVerificationNotification();
+
+    Notification::assertSentTo($user, VerifyEmailNotification::class);
 });
 
 it('keeps the address the request came from out of the queued email', function (): void {

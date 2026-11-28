@@ -85,6 +85,22 @@ it('emails the people invited who are active and have an address, with the addre
     Notification::assertSentOnDemandTimes(FeedbackPublished::class, 1);
 });
 
+it('reads who was invited in blocks of a hundred', function (): void {
+    Notification::fake();
+    invitedToClimate($this->survey, 'ana@acme.test');
+    climateCommitment($this->survey);
+    $reads = [];
+    Illuminate\Support\Facades\DB::listen(function (Illuminate\Database\Events\QueryExecuted $query) use (&$reads): void {
+        if (preg_match('/^select "employee_id" from "engagement_invitations" .* limit (\d+)/', $query->sql, $match) === 1) {
+            $reads[] = (int) $match[1];
+        }
+    });
+
+    resolve(PublishFeedback::class)->handle($this->survey->id, $this->hr->id);
+
+    expect($reads)->not->toBe([])->and(array_unique($reads))->toBe([100]);
+});
+
 it('writes the mail in usted, from the company, without anything of the answers', function (): void {
     $company = new App\Modules\Tenancy\Data\CompanySummary('t', 'Acme', 'acme', false);
     $mail = (new FeedbackPublished('https://x.test/me/acme/climate', 'Ana', $company))->toMail(new Illuminate\Notifications\AnonymousNotifiable);

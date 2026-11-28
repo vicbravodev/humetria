@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
 use App\Modules\Tenancy\Actions\GrantMemberPermissions;
 use App\Modules\Tenancy\Contracts\MemberLookup;
 use App\Modules\Tenancy\Enums\TenantRole;
@@ -10,6 +11,7 @@ use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Models\TenantModule;
 use App\Modules\Tenancy\Support\CompanyMemberLookup;
 use App\Modules\Tenancy\Support\ModuleStates;
+use Illuminate\Support\Str;
 
 mutates(CompanyMemberLookup::class);
 
@@ -47,4 +49,13 @@ it('reads the permissions of many people as it reads them of each one', function
 
     expect($many[$this->viewer->id])->toContain('manage-organization')->not->toContain('view-vacations')
         ->and($lookup->permissionsOfMany($this->tenant->id, []))->toBe([]);
+});
+
+it('finds a member of the company by email, whatever its case, and nobody outside it', function (): void {
+    $lookup = resolve(MemberLookup::class);
+    $stranger = User::factory()->create();
+
+    expect($lookup->userIdByEmail($this->tenant->id, Str::upper($this->hr->email)))->toBe($this->hr->id)
+        ->and($lookup->userIdByEmail($this->tenant->id, $stranger->email))->toBeNull()
+        ->and($lookup->userIdByEmail(Tenant::factory()->create()->id, $this->hr->email))->toBeNull();
 });

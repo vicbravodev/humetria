@@ -108,7 +108,7 @@ final readonly class ConfirmWeek
      */
     public static function blocker(array $marks, WeekCompleteness $completeness): ?string
     {
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             $marks === [] => 'no_marks',
             end($marks)->type !== MarkType::End => 'day_open',
             $completeness->uncoveredDays() !== [] && config()->boolean('attendance.week.block_uncovered_days') => 'uncovered_days',

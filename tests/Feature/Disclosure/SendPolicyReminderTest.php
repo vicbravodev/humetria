@@ -41,12 +41,13 @@ function remindAna(): void
     ]));
 }
 
-it('queues once per person, after the commit, with only ids in the job', function (): void {
+it('queues once per person, after the commit, with only ids in the job, and two more tries after a mail hiccup', function (): void {
     $job = new SendPolicyReminder($this->tenant->id, $this->ana->id);
 
     expect($job)->toBeInstanceOf(ShouldQueue::class)->toBeInstanceOf(ShouldQueueAfterCommit::class)->toBeInstanceOf(ShouldBeUniqueUntilProcessing::class)
         ->and($job->uniqueId())->toBe("{$this->tenant->id}:{$this->ana->id}")
         ->and(SendPolicyReminder::DELAY)->toBe(120)
+        ->and($job->tries)->toBe(3)->and($job->backoff)->toBe([60, 300])->and($job->uniqueFor)->toBe(600)
         ->and(get_object_vars($job))->not->toHaveKey('token');
 });
 

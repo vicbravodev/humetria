@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\AuditEntry;
+use App\Modules\Complaints\Actions\AssignComplaint;
 use App\Modules\Complaints\Actions\SubmitComplaint;
 use App\Modules\Complaints\Models\Complaint;
 use App\Modules\Complaints\Models\ComplaintAssignment;
@@ -22,7 +23,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schema;
 
-mutates(SubmitComplaint::class, TicketSigner::class);
+mutates(SubmitComplaint::class, TicketSigner::class, AssignComplaint::class);
 
 const SECRET_STORY = 'El jefe de turno me grita todos los días frente a mis compañeros y me amenaza con despedirme';
 const IP = '203.0.113.9';

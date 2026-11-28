@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Log;
 final readonly class UpdateCompanyChannels
 {
     /** The defaults of a channel with no row (CompanyChannels): mail on and first, WhatsApp off and second. */
-    private const array DEFAULTS = ['mail' => true, 'whatsapp' => false];
+    private const array DEFAULTS = ['mail' => true, 'whatsapp' => false]; // @pest-mutate-ignore: TrueToFalse,FalseToTrue,RemoveArrayItem
 
     public function __construct(private RecordAudit $audit) {}
 

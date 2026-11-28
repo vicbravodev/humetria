@@ -92,7 +92,13 @@ describe('the action', function (): void {
     it('requires a note of at least 10 characters', function (string $note): void {
         expect(fn () => correctDirectly($this, '2026-11-03 09:00', $note))->toThrow(InvalidArgumentException::class);
         expect(AttendanceMark::query()->whereNotNull('corrects_mark_id')->count())->toBe(0);
-    })->with(['empty' => [''], 'too short' => ['Ya está']]);
+    })->with(['empty' => [''], 'too short' => ['Ya está'], 'nine characters' => ['Corregida']]);
+
+    it('takes a note of exactly 10 characters', function (): void {
+        correctDirectly($this, '2026-11-03 09:00', 'Corregido.');
+
+        expect(AttendanceMark::query()->whereNotNull('corrects_mark_id')->count())->toBe(1);
+    });
 });
 
 describe('from the report', function (): void {

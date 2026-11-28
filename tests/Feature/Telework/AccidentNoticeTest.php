@@ -13,6 +13,7 @@ use App\Modules\Telework\Models\ChecklistApplication;
 use App\Modules\Telework\Models\CommitteeAssignment;
 use App\Modules\Telework\Models\WorkerNotice;
 use App\Modules\Telework\Notifications\NoticeAnswered;
+use App\Modules\Telework\Support\NoticeAccess;
 use App\Modules\Telework\Support\NoticeEvidence;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
@@ -32,7 +33,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(ReviewNotice::class, PortalNoticeController::class, SendNoticeAnswer::class, CloseNotice::class, RequestPlaceReview::class, NoticeEvidence::class);
+mutates(ReviewNotice::class, PortalNoticeController::class, SendNoticeAnswer::class, CloseNotice::class, RequestPlaceReview::class, NoticeEvidence::class, NoticeAccess::class);
 
 // Rediseño v2, board V3-Aviso (decisión A17; docs/02, «Aviso de accidente»): RH or the Comisión records what was done about
 // an accident (6.9), without clinical detail, and the person learns it in their portal.
