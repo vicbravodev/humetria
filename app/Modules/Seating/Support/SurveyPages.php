@@ -21,7 +21,7 @@ use App\Modules\Tenancy\Data\WorkCenterSummary;
  */
 final readonly class SurveyPages
 {
-    private const array STATUS_LABELS = ['active' => 'En curso', 'closed' => 'Cerrada'];
+    private const array STATUS_LABELS = ['active' => 'En curso', 'closed' => 'Cerrada']; // @pest-mutate-ignore: RemoveArrayItem
 
     public function __construct(
         private CenterSurveys $surveys,

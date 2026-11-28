@@ -138,6 +138,7 @@ it('shows only the progress while the survey is open', function (): void {
 
     surveyResultsPage($this->actingAs($this->hr))->assertInertia(fn (Assert $page) => $page
         ->where('survey.status', 'active')
+        ->where('survey.statusLabel', 'En curso')
         ->where('survey.closesOn', '2026-11-12')
         ->where('results', null));
 });
@@ -180,6 +181,7 @@ it('lets RH close the survey before its last day, and then shows the results', f
     expect($this->survey->refresh()->status->value)->toBe('closed');
     surveyResultsPage($this->actingAs($this->hr))->assertInertia(fn (Assert $page) => $page
         ->where('survey.status', 'closed')
+        ->where('survey.statusLabel', 'Cerrada')
         ->where('results.answered', 6)
         ->where('canLaunch', true));
     $entry = AuditEntry::query()->where('event', 'campaign.closed')->sole();
