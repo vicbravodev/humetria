@@ -461,6 +461,15 @@ describe('what is refused', function (): void {
         expect($outcome->reason)->toBe('signature_invalid')->and(AttendanceOfflineMark::query()->count())->toBe(0);
     });
 
+    it('answers person_inactive, with no row, for a person the company no longer has', function (): void {
+        $mark = romMark();
+        // Gone from the roster between the ticket and the delivery.
+        $this->mock(App\Modules\Organization\Contracts\Roster::class, fn ($roster) => $roster->shouldReceive('find')->with($this->ana['employee']->id)->andReturnNull());
+
+        expect(resolve(RecordOfflineMark::class)->handle($mark, romAt('15:00:00'))->toArray())->toBe(['seq' => 0, 'status' => 'rejected', 'reason' => 'person_inactive'])
+            ->and(AttendanceOfflineMark::query()->count())->toBe(0);
+    });
+
     it('rejects, with its row, a person who left, who never accepted the agreement or who marks for another center', function (string $cause, string $reason): void {
         $who = $this->ana;
         $center = $this->plant->id;
