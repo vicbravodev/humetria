@@ -46,7 +46,7 @@ function signedFor(string $employeeId, array $overrides = []): RiskAssessment
     return RiskAssessment::factory()->signed()->create(['tenant_id' => test()->tenant->id, 'employee_id' => $employeeId, 'position_id' => test()->position->id, 'work_center_id' => test()->center->id, ...$overrides]);
 }
 
-it('queues the link once when an assessment is signed', function (): void {
+it('queues the link once when an assessment is signed, with two more tries after a mail hiccup', function (): void {
     Queue::fake();
     $draft = RiskAssessment::factory()->create(['tenant_id' => $this->tenant->id, 'employee_id' => $this->ana->id, 'position_id' => $this->position->id, 'work_center_id' => $this->center->id,
         'scores' => ['standing_time' => 1, 'posture_change' => 1, 'surface' => 1, 'footwear' => 1, 'movement_space' => 1, 'discomfort' => 1, 'pauses' => 1], 'other_aspects' => 'Ninguno.', 'verified_on' => '2026-02-27']);
@@ -57,7 +57,8 @@ it('queues the link once when an assessment is signed', function (): void {
     $this->post(route('tenant.seating.assessments.sign', [$this->tenant, $draft->id]));
 
     Queue::assertPushed(SendRisksToConfirm::class, 1);
-    Queue::assertPushed(SendRisksToConfirm::class, fn (SendRisksToConfirm $job): bool => $job->tenantId === $this->tenant->id && $job->employeeId === $this->ana->id);
+    Queue::assertPushed(SendRisksToConfirm::class, fn (SendRisksToConfirm $job): bool => $job->tenantId === $this->tenant->id && $job->employeeId === $this->ana->id
+        && $job->tries === 3 && $job->backoff === [60, 300] && $job->uniqueFor === 600);
 });
 
 it('emails the person, as usted, the address of their Ley Silla page with no credential, when the job runs', function (): void {

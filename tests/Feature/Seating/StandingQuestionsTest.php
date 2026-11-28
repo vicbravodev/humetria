@@ -52,12 +52,13 @@ function sendQuestions(): void
     app()->call([new SendStandingQuestions(test()->tenant->id, test()->ana->id), 'handle']);
 }
 
-it('asks the person once, after the commit, when their assessment starts', function (): void {
+it('asks the person once, after the commit, when their assessment starts, with two more tries after a mail hiccup', function (): void {
     startAna();
     resolve(StartAssessment::class)->handle($this->center->id, $this->ana->id, $this->hr->id);
 
     Queue::assertPushed(SendStandingQuestions::class, 1);
-    Queue::assertPushed(SendStandingQuestions::class, fn (SendStandingQuestions $job): bool => $job->tenantId === $this->tenant->id && $job->employeeId === $this->ana->id && $job instanceof ShouldQueueAfterCommit);
+    Queue::assertPushed(SendStandingQuestions::class, fn (SendStandingQuestions $job): bool => $job->tenantId === $this->tenant->id && $job->employeeId === $this->ana->id && $job instanceof ShouldQueueAfterCommit
+        && $job->tries === 3 && $job->backoff === [60, 300] && $job->uniqueFor === 600);
 });
 
 it('emails the 2 questions, as usted, with the address of their Ley Silla page (no credential) and nothing they answered', function (): void {
