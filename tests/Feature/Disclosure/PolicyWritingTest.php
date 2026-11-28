@@ -3,9 +3,11 @@
 declare(strict_types=1);
 
 use App\Modules\Disclosure\Actions\SaveWriting;
+use App\Modules\Disclosure\Enums\DocumentKind;
 use App\Modules\Disclosure\Enums\DocumentStatus;
 use App\Modules\Disclosure\Models\Document;
 use App\Modules\Disclosure\Support\Writing\PolicyTemplate;
+use App\Modules\Disclosure\Support\Writing\Templates;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\WorkCenter;
@@ -191,4 +193,32 @@ it('keeps the draft of each company apart', function (): void {
     $this->actingAs(memberOf($other, TenantRole::Hr))
         ->get(route('tenant.disclosure.write', [$other, 'policy']))
         ->assertInertia(fn (Assert $page) => $page->where('answers.signature', 'direction')->where('publication.draftId', null));
+});
+
+it('offers the practices of the first principle and the other principles of Guía IV in plain words', function (): void {
+    $fields = [];
+    foreach (resolve(Templates::class)->template(DocumentKind::Policy)?->questions() ?? [] as $question) {
+        foreach ($question->fields as $field) {
+            $fields[$field->key] = $field->options;
+        }
+    }
+
+    expect($fields['practices'])->toBe([
+        'a' => 'Reuniones para que todos expongan sus dudas, inquietudes y quejas',
+        'b' => 'Áreas de trabajo y áreas comunes limpias',
+        'c' => 'Trato amable y cortés entre todos',
+        'd' => 'Se atienden y sancionan burlas, malos tratos y discriminación',
+        'e' => 'Exámenes médicos al personal de nuevo ingreso',
+        'f' => 'Exámenes psicológicos o psicométricos para ubicar a cada quien en su puesto',
+        'g' => 'Planes de promoción interna',
+        'h' => 'Capacitación de todo el personal',
+    ])->and($fields['principles'])->toBe([
+        'p2' => 'Todas las personas son importantes para el centro de trabajo',
+        'p3' => 'Capacitación conforme a la Ley Federal del Trabajo',
+        'p4' => 'Manuales de organización y descripciones de puesto',
+        'p5' => 'Tableros con anuncios y avisos para todos',
+        'p6' => 'Cargas de trabajo y jornadas conforme a la ley',
+        'p7' => 'Evaluación del desempeño al menos una vez al año',
+        'p8' => 'Vigilar la prevención de la violencia y atender las quejas a tiempo',
+    ]);
 });
