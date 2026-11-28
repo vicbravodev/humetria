@@ -10,8 +10,12 @@ use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Models\Statement;
 use App\Modules\Billing\Models\Subscription;
+use App\Modules\Billing\Support\LedgerReceivables;
+use App\Modules\Billing\Support\OpenBalances;
 
 /** An issued statement of the account for this many pesos, issued that many days ago. */
+mutates(LedgerReceivables::class, OpenBalances::class);
+
 function contractStatement(BillingAccount $account, int $pesos, int $days): void
 {
     Statement::factory()->issued()->create(['billing_account_id' => $account->id, 'subtotal_cents' => $pesos * 100, 'vat_cents' => 0, 'total_cents' => $pesos * 100, 'issued_at' => now()->subDays($days)]);

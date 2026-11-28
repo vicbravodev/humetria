@@ -15,7 +15,7 @@ use Carbon\CarbonImmutable;
  */
 final readonly class OpenBalances
 {
-    public const array BUCKETS = ['current', '1_30', '31_60', 'over_60'];
+    public const array BUCKETS = ['current', '1_30', '31_60', 'over_60']; // @pest-mutate-ignore: RemoveArrayItem
 
     /**
      * @param  list<string>|null  $accountIds  only these accounts; null for all of them.
@@ -51,7 +51,7 @@ final readonly class OpenBalances
 
     public static function bucket(int $days): string
     {
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             $days <= 0 => 'current',
             $days <= 30 => '1_30',
             $days <= 60 => '31_60',

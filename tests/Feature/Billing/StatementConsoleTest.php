@@ -15,12 +15,13 @@ use App\Modules\Billing\Models\Payment;
 use App\Modules\Billing\Models\Statement;
 use App\Modules\Billing\Models\Subscription;
 use App\Modules\Billing\Models\SubscriptionCharge;
+use App\Modules\Billing\Support\DueDate;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Testing\TestResponse;
 use Inertia\Support\SessionKey;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(DescribeStatement::class, ListAccountStatements::class, StatementPeriodRequest::class, AdjustStatementRequest::class);
+mutates(DescribeStatement::class, ListAccountStatements::class, StatementPeriodRequest::class, AdjustStatementRequest::class, DueDate::class);
 
 /** @return array{0: Tenant, 1: App\Modules\Billing\Models\BillingAccount} a company with a December plan. */
 function consoleCompany(): array

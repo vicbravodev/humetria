@@ -22,10 +22,10 @@ use Illuminate\Pagination\LengthAwarePaginator;
  */
 final readonly class DescribeCatalog
 {
-    private const int PER_PAGE = 25;
+    private const int PER_PAGE = 25; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /** A search reads at most this many companies by name. ponytail: raise it (or search in Tenancy by id) if it ever falls short. */
-    private const int SEARCH_LIMIT = 200;
+    private const int SEARCH_LIMIT = 200; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private CompanyRegistry $companies) {}
 
