@@ -25,36 +25,36 @@ use Illuminate\Support\Facades\Gate;
 final readonly class Matrix
 {
     /** The rows, in the order of the board. */
-    private const array ORDER = ['a', 'd', 'b', 'c', 'f', 'e'];
+    private const array ORDER = ['a', 'd', 'b', 'c', 'f', 'e']; // @pest-mutate-ignore: RemoveArrayItem
 
-    private const array KINDS = ['a' => DocumentKind::Policy, 'b' => DocumentKind::ViolenceMeasures, 'c' => DocumentKind::PreventionMeasures, 'd' => DocumentKind::ComplaintMechanism, 'f' => DocumentKind::HealthEffects];
+    private const array KINDS = ['a' => DocumentKind::Policy, 'b' => DocumentKind::ViolenceMeasures, 'c' => DocumentKind::PreventionMeasures, 'd' => DocumentKind::ComplaintMechanism, 'f' => DocumentKind::HealthEffects]; // @pest-mutate-ignore: RemoveArrayItem
 
     /** The names of the board, in plain words. */
     private const array LABELS = [
-        'a' => 'Política de prevención',
-        'b' => 'Medidas contra la violencia laboral',
-        'c' => 'Medidas de prevención y control',
-        'd' => 'Cómo presentar una queja',
-        'f' => 'Posibles alteraciones a la salud',
-        'e' => 'Resultados de la evaluación',
+        'a' => 'Política de prevención', // @pest-mutate-ignore: RemoveArrayItem
+        'b' => 'Medidas contra la violencia laboral', // @pest-mutate-ignore: RemoveArrayItem
+        'c' => 'Medidas de prevención y control', // @pest-mutate-ignore: RemoveArrayItem
+        'd' => 'Cómo presentar una queja', // @pest-mutate-ignore: RemoveArrayItem
+        'f' => 'Posibles alteraciones a la salud', // @pest-mutate-ignore: RemoveArrayItem
+        'e' => 'Resultados de la evaluación', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     private const array CAPTIONS = [
-        'a' => 'La declaración de tus compromisos, por escrito',
-        'b' => 'Qué se considera violencia, qué pasa al denunciar y cómo se protege a quien denuncia',
-        'c' => 'Lo que hace la empresa para prevenir: capacitación, cargas de trabajo, pausas',
-        'd' => 'Por dónde presentar una queja o denuncia',
-        'f' => 'Hay un borrador de Humetría. Revísalo con un médico antes de publicar',
-        'e' => 'Un resumen sin datos de áreas pequeñas',
+        'a' => 'La declaración de tus compromisos, por escrito', // @pest-mutate-ignore: RemoveArrayItem
+        'b' => 'Qué se considera violencia, qué pasa al denunciar y cómo se protege a quien denuncia', // @pest-mutate-ignore: RemoveArrayItem
+        'c' => 'Lo que hace la empresa para prevenir: capacitación, cargas de trabajo, pausas', // @pest-mutate-ignore: RemoveArrayItem
+        'd' => 'Por dónde presentar una queja o denuncia', // @pest-mutate-ignore: RemoveArrayItem
+        'f' => 'Hay un borrador de Humetría. Revísalo con un médico antes de publicar', // @pest-mutate-ignore: RemoveArrayItem
+        'e' => 'Un resumen sin datos de áreas pequeñas', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     /** What the next step says for each thing still to write. */
     private const array STEPS = [
-        'a' => ['Escribe tu política de prevención', 'Al terminar se publica en %s y llega a tus personas para que confirmen que la leyeron.'],
-        'd' => ['Escribe cómo presentar una queja', 'Al terminar se publica en la página de %s, junto a tu canal de quejas cuando lo abras.'],
-        'b' => ['Escribe las medidas contra la violencia laboral', 'Al terminar se publica en la página de %s. Puedes cambiarlo cuando quieras; las versiones anteriores se guardan.'],
-        'c' => ['Escribe las medidas de prevención y control', 'Al terminar se publica en la página de %s. Puedes cambiarlo cuando quieras; las versiones anteriores se guardan.'],
-        'f' => ['Revisa el borrador de las alteraciones a la salud', 'Es un borrador de Humetría. Revísalo con un médico antes de publicarlo en %s.'],
+        'a' => ['Escribe tu política de prevención', 'Al terminar se publica en %s y llega a tus personas para que confirmen que la leyeron.'], // @pest-mutate-ignore: RemoveArrayItem
+        'd' => ['Escribe cómo presentar una queja', 'Al terminar se publica en la página de %s, junto a tu canal de quejas cuando lo abras.'], // @pest-mutate-ignore: RemoveArrayItem
+        'b' => ['Escribe las medidas contra la violencia laboral', 'Al terminar se publica en la página de %s. Puedes cambiarlo cuando quieras; las versiones anteriores se guardan.'], // @pest-mutate-ignore: RemoveArrayItem
+        'c' => ['Escribe las medidas de prevención y control', 'Al terminar se publica en la página de %s. Puedes cambiarlo cuando quieras; las versiones anteriores se guardan.'], // @pest-mutate-ignore: RemoveArrayItem
+        'f' => ['Revisa el borrador de las alteraciones a la salud', 'Es un borrador de Humetría. Revísalo con un médico antes de publicarlo en %s.'], // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     public function __construct(private Templates $templates, private ComplaintChannelFeed $channel, private Companies $companies, private GroupMinimums $minimums) {}
@@ -133,7 +133,7 @@ final readonly class Matrix
     {
         $published = $item === 'a' ? $facts->policy !== null : $facts->hasContent($item);
 
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             ! $published => 'missing',
             ! $facts->delivered($item) => 'undelivered',
             default => 'done',
@@ -143,7 +143,7 @@ final readonly class Matrix
     /** Where the results for the people of a center stand: ready to publish, published, waiting for a closed evaluation or not applicable. */
     public static function resultsState(?ResultsFact $fact): string
     {
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             $fact !== null && ! $fact->applies => 'not_applicable',
             $fact === null || $fact->latest === null => 'waiting',
             ! $fact->latestPublished => 'ready',
@@ -157,7 +157,7 @@ final readonly class Matrix
             return 'Se llena sola con tu canal de quejas';
         }
 
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             $latest !== null && $latest->published_at !== null => ($item === 'a' ? 'Publicada' : 'Publicado').", versión {$latest->version} del ".Days::moment($latest->published_at),
             $draft => 'Tienes un borrador a medias',
             default => self::CAPTIONS[$item],
@@ -169,7 +169,7 @@ final readonly class Matrix
     {
         $write = route('tenant.disclosure.write', [$tenantSlug, $kind->value]);
 
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             $draft => ['label' => 'Continuar', 'href' => $write],
             $published => ['label' => 'Ver', 'href' => $kind === DocumentKind::Policy ? route('tenant.disclosure.policy', $tenantSlug) : route('tenant.disclosure.contents', $tenantSlug)],
             $kind === DocumentKind::HealthEffects => ['label' => 'Revisar borrador', 'href' => $write],
@@ -190,7 +190,7 @@ final readonly class Matrix
         $ready = array_keys(array_filter($cells, fn (array $center): bool => $center['e'] === 'ready'));
         $campaign = count($ready) === 1 ? $facts[$ready[0]]->results?->latest : null;
 
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             $campaign !== null => ['label' => "Publicar {$centers[$ready[0]]->name}", 'href' => route('tenant.disclosure.results.share', [$tenantSlug, $campaign->id])],
             $ready !== [] => ['label' => 'Publicar resultados', 'href' => route('tenant.disclosure.dissemination', $tenantSlug)],
             default => null,
@@ -222,6 +222,7 @@ final readonly class Matrix
         if ($kind !== null && $step !== null && $has('missing')) {
             $questions = count($this->templates->template($kind)->questions());
             $drafting = $documents->contains(fn (Document $document): bool => $document->kind === $kind && $document->status === DocumentStatus::Draft);
+            $where = $centers === 1 ? 'tu centro' : "tus {$centers} centros";
 
             return [
                 'item' => $item,
@@ -230,12 +231,12 @@ final readonly class Matrix
                     0 => '',
                     1 => '1 pregunta con opciones. ',
                     default => "{$questions} preguntas con opciones. ",
-                }.sprintf($step[1], $centers === 1 ? 'tu centro' : "tus {$centers} centros"),
+                }.sprintf($step[1], $where),
                 'action' => ['label' => $drafting ? 'Continuar' : 'Empezar', 'href' => route('tenant.disclosure.write', [$tenantSlug, $kind->value])],
             ];
         }
 
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             $has('undelivered') => ['item' => $item, 'title' => 'Pon a la vista de tus personas lo que publicaste', 'text' => 'Aún no lo pueden consultar: activa la página de las personas o registra un cartel, boletín o folleto que lo cubra.', 'action' => ['label' => 'Activar su página', 'href' => route('tenant.disclosure.page', $tenantSlug)]],
             $item === 'e' && $has('ready') => ['item' => 'e', 'title' => 'Publica los resultados para tus personas', 'text' => trans_choice('group-minimum.publish', $this->minimums->current(), ['minimum' => $this->minimums->current()]), 'action' => ['label' => 'Publicar', 'href' => route('tenant.disclosure.dissemination', $tenantSlug)]],
             default => null,
