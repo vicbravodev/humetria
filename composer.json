@@ -133,6 +133,10 @@
             "Composer\\Config::disableProcessTimeout",
             "scripts/mutate-critical.sh"
         ],
+        "mutate:changed": [
+            "Composer\\Config::disableProcessTimeout",
+            "scripts/mutate-critical.sh --changed --min=95 --ignore-min-score-on-zero-mutations"
+        ],
         "mutate:full": [
             "Composer\\Config::disableProcessTimeout",
             "pest --mutate --parallel --processes=4 --exclude-testsuite=Browser,Ssr --group=__pest_mutate_only --min=95 --ignore-min-score-on-zero-mutations"

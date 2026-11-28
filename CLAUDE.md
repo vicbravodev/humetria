@@ -42,11 +42,13 @@ El detalle que no hace falta en cada sesión vive en `docs/` y se lee cuando toc
   detalle, sus datos vivos si los hay, y sus criterios en `docs/normas/*/criterios.md` (entran solos al buscador). Mismas
   reglas de privacidad: conteos y estados, nunca respuestas ni personas. `tests/Feature/Assistant/ModuleCoverageTest.php`
   falla con un módulo nuevo sin conexión; eximir uno exige su razón en ese test.
-- **Mutación: semanal en CI** (`mutation.yml`, `--min=95`), nunca en los PR. Entra sola la clase cuyo test declara
+- **Mutación: semanal en CI** (`mutation.yml`, `--min=95`), nunca en los PR. Entra la clase cuyo test declara
   `mutates(Clase::class)`; por omisión toda clase de lógica entra (que sobre un test a que falte un borde crítico) y solo se
   exime lo que no decide nada (DTO, texto o catálogo fijo, adaptador externo) con su razón en `MutationCoverageTest`. Todo
-  módulo, el Kernel incluido, pasa el 95. En local **solo si el usuario la pide**, acotada: `composer mutate -- --class=…`. Nunca se baja
-  `--min`; si falla, falta el test que mata al mutante. Detalle: `docs/testing.md`.
+  módulo, el Kernel incluido, pasa el 95. **Un feature termina con `composer mutate:changed` en verde**: una vez, al final,
+  antes de pedir el PR (los módulos cuyo código cambió). Fuera de ese cierre, en local solo si el usuario la pide, acotada:
+  `composer mutate -- --class=…`. Nunca se baja `--min`; si falla, falta el test que mata al mutante, y si ese test destapa
+  un bug se corrige el código, no el test. Detalle: `docs/testing.md`.
 
 ## Arquitectura: monolito modular
 

@@ -21,8 +21,13 @@
   fije el valor (el límite exacto de la constante, la lista que se ve en la respuesta): el comentario solo dice que la
   mutación no puede medirlo, no que no se prueba.
 - Mientras desarrollas, la mutación se corre en local **solo por clase**. La corrida de las clases críticas vive en CI, cada semana.
-- Si un mutante escapa, falta un test. Si el mutante es equivalente (no cambia el comportamiento), se reporta; no se
-  escribe un test artificial para matarlo.
+- **Un feature no está terminado sin su mutación.** La sesión que lo construye corre `composer mutate:changed` una vez, al
+  final y antes de pedir el PR: muta cada módulo cuyo código de `app/` cambió respecto de `origin/main`, y cada uno pasa el
+  95. Una clase nueva sin `mutates()` ni razón la frena el CI en el PR (`MutationCoverageTest`); el score lo confirma la
+  corrida semanal, que no debe descubrir nada.
+- Si un mutante escapa, falta un test. Si al escribirlo el comportamiento resulta mal (el mutante destapa un bug), primero
+  el test en rojo y luego se corrige el código: nunca se ajusta el test a lo que el código hace. Si el mutante es
+  equivalente (no cambia el comportamiento), se reporta; no se escribe un test artificial para matarlo.
 
 ## Comandos
 
@@ -31,6 +36,7 @@ composer test:fast                                                       # Tia: 
 composer mutate -- --class='App\Modules\Tenancy\Actions\AcceptInvitation' # una clase (o un namespace), 4 procesos
 composer mutate:retry -- --class='App\Modules\Tenancy\Actions\AcceptInvitation' # lo que escapó, primero
 composer mutate:critical                                                 # las clases de lógica de negocio, un módulo a la vez; CI le pone --min=95
+composer mutate:changed                                                  # cierre del feature: los módulos que cambiaron, --min=95
 composer mutate:full                                                     # todas las clases de mutates(), --min=95
 ```
 

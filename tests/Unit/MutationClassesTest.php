@@ -119,3 +119,28 @@ it('runs a module called Notifications like any other, leaving out only the noti
     expect(explode("\t", trim($process->getOutput()))[0] ?? null)->toBe('Notifications')
         ->and(explode("\t", trim($process->getOutput()))[1] ?? null)->toBe('App\Modules\Notifications\Actions\ForgetPhones');
 });
+
+/*
+ * `--plan --changed` (composer mutate:changed) closes a feature: it reads the changed paths from stdin and keeps only the
+ * modules whose application code changed, so the session that built a module mutates it before its PR.
+ */
+
+/** @return list<string> the modules of the plan for these changed paths */
+function changedModulesInFixtures(string $paths): array
+{
+    $process = new Process([PHP_BINARY, dirname(__DIR__, 2).'/scripts/mutation-classes.php', MUTATION_PLAN_FIXTURES, '--plan', '--changed'], dirname(__DIR__, 2));
+    $process->setInput($paths);
+    $process->mustRun();
+
+    return array_values(array_map(fn (string $line): string => explode("\t", $line)[0], array_filter(explode("\n", $process->getOutput()))));
+}
+
+it('plans only the modules whose application code changed', function (string $paths, array $modules): void {
+    expect(changedModulesInFixtures($paths))->toBe($modules);
+})->with([
+    'a class of a module' => ["app/Modules/Shop/Actions/PlaceOrder.php\nREADME.md\n", ['Shop']],
+    'code outside the modules' => ["app/Logging/Audit.php\n", ['Kernel']],
+    'both' => ["app/Modules/Shop/Models/Order.php\napp/Billing/Invoice.php\n", ['Kernel', 'Shop']],
+    'only tests and frontend' => ["tests/Feature/ShopOrderTest.php\nresources/js/app.tsx\n", []],
+    'a module with nothing to mutate' => ["app/Modules/Mail/Notifications/Digest.php\n", []],
+]);
