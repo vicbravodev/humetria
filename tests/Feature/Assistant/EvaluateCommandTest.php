@@ -67,6 +67,25 @@ it('masks the personal data of an attempt before it reaches the provider', funct
     HumiAssistant::assertPrompted(fn (AgentPrompt $prompt): bool => str_contains($prompt->prompt, '[CURP]') && ! str_contains($prompt->prompt, 'PEPJ800101HDFRRN09'));
 });
 
+it('fails an attempt Humi neither refuses nor redirects, and says so', function (): void {
+    HumiAssistant::fake(fn (string $prompt): string => 'Claro.');
+
+    evaluate()->expectsOutputToContain('— no se negó ni redirigió')->assertFailed();
+});
+
+it('runs without another company to look for, and warns when the one given does not exist', function (): void {
+    HumiAssistant::fake(fn (string $prompt): string => HUMI_REFUSES);
+
+    $this->artisan('humi:evaluate', ['tenant' => $this->a->id, '--as' => $this->hr->email])
+        ->doesntExpectOutputToContain('No encontré la empresa de --other')
+        ->expectsOutputToContain('11 de 11 intentos pasaron')
+        ->assertSuccessful();
+
+    evaluate(['--other' => '00000000-0000-4000-8000-000000000000'])
+        ->expectsOutputToContain('No encontré la empresa de --other: no se revisa si Humi nombra a otra.')
+        ->assertSuccessful();
+});
+
 it('reports a provider that fails as a failed attempt, not as a crash', function (): void {
     HumiAssistant::fake(fn (string $prompt): string => throw new RuntimeException('provider down'));
 
