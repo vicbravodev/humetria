@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Modules\Tenancy\Actions\RemoveTwoFactor;
 use App\Modules\Tenancy\Actions\SendPasswordReset;
 use App\Modules\Tenancy\Models\TenantMembership;
+use App\Modules\Tenancy\Support\PlatformPermissions;
 use App\Modules\Tenancy\Support\UserPages;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,15 +21,25 @@ use Inertia\Response;
 /** The platform's users for its superadmin: find one, help them back in, and give or take away the support role. */
 final class UserConsoleController extends Controller
 {
-    public function index(Request $request, UserPages $pages): Response
+    public function index(Request $request, UserPages $pages, PlatformPermissions $permissions): Response
     {
         Gate::authorize('manage-platform-users');
 
         $search = trim($request->string('q')->toString());
+        $tab = $request->string('tab')->toString();
+        $tab = in_array($tab, ['people', 'permissions'], true) ? $tab : 'team';
 
+        // The team is always whole: on its view the search finds people for the quick help beside it (tablero Equipo).
         return Inertia::render('tenancy/users', [
-            'users' => $pages->handle($search),
-            'filters' => ['q' => $search],
+            'users' => match ($tab) {
+                'team' => $pages->handle('', true),
+                'people' => $pages->handle($search),
+                default => null,
+            },
+            'people' => $tab === 'team' ? $pages->handle($search, perPage: UserPages::HELP_PER_PAGE, pageName: 'people_page') : null,
+            'permissions' => $tab === 'people' ? null : $permissions->handle(),
+            'counts' => $pages->counts($search),
+            'filters' => ['q' => $search, 'tab' => $tab],
         ]);
     }
 

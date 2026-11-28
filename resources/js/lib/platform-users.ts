@@ -1,10 +1,22 @@
-import type { PlatformUserRow } from '@/types';
+import type { PlatformUserFilters, PlatformUserRow } from '@/types';
 
 export type UserAction =
     | 'reset'
     | 'two_factor'
     | 'grant_support'
     | 'revoke_support';
+
+/** The address of a view of «Equipo Humetría»: its search and its view, each left out when it is the default. */
+export function usersQuery(
+    filters: PlatformUserFilters,
+): Partial<Record<keyof PlatformUserFilters, string>> {
+    const q = filters.q.trim();
+
+    return {
+        ...(q === '' ? {} : { q }),
+        ...(filters.tab === 'team' ? {} : { tab: filters.tab }),
+    };
+}
 
 /** The platform role as the list says it. */
 export function platformRoleLabel(
@@ -31,6 +43,38 @@ export function userActions(user: PlatformUserRow): UserAction[] {
         ...(user.twoFactor ? (['two_factor'] as const) : []),
         user.platformRole === 'support' ? 'revoke_support' : 'grant_support',
     ];
+}
+
+/** The quick help's line under a person's name (tablero Equipo): what helps to tell why they cannot get in. */
+export function helpLine(user: PlatformUserRow): string {
+    const role =
+        user.platformRole === null
+            ? []
+            : [platformRoleLabel(user.platformRole)];
+    const companies =
+        user.companies !== ''
+            ? [user.companies]
+            : role.length === 0
+              ? ['Sin empresas']
+              : [];
+
+    return [
+        user.email,
+        ...role,
+        ...companies,
+        user.twoFactor ? '2FA activa' : 'Sin 2FA',
+        user.lastLogin === null
+            ? 'Nunca ha entrado'
+            : `Último acceso ${user.lastLogin}`,
+        ...(user.verified ? [] : ['Correo sin verificar']),
+    ].join(' · ');
+}
+
+/** What the quick help offers on a person, as buttons: getting them back in, never their role. */
+export function helpActions(user: PlatformUserRow): UserAction[] {
+    return userActions(user).filter(
+        (action) => action === 'reset' || action === 'two_factor',
+    );
 }
 
 type Copy = {

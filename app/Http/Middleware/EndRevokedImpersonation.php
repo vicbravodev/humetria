@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Checked on every request that carries the impersonation mark: once the superadmin behind it is
  * gone or no longer on the staff, or the mark is not the signed-in user's, the session ends right
- * there, not when someone presses "Salir".
+ * there, not when someone presses "Salir". Once its time is up, it ends too, and the staff member is back in the console.
  */
 final class EndRevokedImpersonation
 {
@@ -36,7 +36,14 @@ final class EndRevokedImpersonation
         $impersonatorId = $this->impersonation->impersonatorId();
 
         if ($impersonatorId !== null && User::query()->find($impersonatorId)?->isStaff() === true) {
-            return $next($request);
+            if (! $this->impersonation->hasExpired()) {
+                return $next($request);
+            }
+
+            // Its time is up: the staff member is back in the console, not signed out.
+            $this->impersonation->expire();
+
+            return redirect()->route('companies.index', status: 303);
         }
 
         Log::warning('impersonation.revoked', [

@@ -26,14 +26,12 @@ it('lists who pays what, with the kind of each account and how many companies it
 
     visitPage('billing/accounts', '/admin/billing/accounts', $dark, $mobile)
         ->assertSee('Cuentas')
-        ->assertSee('2 cuentas')
+        ->assertSee('Quién paga qué y qué falta por cobrar')
         ->assertSee('Consultores Asociados S.C.')
         ->assertSee('CAS010101AB1')
         ->assertSee('Consultor')
-        ->assertSee('2 empresas')
-        ->assertSee('Laura Pérez')
         ->assertSee('Grupo Directo S.A.')
-        ->assertSee('Crear cuenta');
+        ->assertSee('Nueva cuenta');
 })->with($looks);
 
 it('shows an empty list with its next step', function (): void {
@@ -50,14 +48,14 @@ it('shows support the accounts without the button that creates one', function ()
 
     visitPage('billing/accounts', '/admin/billing/accounts')
         ->assertSee('Grupo Directo S.A.')
-        ->assertDontSee('Crear cuenta');
+        ->assertDontSee('Nueva cuenta');
 });
 
 it('creates an account from the list and lands on its page', function (): void {
     signInAsSuperadmin();
 
     visitPage('billing/accounts', '/admin/billing/accounts')
-        ->click('Crear cuenta')
+        ->click('Nueva cuenta')
         ->assertSee('Quien paga por una o varias empresas')
         ->click('Consultor')
         ->fill('legal_name', 'Consultores Nuevos S.C.')
@@ -82,8 +80,8 @@ it('shows an account with the companies it pays, none of them with a plan yet', 
         ->assertSee('Consultores Asociados S.C.')
         ->assertSee('Consultor')
         ->assertSee('CAS010101AB1')
-        ->assertSee('Editar cuenta')
-        ->assertSee('Vincular empresa')
+        ->assertSee('Editar datos fiscales')
+        ->assertSee('Vincular')
         ->assertSee('Acme Industrial')
         ->assertSee('Sin plan asignado')
         ->assertSee('Asignar plan');
@@ -104,12 +102,12 @@ it('links a company found by name, and the account then pays it', function (): v
     Tenant::factory()->create(['trade_name' => 'Zapatería Libre', 'rfc' => 'ZAP010101AB1']);
 
     visitPage('billing/account', "/admin/billing/accounts/{$account->id}")
-        ->click('Vincular empresa')
+        ->click('[aria-label="Vincular empresa"]')
         ->click('#billing-company_id')
         ->type('[role="combobox"][aria-controls="billing-company_id-options"]', 'zapat')
         ->assertSee('Zapatería Libre · ZAP010101AB1')
         ->keys('[role="combobox"][aria-controls="billing-company_id-options"]', 'Enter')
-        ->press('Vincular')
+        ->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Empresa vinculada.')
         ->assertSee('Zapatería Libre')
         ->assertSee('Sin plan asignado');
@@ -125,7 +123,7 @@ it('shows an account with its fiscal data and the way to correct it', function (
         ->assertSee('Consultores Asociados S.C.')
         ->assertSee('Consultor')
         ->assertSee('CAS010101AB1')
-        ->assertSee('Editar cuenta');
+        ->assertSee('Editar datos fiscales');
 })->with($looks);
 
 it('shows a consultant\'s portfolio: each company with its plan and cost, and what the account adds up to', function (bool $dark, bool $mobile): void {
@@ -136,15 +134,14 @@ it('shows a consultant\'s portfolio: each company with its plan and cost, and wh
     }
 
     visitPage('billing/account', "/admin/billing/accounts/{$account->id}", $dark, $mobile)
-        ->assertSee('Al mes, sin IVA')
-        ->assertSee('$19,950')
+        ->assertSee('Próximos cargos')
+        ->assertSee('$19,950 sin IVA')
         ->assertSee('$23,142')
-        ->assertSee('Próxima renovación')
+        ->assertSee('Renovación')
         ->assertSee('Cliente 1')
-        ->assertSee('Cumplimiento')
-        ->assertSee('Canal Cumplimiento')
+        ->assertSee('Cumplimiento · 100 asientos')
         ->assertSee('$3,990')
-        ->assertSee('0 de 100 personas')
+        ->click('[aria-label="Acciones de Cliente 1"]')
         ->assertSee('Editar plan');
 })->with($looks);
 
@@ -154,8 +151,8 @@ it('shows the centers a company may really have, not the ones it contracted belo
     planFor($account, ['plan' => Plan::Cumplimiento, 'centers' => 1]);
 
     visitPage('billing/account', "/admin/billing/accounts/{$account->id}")
-        ->assertSee('0 de 2 centros')
-        ->assertDontSee('de 1 centros');
+        ->assertSee('2 centros')
+        ->assertDontSee('1 centro');
 });
 
 it('chooses the tax regime and the CFDI use from the SAT catalog', function (): void {
@@ -163,7 +160,7 @@ it('chooses the tax regime and the CFDI use from the SAT catalog', function (): 
     $account = BillingAccount::factory()->consultant()->create(['tax_regime' => 'texto libre', 'cfdi_use' => null]);
 
     visitPage('billing/account', "/admin/billing/accounts/{$account->id}")
-        ->click('Editar cuenta')
+        ->click('Editar datos fiscales')
         ->click('#billing-tax_regime')
         ->click('[role="option"]:has-text("601 ·")')
         ->click('#billing-cfdi_use')
@@ -206,7 +203,7 @@ it('shows support the portfolio without the buttons that change it', function ()
         ->assertSee('$4,900')
         ->assertDontSee('Editar plan')
         ->assertDontSee('Vincular empresa')
-        ->assertDontSee('Editar cuenta');
+        ->assertDontSee('Editar datos fiscales');
 });
 
 it('names the tools a plan takes away before it is assigned', function (): void {
@@ -258,7 +255,7 @@ it('shows the next amount before saving a plan, and saves it', function (): void
         ->assertSee('IVA')
         ->press('Asignar y quitar 4 herramientas')
         ->assertSee('Plan asignado.')
-        ->assertSee('Canal Cumplimiento')
+        ->assertSee('Cumplimiento · 100 asientos')
         ->assertSee('$3,990');
 
     expect(Subscription::query()->sole())->seats->toBe(100);
@@ -270,6 +267,7 @@ it('shows $2,490 to $3,990 when a channel company goes from 50 to 51 people, bef
     Subscription::factory()->create(['tenant_id' => $tenant->id, 'plan' => Plan::Cumplimiento, 'profile' => Profile::ChannelCompliance, 'seats' => 50, 'centers' => 2]);
 
     visitPage('billing/account', "/admin/billing/accounts/{$account->id}")
+        ->click('[data-slot="row-menu"]')
         ->click('Editar plan')
         ->assertSee('Banda de canal hasta 50 personas: $2,490')
         ->fill('seats', '51')
@@ -332,6 +330,21 @@ it('adds a charge to a company with a plan, and lists it', function (): void {
     expect(SubscriptionCharge::query()->sole())->amount_cents->toBe(150_000);
 });
 
+it('asks which company an action of the page is for when the account pays more than one', function (): void {
+    signInAsSuperadmin();
+    $account = BillingAccount::factory()->consultant()->create();
+    planFor($account, [], Tenant::factory()->create(['trade_name' => 'Cliente Uno']));
+    planFor($account, [], Tenant::factory()->create(['trade_name' => 'Cliente Dos']));
+
+    visitPage('billing/account', "/admin/billing/accounts/{$account->id}")
+        ->click('Agregar cargo')
+        ->assertSee('Elige la empresa')
+        ->click('#billing-pick-company')
+        ->click('[role="option"]:has-text("Cliente Dos")')
+        ->press('Continuar')
+        ->assertSee('Agregar cargo · Cliente Dos');
+});
+
 it('does not offer a charge to a company with no plan', function (): void {
     signInAsSuperadmin();
     [, $account] = paidCompany();
@@ -348,7 +361,7 @@ it('moves a company to another account after showing what it would do, and keeps
     $to = BillingAccount::factory()->create(['legal_name' => 'Grupo Directo Destino S.A.', 'rfc' => 'GDD010101AB1']);
 
     visitPage('billing/account', "/admin/billing/accounts/{$from->id}")
-        ->click('Trasladar')
+        ->click('Transferir una empresa a otra cuenta…')
         ->assertSee('La empresa conserva su plan y su gente conserva su acceso')
         ->click('#transfer-to_account')
         ->type('[role="combobox"][aria-controls="transfer-to_account-options"]', 'destino')

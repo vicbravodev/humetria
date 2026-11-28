@@ -61,6 +61,9 @@ final class HandleInertiaRequests extends Middleware
             ],
             // The superadmin working as auth.user, for the banner that lets them out; null otherwise.
             'impersonator' => $this->impersonatorName(),
+            // Seconds before that entry ends by itself, for the banner's countdown; only while someone is impersonating, so a
+            // page without a session (and its SSR golden file) does not change.
+            ...$this->impersonationLeft(),
             // The company routes override these (Tenancy's ResolveTenant); the kernel only gives the defaults.
             'tenant' => null,
             'tenants' => [],
@@ -188,6 +191,16 @@ final class HandleInertiaRequests extends Middleware
         $inCourse = app(OpenCampaigns::class)->inCourse();
 
         return ['count' => $inCourse->count, 'daysLeft' => $inCourse->daysLeft, 'elapsed' => $inCourse->elapsed];
+    }
+
+    /**
+     * @return array{impersonationLeft?: int}
+     */
+    private function impersonationLeft(): array
+    {
+        $left = app(Impersonation::class)->secondsLeft();
+
+        return $left === null ? [] : ['impersonationLeft' => $left];
     }
 
     private function impersonatorName(): ?string

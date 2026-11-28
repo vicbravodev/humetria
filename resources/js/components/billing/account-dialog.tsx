@@ -36,11 +36,11 @@ export default function AccountDialog({
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 {editing ? (
-                    <Button variant="outline">Editar cuenta</Button>
+                    <Button variant="outline">Editar datos fiscales</Button>
                 ) : (
                     <Button>
                         <Plus aria-hidden />
-                        Crear cuenta
+                        Nueva cuenta
                     </Button>
                 )}
             </DialogTrigger>

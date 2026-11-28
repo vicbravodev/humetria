@@ -8,6 +8,7 @@ use App\Actions\RecordAudit;
 use App\Modules\Demos\Actions\ListDemoRequests;
 use App\Modules\Demos\Contracts\DemoLeads;
 use App\Modules\Demos\Data\DemoLead;
+use App\Modules\Demos\Data\DemoWaiting;
 use App\Modules\Demos\Enums\DemoStatus;
 use App\Modules\Demos\Models\DemoRequest;
 use Illuminate\Support\Facades\DB;
@@ -61,5 +62,18 @@ final readonly class DemoLeadRegistry implements DemoLeads
     public function countsByStatus(): array
     {
         return $this->list->counts();
+    }
+
+    public function waiting(): DemoWaiting
+    {
+        $row = DemoRequest::query()->toBase()
+            ->where('status', DemoStatus::New->value)
+            ->selectRaw('count(*) as new, count(*) filter (where created_at < ?) as unattended', [now()->subHours(48)])
+            ->first();
+
+        return new DemoWaiting(
+            is_numeric($row?->new) ? (int) $row->new : 0,
+            is_numeric($row?->unattended) ? (int) $row->unattended : 0,
+        );
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Http\Middleware;
 
 use App\Http\Impersonation;
+use App\Modules\Announcements\Contracts\PlatformNotices;
 use App\Modules\Assistant\Contracts\AiAccess;
 use App\Modules\Tenancy\Actions\ListUserTenants;
 use App\Modules\Tenancy\Contracts\CompanyModules;
@@ -36,6 +37,7 @@ final class ResolveTenant
         private readonly CompanyModules $modules,
         private readonly AiAccess $ai,
         private readonly Impersonation $impersonation,
+        private readonly PlatformNotices $notices,
     ) {}
 
     /**
@@ -102,7 +104,7 @@ final class ResolveTenant
             'modules' => $this->modules->enabledKeys($tenant->id),
             'role' => $role->key,
             'role_label' => $role->label,
-            // What the role allows; a read-only company has every writing one off, and `permissions` keeps the full set for the menu.
+            // What the role allows; a read-only company (or every one, while the platform is in maintenance) has every writing one off, and `permissions` keeps the full set for the menu.
             'can' => $this->writable($permissions = [
                 'manage_organization' => $user->can('manage-organization'),
                 'manage_members' => $user->can('manage-members'),
@@ -141,9 +143,16 @@ final class ResolveTenant
                 'view_work_centers' => $user->can('view-work-centers'),
                 'view_nom035_route' => $user->can('view-nom035-route'),
                 'view_telework' => $user->can('view-telework'),
-            ], $status->isReadOnly()),
+            ], $status->isReadOnly() || $this->notices->inMaintenance()),
             'permissions' => $permissions,
         ]);
+        // What Humetría tells this company now (a banner of the panel); only here, so no page outside a company carries it, and
+        // only when there is one, so a page without it carries no more than before. It reads no table (PlatformNotices).
+        $notice = $this->notices->forCompany($tenant->id);
+
+        if ($notice !== null) {
+            Inertia::share('platform_notice', $notice->toArray());
+        }
         // For the company switcher: the first few, and how many there are to see them all on their own page.
         Inertia::share('tenants', function () use ($user, $only): array {
             $companies = $this->listUserTenants->handle($user->id, self::SWITCHER_COMPANIES, $only);

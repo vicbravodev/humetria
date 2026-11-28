@@ -1,15 +1,16 @@
 import { Head, Link } from '@inertiajs/react';
-import { ScrollText } from 'lucide-react';
+import { Download, ScrollText } from 'lucide-react';
 import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
 import Pagination from '@/components/humetria/pagination';
-import AuditTable from '@/components/tenancy/audit-table';
+import AuditTabs from '@/components/tenancy/audit-tabs';
 import AuditToolbar from '@/components/tenancy/audit-toolbar';
+import AuditWorkArea from '@/components/tenancy/audit-work-area';
 import { Button } from '@/components/ui/button';
-import { auditFiltered } from '@/lib/audit';
-import { countOf } from '@/lib/plural';
-import { index } from '@/routes/audit';
+import { auditFiltered, auditQuery } from '@/lib/audit';
+import { exportMethod, index } from '@/routes/audit';
 import type {
+    AuditCounts,
     AuditEntryRow,
     AuditFamily,
     AuditFilters,
@@ -18,11 +19,13 @@ import type {
 
 export default function Audit({
     entries,
+    counts,
     filters,
     company,
     families,
 }: {
     entries: Paginated<AuditEntryRow>;
+    counts: AuditCounts;
     filters: AuditFilters;
     company: string | null;
     families: AuditFamily[];
@@ -32,16 +35,31 @@ export default function Audit({
     return (
         <>
             <Head title="Bitácora" />
-            <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
+            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
                     title="Bitácora"
-                    description={`${countOf(entries.total, 'registro', 'registros')}, el más reciente primero. Solo se lee: nada de aquí se edita ni se borra.`}
-                />
+                    description="Todo lo sensible que pasó en la plataforma, de solo lectura y sin borrar. Nunca guarda respuestas de encuestas ni liga a una persona con una respuesta."
+                >
+                    {entries.total > 0 && (
+                        <Button asChild variant="outline">
+                            {/* A file, not a page: a plain download that also goes to the trail. */}
+                            <a
+                                href={exportMethod.url({
+                                    query: auditQuery(filters),
+                                })}
+                            >
+                                <Download aria-hidden />
+                                Exportar CSV
+                            </a>
+                        </Button>
+                    )}
+                </PageHeader>
                 <AuditToolbar
                     filters={filters}
                     families={families}
                     company={company}
                 />
+                <AuditTabs filters={filters} counts={counts} />
                 {entries.data.length === 0 ? (
                     <EmptyState
                         icon={ScrollText}
@@ -63,7 +81,7 @@ export default function Audit({
                             : 'Cada acción sensible de la plataforma quedará aquí con quién la hizo y cuándo.'}
                     </EmptyState>
                 ) : (
-                    <AuditTable entries={entries.data} />
+                    <AuditWorkArea entries={entries.data} families={families} />
                 )}
                 <Pagination
                     previous="Ver más recientes"

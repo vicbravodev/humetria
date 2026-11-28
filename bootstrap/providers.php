@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Announcements\Providers\AnnouncementsServiceProvider;
 use App\Modules\Assistant\Providers\AssistantServiceProvider;
 use App\Modules\Attendance\Providers\AttendanceServiceProvider;
 use App\Modules\Billing\Providers\BillingServiceProvider;
@@ -19,6 +20,7 @@ use App\Modules\Leave\Providers\LeaveServiceProvider;
 use App\Modules\Messaging\Providers\MailTrackingServiceProvider;
 use App\Modules\Messaging\Providers\MessagingServiceProvider;
 use App\Modules\Notifications\Providers\NotificationsServiceProvider;
+use App\Modules\Operations\Providers\OperationsServiceProvider;
 use App\Modules\Organization\Providers\OrganizationServiceProvider;
 use App\Modules\Responses\Providers\ResponsesServiceProvider;
 use App\Modules\Results\Providers\ResultsServiceProvider;
@@ -59,5 +61,7 @@ return [
     SsoServiceProvider::class,
     MessagingServiceProvider::class,
     MailTrackingServiceProvider::class,
+    OperationsServiceProvider::class,
+    AnnouncementsServiceProvider::class,
     BlogServiceProvider::class,
 ];

@@ -1,12 +1,9 @@
-import { useState } from 'react';
 import TransferCompanyForm from '@/components/billing/transfer-company-form';
-import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
     DialogDescription,
     DialogTitle,
-    DialogTrigger,
 } from '@/components/ui/dialog';
 import type { AccountCompanyRow } from '@/types';
 
@@ -14,23 +11,16 @@ import type { AccountCompanyRow } from '@/types';
 export default function TransferCompanyDialog({
     company,
     today,
+    open,
+    onOpenChange,
 }: {
     company: AccountCompanyRow;
     today: string;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
 }) {
-    const [open, setOpen] = useState(false);
-
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    aria-label={`Trasladar a ${company.trade_name}`}
-                >
-                    Trasladar
-                </Button>
-            </DialogTrigger>
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-4xl">
                 <DialogTitle>Trasladar · {company.trade_name}</DialogTitle>
                 <DialogDescription>
@@ -41,7 +31,7 @@ export default function TransferCompanyDialog({
                 <TransferCompanyForm
                     company={company}
                     today={today}
-                    onDone={() => setOpen(false)}
+                    onDone={() => onOpenChange(false)}
                 />
             </DialogContent>
         </Dialog>

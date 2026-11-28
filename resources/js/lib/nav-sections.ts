@@ -5,7 +5,9 @@ import {
     type NavSection,
 } from '@/lib/app-navigation';
 import {
+    clientNavItems,
     consoleNavItems,
+    homeNavItems,
     platformNavItems,
     salesNavItems,
 } from '@/lib/staff-navigation';
@@ -43,7 +45,7 @@ export function navSections({
             // Outside a company, staff's daily pages are the console's: the customers.
             items:
                 tenant === null && isStaff
-                    ? consoleNavItems(isSuperadmin)
+                    ? homeNavItems(isSuperadmin)
                     : mainNavItems(tenant, isStaff),
         },
         // Right after the daily pages, where they always were: the menu's order is a contract with StartRoute.
@@ -63,24 +65,42 @@ export function navSections({
             label: 'Ordena tu operación',
             items: operationsNavItems(tenant),
         },
-        // Staff inside a company still reach the console from here; outside one, these are the main pages.
-        {
-            key: 'console',
-            label: 'Consola',
-            items:
-                isStaff && tenant !== null ? consoleNavItems(isSuperadmin) : [],
-        },
-        {
-            key: 'sales',
-            label: 'Ventas',
-            items: isStaff ? salesNavItems(isSuperadmin) : [],
-        },
-        {
-            key: 'platform',
-            label: 'Plataforma',
-            items: isStaff ? platformNavItems(isSuperadmin) : [],
-        },
+        ...staffSections(tenant, isStaff, isSuperadmin),
     ];
 
     return sections.filter((section) => section.items.length > 0);
+}
+
+/** Humetría staff's groups: the customers outside a company, or the whole console inside one, then sales and the platform. */
+function staffSections(
+    tenant: NavTenant | null,
+    isStaff: boolean,
+    isSuperadmin: boolean,
+): NavSection[] {
+    if (!isStaff) {
+        return [];
+    }
+
+    const outside = tenant === null;
+
+    return [
+        // Outside a company the customers are the console's first group, under the overview.
+        {
+            key: 'clients',
+            label: 'Clientes',
+            items: outside ? clientNavItems() : [],
+        },
+        // Inside a company staff still reach the whole console from one group.
+        {
+            key: 'console',
+            label: 'Consola',
+            items: outside ? [] : consoleNavItems(isSuperadmin),
+        },
+        { key: 'sales', label: 'Ventas', items: salesNavItems(isSuperadmin) },
+        {
+            key: 'platform',
+            label: 'Plataforma',
+            items: platformNavItems(isSuperadmin),
+        },
+    ];
 }

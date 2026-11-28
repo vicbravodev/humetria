@@ -33,7 +33,8 @@ final readonly class DescribeStatement
         $brief = $this->companies->find($statement->tenant_id);
         $draft = $statement->status === StatementStatus::Draft;
         $paid = $this->balances->paid([$statement->id])[$statement->id] ?? 0;
-        $state = StatementState::of($statement->status, $statement->total_cents, $paid);
+        $balance = Statement::query()->selectBalance()->findOrFail($statement->id)->balance_cents;
+        $state = StatementState::of($statement->status, $statement->total_cents, $paid, $balance);
         $names = $this->names(array_filter([$statement->created_by, $statement->issued_by]));
 
         return [
@@ -61,7 +62,7 @@ final readonly class DescribeStatement
                 'vat' => Money::format($statement->vat_cents),
                 'total' => Money::format($statement->total_cents),
                 'paid' => $draft ? null : Money::format($paid),
-                'balance' => $draft ? null : Money::format($statement->total_cents - $paid),
+                'balance' => $draft ? null : Money::format($balance),
                 'created_by' => $statement->created_by === null ? 'Renovación mensual' : $names[$statement->created_by] ?? '',
                 'issued_by' => $statement->issued_by === null ? null : $names[$statement->issued_by] ?? '',
                 'issued_at' => $statement->issued_at === null ? null : ShortDate::format($statement->issued_at->setTimezone(config()->string('app.display_timezone'))),

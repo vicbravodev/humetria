@@ -18,8 +18,8 @@ final readonly class ListAccountPayments
     private const int PER_PAGE = 25;
 
     /**
-     * The payments of the account, the latest first, a page at a time, with who recorded each, how much of it was applied and
-     * the reversed ones marked with their reason.
+     * The payments of the account, the latest first, a page at a time, with who recorded each, how much of it was applied and to
+     * which months, and the reversed ones marked with their reason.
      *
      * @return LengthAwarePaginator<int, PaymentRow>
      */
@@ -35,9 +35,20 @@ final readonly class ListAccountPayments
 
         $items = $page->items();
         $applied = [];
+        $months = [];
+        $allocations = PaymentAllocation::query()
+            ->with('statement:id,period_start')
+            ->whereIn('payment_id', array_map(fn (Payment $payment): string => $payment->id, $items))
+            ->get(['payment_id', 'statement_id', 'amount_cents'])
+            ->sortBy(fn (PaymentAllocation $allocation): string => $allocation->statement?->period_start->toDateString() ?? '');
 
-        foreach (PaymentAllocation::query()->whereIn('payment_id', array_map(fn (Payment $payment): string => $payment->id, $items))->get(['payment_id', 'amount_cents']) as $allocation) {
+        foreach ($allocations as $allocation) {
             $applied[$allocation->payment_id] = ($applied[$allocation->payment_id] ?? 0) + $allocation->amount_cents;
+            $period = $allocation->statement?->period_start;
+
+            if ($period !== null) {
+                $months[$allocation->payment_id] = array_values(array_unique([...$months[$allocation->payment_id] ?? [], ShortDate::month($period)]));
+            }
         }
 
         $names = [];
@@ -58,6 +69,7 @@ final readonly class ListAccountPayments
             $payment->isReversed(),
             $payment->reversal_reason,
             ! $payment->isReversed() && $payment->amount_cents > ($applied[$payment->id] ?? 0),
+            $months[$payment->id] ?? [],
         ));
     }
 }

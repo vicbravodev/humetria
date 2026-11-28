@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Http\Middleware;
 
 use App\Http\Impersonation;
+use App\Modules\Announcements\Contracts\PlatformNotices;
 use App\Modules\Tenancy\Models\Tenant;
 use Closure;
 use Illuminate\Http\Request;
@@ -18,11 +19,12 @@ use Symfony\Component\HttpFoundation\Response;
  * whose term lapsed or that a person set read only keeps its pages for reading and exporting, and only changes get 423.
  * A superadmin impersonating the owner sees the real pages (the frame shows them the modal, and they can dismiss it),
  * but changes nothing either: a suspended company launches and sends nothing, whoever acts as its owner.
+ * While the platform is in maintenance every company is read only the same way; its portals and surveys never pass here.
  * Runs after ResolveTenant, which has already bound the company and checked membership.
  */
 final class BlockSuspendedTenant
 {
-    public function __construct(private readonly Impersonation $impersonation) {}
+    public function __construct(private readonly Impersonation $impersonation, private readonly PlatformNotices $notices) {}
 
     /**
      * @param  Closure(Request): Response  $next
@@ -37,7 +39,8 @@ final class BlockSuspendedTenant
 
         $status = $tenant->status();
 
-        if ($status->isReadOnly()) {
+        // The platform's maintenance makes every company read only while it lasts, whatever its own status.
+        if ($status->isReadOnly() || $this->notices->inMaintenance()) {
             return $this->readOnly($request, $next, $tenant);
         }
 

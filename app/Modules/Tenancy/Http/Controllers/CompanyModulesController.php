@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Modules\Tenancy\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Billing\Contracts\Receivables;
 use App\Modules\Billing\Contracts\UsageMeter;
+use App\Modules\Billing\Data\CompanyPayer;
 use App\Modules\Billing\Data\UsageHistoryRow;
 use App\Modules\Billing\Data\UsageSnapshot;
 use App\Modules\Tenancy\Actions\GrantModule;
@@ -18,7 +20,10 @@ use App\Modules\Tenancy\Exceptions\InvalidModuleChange;
 use App\Modules\Tenancy\Http\Requests\GrantModuleRequest;
 use App\Modules\Tenancy\Http\Requests\RevokeModuleRequest;
 use App\Modules\Tenancy\Models\Tenant;
+use App\Modules\Tenancy\Support\AuditPages;
+use App\Modules\Tenancy\Support\CompanyConsolePage;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -26,7 +31,7 @@ use Inertia\Response;
 /** One company in the console, with its modules and what it has used of its plan's limits: the staff reads them, the superadmin grants and takes them away by hand. */
 final class CompanyModulesController extends Controller
 {
-    public function show(Tenant $tenant, CompanyModules $modules, CompanyLimits $limits, UsageMeter $usage): Response
+    public function show(Tenant $tenant, CompanyModules $modules, CompanyLimits $limits, UsageMeter $usage, CompanyConsolePage $page, AuditPages $audit, Receivables $receivables): Response
     {
         Gate::authorize('view-console');
 
@@ -43,7 +48,18 @@ final class CompanyModulesController extends Controller
                 'status' => $status->value,
                 'status_label' => $status->label(),
                 'restriction_reason' => $tenant->restriction_reason,
+                ...$page->contact($tenant),
             ],
+            // What Billing says of its plan, in words and dates; never money.
+            'plan' => $page->plan($tenant),
+            // Who pays it and what that account owes past due, as Billing tells the staff.
+            'payer' => $this->payer($receivables->payerOf($tenant->id)),
+            'members' => $page->members($tenant),
+            'invitations' => $page->invitations($tenant),
+            // The staff's own notes: the company never sees them.
+            'notes' => $page->notes($tenant),
+            // The latest of its audit trail, for whoever may read the trail.
+            'activity' => Gate::allows('view-audit') ? $audit->handle($audit->filters(q: '', kind: '', family: '', company: $tenant->id, from: '', to: '')) : null,
             'modules' => array_map(fn (ModuleRow $row): array => [
                 'key' => $row->key,
                 'label' => $row->label,
@@ -86,6 +102,20 @@ final class CompanyModulesController extends Controller
     }
 
     /**
+     * @return array{account_id: string, legal_name: string, kind_label: string, overdue_cents: int, days_past_due: int}|null
+     */
+    private function payer(?CompanyPayer $payer): ?array
+    {
+        return $payer === null ? null : [
+            'account_id' => $payer->accountId,
+            'legal_name' => $payer->legalName,
+            'kind_label' => $payer->kindLabel,
+            'overdue_cents' => $payer->overdueCents,
+            'days_past_due' => $payer->daysPastDue,
+        ];
+    }
+
+    /**
      * @return array{period_label: string, used: int, reserved: int, quota: int, granted: int, remaining: int}
      */
     private function usage(UsageSnapshot $snapshot): array
@@ -110,7 +140,7 @@ final class CompanyModulesController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Módulo concedido.']);
 
-        return redirect()->route('companies.show', $tenant);
+        return $this->toPage($request, $tenant);
     }
 
     public function revoke(RevokeModuleRequest $request, Tenant $tenant, RevokeModule $revoke): RedirectResponse
@@ -123,6 +153,12 @@ final class CompanyModulesController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Módulo quitado.']);
 
-        return redirect()->route('companies.show', $tenant);
+        return $this->toPage($request, $tenant);
+    }
+
+    /** Back to the company, on the modules tab when the change was made there; any other tab asked is ignored. */
+    private function toPage(Request $request, Tenant $tenant): RedirectResponse
+    {
+        return redirect()->route('companies.show', $request->query('tab') === 'modulos' ? [$tenant, 'tab' => 'modulos'] : $tenant);
     }
 }

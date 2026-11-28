@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Billing\Actions;
 
+use App\Actions\RecordAudit;
 use App\Modules\Billing\Enums\AccountKind;
 use App\Modules\Billing\Enums\Plan;
 use App\Modules\Billing\Enums\SubscriptionStatus;
@@ -19,9 +20,9 @@ use App\Modules\Billing\Notifications\OverdueBalanceNotice;
 use App\Modules\Billing\Support\Catalog;
 use App\Modules\Billing\Support\Money;
 use App\Modules\Billing\Support\ShortDate;
-use App\Modules\Billing\Support\StatementBalances;
 use App\Modules\Tenancy\Contracts\CompanyRegistry;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Notifications\Notification as BaseNotification;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -36,7 +37,7 @@ use Illuminate\Support\Str;
  */
 final readonly class SendBillingNotices
 {
-    public function __construct(private BuildStatement $build, private CompanyRegistry $companies, private StatementBalances $balances) {}
+    public function __construct(private BuildStatement $build, private CompanyRegistry $companies, private RecordAudit $recordAudit) {}
 
     /** @return int notices sent */
     public function handle(?CarbonImmutable $on = null): int
@@ -112,26 +113,67 @@ final readonly class SendBillingNotices
         return $this->tell($account, 'eligibility_lost', $next->format('Y-m'), new EligibilityLostNotice($account->legal_name, array_values($leaving->map(fn (Subscription $subscription): string => $names[$subscription->tenant_id] ?? '')->sort()->all()), $minimum, $this->month($next)));
     }
 
+    /**
+     * Reminds each of the chosen accounts what it owes past due, when it does, whatever the overdue notice already told it: at
+     * most once a day an account (the day of the panel's time zone). Who asked is audited with the accounts reminded.
+     *
+     * @param  list<string>  $accountIds
+     * @return int accounts reminded
+     */
+    public function remind(array $accountIds): int
+    {
+        $now = CarbonImmutable::now();
+        $today = $now->setTimezone(config()->string('app.display_timezone'))->toDateString();
+        $due = Statement::query()->overdue($now)->whereIn('billing_account_id', $accountIds)->orderBy('period_start')->orderBy('id')->get();
+        $reminded = [];
+
+        foreach ($this->overdueLines($due) as [$account, , $lines]) {
+            if ($this->tell($account, 'reminder', $today, new OverdueBalanceNotice($account->legal_name, $lines))) {
+                $reminded[] = $account->id;
+            }
+        }
+
+        if ($reminded !== []) {
+            $this->recordAudit->handle('billing.reminders_sent', null, ['account_ids' => $reminded]);
+        }
+
+        return count($reminded);
+    }
+
     private function overdue(CarbonImmutable $now): int
     {
         $due = Statement::query()->overdue($now)
             ->whereRaw('statements.id::text NOT IN (SELECT reference FROM billing_notices WHERE kind = ?)', ['overdue'])->orderBy('period_start')->orderBy('id')->get();
-        $paid = $this->balances->paid(array_values($due->map(fn (Statement $statement): string => $statement->id)->all()));
-        $names = $this->names(array_values(array_unique($due->map(fn (Statement $statement): string => $statement->tenant_id)->all())));
         $sent = 0;
 
-        foreach ($due->groupBy('billing_account_id') as $accountId => $statements) {
-            $account = BillingAccount::query()->findOrFail($accountId);
-            $lines = array_values($statements->map(fn (Statement $statement): array => [
-                'company' => $names[$statement->tenant_id] ?? '',
-                'period' => ShortDate::month($statement->period_start),
-                'balance' => Money::format($statement->total_cents - ($paid[$statement->id] ?? 0)),
-            ])->all());
-
+        foreach ($this->overdueLines($due) as [$account, $statements, $lines]) {
             $sent += (int) $this->tellStatements($account, $statements, new OverdueBalanceNotice($account->legal_name, $lines));
         }
 
         return $sent;
+    }
+
+    /**
+     * The statements past due by account, each with the lines of its notice: the company, the month and what is still owed.
+     *
+     * @param  Collection<int, Statement>  $due
+     * @return list<array{0: BillingAccount, 1: Collection<int, Statement>, 2: list<array{company: string, period: string, balance: string}>}>
+     */
+    private function overdueLines(Collection $due): array
+    {
+        $names = $this->names(array_values(array_unique($due->map(fn (Statement $statement): string => $statement->tenant_id)->all())));
+        $accounts = BillingAccount::query()->whereIn('id', $due->pluck('billing_account_id'))->get()->keyBy('id');
+        $byAccount = [];
+
+        foreach ($due->groupBy('billing_account_id') as $accountId => $statements) {
+            $byAccount[] = [$accounts->get($accountId) ?? throw new ModelNotFoundException, $statements, array_values($statements->map(fn (Statement $statement): array => [
+                'company' => $names[$statement->tenant_id] ?? '',
+                'period' => ShortDate::month($statement->period_start),
+                'balance' => Money::format($statement->balance_cents),
+            ])->all())];
+        }
+
+        return $byAccount;
     }
 
     /** @param  Collection<int, Statement>  $statements */

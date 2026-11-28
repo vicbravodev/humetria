@@ -7,6 +7,7 @@ import type { InCourse } from '@/types/navigation';
 import type { LeaveImportSummary } from '@/types/leave-policy';
 import type { EmployeeImportSummary } from '@/types/organization';
 import type { ReportLink } from '@/types/results';
+import type { PlatformNotice } from '@/types/announcements';
 import type { Brand, CurrentTenant, TenantSummary } from '@/types/tenancy';
 import type { FlashToast } from '@/types/ui';
 import type { ProofStep } from '@/types/worker-access';
@@ -36,7 +37,11 @@ declare module '@inertiajs/core' {
             auth: Auth;
             /** The superadmin working as auth.user; null outside an impersonation. */
             impersonator: string | null;
+            /** Seconds before that entry as support ends by itself; only while impersonating. */
+            impersonationLeft?: number | undefined;
             tenant: CurrentTenant | null;
+            /** What Humetría tells the company now, a banner of its panel; only inside a company, and only when there is one. */
+            platform_notice?: PlatformNotice;
             /** The user's first companies, for the switcher, and how many they have. */
             tenants: { data: TenantSummary[]; total: number };
             /** The company's campaigns in course and how close the soonest is to its last day; null outside a company. */

@@ -30,7 +30,7 @@ function enterAsOwner(): array
     $tenant = Tenant::factory()->create();
     $owner = ownerOf($tenant);
 
-    test()->actingAs($superadmin)->post(route('companies.impersonate', $tenant));
+    test()->actingAs($superadmin)->post(route('companies.impersonate', $tenant), supportEntry());
 
     return [$superadmin, $tenant, $owner];
 }
@@ -41,7 +41,7 @@ it('lets the superadmin work as the owner, leaving the start in the audit trail'
     $owner = ownerOf($tenant);
 
     $this->actingAs($superadmin)
-        ->post(route('companies.impersonate', $tenant))
+        ->post(route('companies.impersonate', $tenant), supportEntry())
         ->assertRedirect(route('dashboard'));
 
     $this->assertAuthenticatedAs($owner);
@@ -52,7 +52,7 @@ it('lets the superadmin work as the owner, leaving the start in the audit trail'
         ->subject_type->toBe($owner->getMorphClass())
         ->subject_id->toBe((string) $owner->id)
         ->tenant_id->toBe($tenant->id)
-        ->metadata->toBe(['tenant_id' => $tenant->id]);
+        ->metadata->toBe(['reason' => 'Revisar una invitación rebotada', 'minutes' => 30, 'tenant_id' => $tenant->id]);
 });
 
 it('records what is done while impersonating as the owner, with the superadmin behind', function (): void {
@@ -107,7 +107,7 @@ it('lets nobody impersonate where it is not allowed', function (Closure $arrange
     [$actor, $tenant] = $arrange();
 
     $this->actingAs($actor)
-        ->post(route('companies.impersonate', $tenant))
+        ->post(route('companies.impersonate', $tenant), supportEntry())
         ->assertNotFound();
 
     $this->assertAuthenticatedAs($actor);
@@ -133,7 +133,7 @@ it('does not let the superadmin impersonate while already impersonating', functi
     $other = Tenant::factory()->create();
     ownerOf($other);
 
-    $this->post(route('companies.impersonate', $other))->assertNotFound();
+    $this->post(route('companies.impersonate', $other), supportEntry())->assertNotFound();
 
     $this->assertAuthenticatedAs($owner);
     expect(AuditEntry::query()->where('event', 'impersonation.started')->count())->toBe(1);
@@ -265,7 +265,7 @@ it('writes ids, never names or emails, in the log and the audit trail', function
     $owner = ownerOf($tenant);
     $owner->forceFill(['name' => 'Óscar Dueño', 'email' => 'oscar@acme.mx'])->save();
 
-    $this->actingAs($superadmin)->post(route('companies.impersonate', $tenant));
+    $this->actingAs($superadmin)->post(route('companies.impersonate', $tenant), supportEntry());
     $this->post(route('impersonation.stop'));
 
     $logged = collect($lines)->filter(fn (MessageLogged $line): bool => str_starts_with($line->message, 'impersonation.'));
@@ -285,7 +285,7 @@ it('shares the name of the superadmin behind the owner, and null otherwise', fun
     $tenant = Tenant::factory()->create();
     ownerOf($tenant);
 
-    $this->actingAs($superadmin)->post(route('companies.impersonate', $tenant));
+    $this->actingAs($superadmin)->post(route('companies.impersonate', $tenant), supportEntry());
 
     $this->get(route('tenant.dashboard', $tenant))
         ->assertInertia(fn (Assert $page) => $page->where('impersonator', 'Sofía Admin'));
@@ -303,7 +303,7 @@ it('does not carry the superadmin password confirmation over to the owner', func
 
     $this->actingAs($superadmin)
         ->withSession(['auth.password_confirmed_at' => now()->timestamp])
-        ->post(route('companies.impersonate', $tenant));
+        ->post(route('companies.impersonate', $tenant), supportEntry());
 
     // Those routes now answer 404 while impersonating (ImpersonationSettingsTest); the mark itself must be gone.
     expect(session()->has('auth.password_confirmed_at'))->toBeFalse();
@@ -427,6 +427,6 @@ it('ignores the page asked for in a real company: the room only sends to the dem
     ownerOf($company);
 
     $this->actingAs(superadmin())
-        ->post(route('companies.impersonate', $company), ['to' => '/admin/acme/employees'])
+        ->post(route('companies.impersonate', $company), ['to' => '/admin/acme/employees', 'reason' => 'Revisar un reporte', 'minutes' => 30])
         ->assertRedirect(route('dashboard'));
 });

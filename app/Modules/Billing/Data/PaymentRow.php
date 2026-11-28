@@ -13,6 +13,9 @@ use Illuminate\Contracts\Support\Arrayable;
  */
 final readonly class PaymentRow implements Arrayable
 {
+    /**
+     * @param  list<string>  $appliedTo  the months of the statements it settled, oldest first.
+     */
     public function __construct(
         public string $id,
         public string $reference,
@@ -25,6 +28,7 @@ final readonly class PaymentRow implements Arrayable
         public bool $reversed,
         public ?string $reversalReason,
         public bool $canApply = false,
+        public array $appliedTo = [],
     ) {}
 
     /**
@@ -44,6 +48,7 @@ final readonly class PaymentRow implements Arrayable
             'reversed' => $this->reversed,
             'reversal_reason' => $this->reversalReason,
             'can_apply' => $this->canApply,
+            'applied_to' => $this->appliedTo,
         ];
     }
 }

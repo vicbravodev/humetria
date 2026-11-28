@@ -29,6 +29,14 @@ Route::put('admin/demo-requests/{demoRequest}', [DemoRequestConsoleController::c
     ->middleware(['auth', 'verified'])
     ->name('demo-requests.update');
 
+Route::post('admin/demo-requests/{demoRequest}/schedule', [DemoRequestConsoleController::class, 'schedule'])
+    ->middleware(['auth', 'verified'])
+    ->name('demo-requests.schedule');
+
+Route::post('admin/demo-requests/{demoRequest}/discard', [DemoRequestConsoleController::class, 'discard'])
+    ->middleware(['auth', 'verified'])
+    ->name('demo-requests.discard');
+
 // The door of a live demo (its QR): public, the code is the credential of a while the console opened; throttled per address.
 Route::get('demo/{code}', DoorController::class)
     ->middleware('throttle:demo-door')

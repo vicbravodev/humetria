@@ -33,7 +33,7 @@ it('does not count the superadmin entering as the owner as the owner signing in,
     $tenant = Tenant::factory()->create();
     $owner = ownerOf($tenant);
 
-    $this->actingAs($superadmin)->post(route('companies.impersonate', $tenant));
+    $this->actingAs($superadmin)->post(route('companies.impersonate', $tenant), supportEntry());
 
     expect($owner->fresh()->last_login_at)->toBeNull();
 

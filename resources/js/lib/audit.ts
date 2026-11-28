@@ -1,4 +1,4 @@
-import type { AuditFilters } from '@/types';
+import type { AuditEntryRow, AuditFilters } from '@/types';
 
 const LABELS: Record<string, string> = {
     'tenant.created': 'Empresa dada de alta',
@@ -6,6 +6,7 @@ const LABELS: Record<string, string> = {
     'tenant.activated': 'Empresa activada',
     'tenant.reactivated': 'Empresa reactivada',
     'tenant.trial_started': 'Prueba iniciada',
+    'tenant.trial_extended': 'Prueba extendida',
     'tenant.owner_changed': 'Dueño cambiado',
     'tenant.module_granted': 'Herramienta concedida',
     'tenant.module_revoked': 'Herramienta quitada',
@@ -23,6 +24,7 @@ const LABELS: Record<string, string> = {
     'tenant_role.deleted': 'Rol propio borrado',
     'impersonation.started': 'Inicio de impersonación',
     'impersonation.stopped': 'Fin de impersonación',
+    'impersonation.expired': 'Impersonación terminada por tiempo',
     'user.password_reset_sent': 'Enlace de contraseña enviado',
     'user.two_factor_removed': 'Verificación en dos pasos quitada',
     'user.support_granted': 'Rol de soporte dado',
@@ -30,6 +32,9 @@ const LABELS: Record<string, string> = {
     'user.superadmin_created': 'Superadmin creado',
     'demo.updated': 'Solicitud de demo actualizada',
     'demo.converted': 'Solicitud de demo convertida',
+    'demo.assigned': 'Responsable de la solicitud de demo cambiado',
+    'demo.scheduled': 'Demo agendada',
+    'demo.discarded': 'Solicitud de demo descartada',
     'demo.prepare_started': 'Preparación de la demo iniciada',
     'demo.reset_started': 'Reinicio de la demo iniciado',
     'demo.door_opened': 'Sala de la demo abierta',
@@ -209,6 +214,14 @@ const LABELS: Record<string, string> = {
     'billing.charge_removed': 'Cargo eliminado',
     'billing.statement_adjusted': 'Estado de cuenta ajustado',
     'billing.report_exported': 'Reporte de cobranza exportado',
+    'billing.reminders_sent': 'Recordatorios de cobro enviados',
+    'audit.exported': 'Bitácora exportada',
+    'announcement.created': 'Aviso creado',
+    'announcement.updated': 'Aviso editado',
+    'announcement.maintenance_started':
+        'Mantenimiento de la plataforma iniciado',
+    'announcement.maintenance_ended':
+        'Mantenimiento de la plataforma terminado',
     'billing.payment_reversed': 'Pago revertido',
     'billing.statement_discarded': 'Estado de cuenta descartado',
     'billing.subscription_set': 'Plan de la empresa definido',
@@ -248,6 +261,7 @@ export function auditQuery(
 
     return {
         ...(q === '' ? {} : { q }),
+        ...(filters.kind === '' ? {} : { kind: filters.kind }),
         ...(filters.family === '' ? {} : { family: filters.family }),
         ...(filters.company === '' ? {} : { company: filters.company }),
         ...(filters.from === '' ? {} : { from: filters.from }),
@@ -258,4 +272,17 @@ export function auditQuery(
 /** Whether any filter narrows the trail: an empty list is then the filters' doing. */
 export function auditFiltered(filters: AuditFilters): boolean {
     return Object.keys(auditQuery(filters)).length > 0;
+}
+
+/** Who acted on an entry, with their email: the system when nobody did, and who worked as whom while impersonating. */
+export function auditActor(entry: AuditEntryRow): string {
+    if (entry.actor === null) {
+        return 'Sistema';
+    }
+
+    const who = `${entry.actor.name} (${entry.actor.email})`;
+
+    return entry.impersonator === null
+        ? who
+        : `${entry.impersonator.name} como ${who}`;
 }

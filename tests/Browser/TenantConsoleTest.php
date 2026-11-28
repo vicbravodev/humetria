@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Modules\Attendance\Models\AttendancePolicy;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantInvitation;
+use App\Modules\Tenancy\Models\TenantLimit;
 use App\Modules\Tenancy\Models\TenantMembership;
 
 // The labels of the open row menu, in order.
@@ -39,21 +40,26 @@ it('shows the superadmin every company with its status', function (bool $dark, b
         ->assertSee('Empresas')
         ->assertSee('5 empresas')
         ->assertSee('Grupo Ejemplo')
-        ->assertSee('Grupo Ejemplo S.A. de C.V.')
         ->assertSee('GEJ0101011A1')
         ->assertSee('Sin iniciar');
 
     $page->assertSee('Sin invitar')
         ->assertSee('Ana Pérez')
-        ->assertSee('ana@acme.mx')
         ->assertSee('Invitación enviada · vence el')
         ->assertSee('Vencida')
         ->assertSee('carla@acme.mx')
-        ->assertSee('dora@acme.mx')
         ->assertSee('eva@acme.mx');
 
+    // The legal name and the owner's email live in the quick view (tablero Empresas), one line per row in the table.
+    $page->click('[aria-label="Vista rápida de Con owner"]')
+        ->assertSee('ana@acme.mx');
+    visit('/admin/companies')
+        ->click('[aria-label="Vista rápida de Grupo Ejemplo"]')
+        ->assertSee('Grupo Ejemplo S.A. de C.V.');
+
     // A company with an owner offers to change it, from its row's menu.
-    $page->click('[aria-label="Acciones de Con owner"]')
+    visit('/admin/companies')
+        ->click('[aria-label="Acciones de Con owner"]')
         ->assertSee('Cambiar owner');
 })->with($looks);
 
@@ -370,7 +376,7 @@ it('shows support the console and the way into a company, and nothing that chang
 
     visitPage('tenancy/index', '/admin/companies', $dark, $mobile)
         ->assertSee('Con owner')
-        ->assertSee('Entrar como owner')
+        ->assertSee('Entrar como soporte')
         ->assertDontSee('Dar de alta empresa')
         ->assertMissing('@tenant-actions')
         ->assertDontSee('Reenviar');
@@ -393,7 +399,7 @@ it('lets support enter a company as its owner', function (): void {
         ->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
 
     visit('/admin/companies')
-        ->click('Entrar como owner')
+        ->click('Entrar como soporte')->type('#support-reason', 'Revisar una invitación rebotada')->click('[role="dialog"] button[type="submit"]')
         ->assertPathBeginsWith('/admin/acme')
         ->assertSee('Estás viendo Humetría como Ana Pérez')
         ->assertNoJavaScriptErrors();
@@ -534,10 +540,10 @@ it('enters as the owner from the console, shows the banner on every page, and co
     TenantMembership::factory()->for($tenant)->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
 
     $page = visit('/admin/companies')
-        ->click('@tenant-actions')->click('Entrar como owner')
+        ->click('@tenant-actions')->click('Entrar como soporte')->type('#support-reason', 'Revisar una invitación rebotada')->click('[role="dialog"] button[type="submit"]')
         ->assertScript(pathBecomes('/admin/grupo-ejemplo'), true)
         ->assertPathIs('/admin/grupo-ejemplo')
-        ->assertSee('Estás viendo Humetría como Ana Pérez · Salir');
+        ->assertSee('Estás viendo Humetría como Ana Pérez · Quedan 30 min · Salir');
     // Settings has its own layout inside the frame: the banner is there too.
     openPath($page, '/admin/settings/appearance')
         ->assertSee('Estás viendo Humetría como Ana Pérez')
@@ -554,7 +560,7 @@ it('leaves only the appearance settings while impersonating', function (): void 
     TenantMembership::factory()->for(Tenant::factory()->create())->create();
 
     $page = visit('/admin/companies')
-        ->click('@tenant-actions')->click('Entrar como owner');
+        ->click('@tenant-actions')->click('Entrar como soporte')->type('#support-reason', 'Revisar una invitación rebotada')->click('[role="dialog"] button[type="submit"]');
     openPath($page, '/admin/settings/appearance')
         ->assertSee('Apariencia')
         ->assertDontSee('Perfil')
@@ -568,7 +574,7 @@ it('offers to enter as the owner only when the company has one', function (): vo
 
     visit('/admin/companies')
         ->click('@tenant-actions')
-        ->assertDontSee('Entrar como owner');
+        ->assertDontSee('Entrar como soporte');
 });
 
 it('passes the accessibility and CSP checks with the impersonation banner', function (bool $dark, bool $mobile): void {
@@ -576,7 +582,7 @@ it('passes the accessibility and CSP checks with the impersonation banner', func
     TenantMembership::factory()->for(Tenant::factory()->create())->create();
 
     visitPage('dashboard', '/admin/companies', $dark, $mobile, fn ($page) => $page
-        ->click('@tenant-actions')->click('Entrar como owner')
+        ->click('@tenant-actions')->click('Entrar como soporte')->type('#support-reason', 'Revisar una invitación rebotada')->click('[role="dialog"] button[type="submit"]')
         ->assertSee('Estás viendo Humetría como'));
 })->with($looks);
 
@@ -590,7 +596,7 @@ it('narrows the companies by name or RFC and by status', function (): void {
         ->assertDontSee('Grupo Ejemplo')
         ->assertSee('Autopartes Querétaro')
         ->assertQueryStringHas('q', 'queretaro')
-        ->click('a[href*="status=trial"]')
+        ->click('a[href$="status=trial"]')
         ->assertSee('Nada coincide con tu búsqueda')
         ->assertSee('Quitar filtros')
         ->assertNoJavaScriptErrors();
@@ -720,6 +726,30 @@ it('reads an entry made while impersonating as the superadmin acting as the pers
         ->assertDontSee('Impersonando:');
 });
 
+it('groups the trail by day with each action tagged and its origin, and narrows it with chips', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    $tenant = Tenant::factory()->create(['trade_name' => 'Hotel Vía Real']);
+    App\Models\AuditEntry::query()->forceCreate([
+        'id' => (string) Illuminate\Support\Str::uuid(),
+        'tenant_id' => $tenant->id,
+        'event' => 'billing.payment_applied',
+        'metadata' => [],
+        'created_at' => now(),
+    ]);
+
+    visitPage('tenancy/audit', '/admin/audit?family=billing', $dark, $mobile)
+        ->assertSee('Hoy ·')
+        ->assertSee('Cobro o plan')
+        ->assertSee('Pago aplicado')
+        ->assertSee('Hotel Vía Real')
+        ->assertSee('Sistema')
+        ->assertSee('Tipo: Cobranza')
+        ->click('[aria-label="Quitar el filtro: Tipo"]')
+        ->assertQueryStringMissing('family')
+        ->click('button:has-text("Empresa")')
+        ->assertVisible('#audit-company');
+})->with($looks);
+
 it('says so when the filters of the audit trail match nothing', function (bool $dark): void {
     signInAsSuperadmin();
 
@@ -732,7 +762,7 @@ it('shows the superadmin the platform users, each with a menu that asks before i
     signInAsSuperadmin();
     User::factory()->create(['name' => 'Ana Pérez', 'email' => 'ana@acme.mx', 'two_factor_confirmed_at' => now(), 'two_factor_secret' => 's', 'two_factor_recovery_codes' => 'c']);
 
-    visitPage('tenancy/users', '/admin/platform-users', $dark, $mobile)
+    visitPage('tenancy/users', '/admin/platform-users?tab=people', $dark, $mobile)
         ->assertSee('Usuarios')
         ->assertSee('Ana Pérez')
         ->assertSee('ana@acme.mx')
@@ -743,6 +773,53 @@ it('shows the superadmin the platform users, each with a menu that asks before i
         ->click('Quitar verificación en dos pasos')
         ->assertSee('¿Quitar la verificación en dos pasos de Ana Pérez?')
         ->assertSee('ana@acme.mx');
+})->with($looks);
+
+it('shows the team with its support entries, and what each platform role may do', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    support()->forceFill(['name' => 'Soporte Uno'])->save();
+
+    visitPage('tenancy/users', '/admin/platform-users', $dark, $mobile)
+        ->assertSee('Equipo Humetría')
+        ->assertSee('Soporte Uno')
+        ->click('Permisos por rol')
+        ->assertSee('Leer la bitácora')
+        ->assertSee('Superadmin');
+})->with($looks);
+
+it('shows the team beside what each role may do, and the quick help that helps anyone with an account back in', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    support()->forceFill(['name' => 'Soporte Uno'])->save();
+    User::factory()->create(['name' => 'Ana Pérez', 'email' => 'ana@acme.mx', 'two_factor_confirmed_at' => now(), 'two_factor_secret' => 's', 'two_factor_recovery_codes' => 'c']);
+
+    visitPage('tenancy/users', '/admin/platform-users', $dark, $mobile)
+        ->assertSee('Entró como soporte (30 d)')
+        ->assertSee('Qué puede hacer cada rol')
+        ->assertSee('nunca ve respuestas')
+        ->assertSee('Personas con cuenta: ayuda rápida')
+        ->assertSee('ana@acme.mx · Sin empresas · 2FA activa')
+        ->click('[aria-label="Quitar 2FA…: Ana Pérez"]')
+        ->assertSee('¿Quitar la verificación en dos pasos de Ana Pérez?')
+        ->click('Cancelar')
+        ->click('[aria-label="Gestionar a Soporte Uno"]')
+        ->assertSee('Quitar rol de soporte');
+})->with($looks);
+
+it('opens the detail of an entry in a side panel with what it changed, and offers the export', function (bool $dark, bool $mobile): void {
+    signInAsSuperadmin();
+    App\Models\AuditEntry::query()->forceCreate([
+        'id' => (string) Illuminate\Support\Str::uuid(),
+        'event' => 'employee.updated',
+        'metadata' => ['changes' => ['job_title' => ['before' => 'Analista', 'after' => 'Gerente']]],
+        'created_at' => now(),
+    ]);
+
+    visitPage('tenancy/audit', '/admin/audit', $dark, $mobile)
+        ->assertSee('Exportar CSV')
+        ->assertSee('Roles y permisos')
+        ->click('[aria-label^="Detalle: "]')
+        ->assertSee('Puesto: Analista')
+        ->assertSee('Puesto: Gerente');
 })->with($looks);
 
 it('says so when no user matches the search', function (bool $dark): void {
@@ -762,8 +839,8 @@ it('shows the superadmin the platform in four figures, each a way into its list'
         ->assertSee('Resumen')
         ->assertSee('Ingreso mensual contratado')
         ->assertSee('Solicitudes de demo')
-        ->assertSee('Sin entrar en 30 días')
-        ->assertSee('Suspendidas')
+        ->assertSee('Prueba por vencer')
+        ->assertSee('Empresas activas')
         ->assertSee('1 espera respuesta.');
 })->with($looks);
 
@@ -773,4 +850,34 @@ it('shows when each company and each user last came in', function (): void {
     TenantMembership::factory()->for($tenant)->for(User::factory()->create(['last_login_at' => '2026-11-10 18:00:00']))->create();
 
     visitPage('tenancy/index', '/admin/companies')->assertSee('Último acceso')->assertSee('10 nov 2026');
+});
+
+it('finds a company by name from the ⌘K palette of the console and opens its page', function (): void {
+    signInAsSuperadmin();
+    $tenant = Tenant::factory()->create(['trade_name' => 'Textiles del Norte']);
+
+    visit('/admin/companies')
+        ->assertVisible('@command-palette')
+        ->assertScript('() => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true })); return true; }')
+        ->type('#command-search', 'textiles')
+        ->assertSeeIn('[role="listbox"] [role="group"]', 'Empresas')
+        ->assertSee('Textiles del Norte')
+        ->keys('#command-search', 'Enter')
+        ->assertScript(pathBecomes("/admin/companies/{$tenant->id}"), true)
+        ->assertNoJavaScriptErrors();
+});
+
+it('narrows the companies with the chips of the list, on the server', function (): void {
+    signInAsSuperadmin();
+    $full = Tenant::factory()->create(['trade_name' => 'Casi llena']);
+    TenantLimit::factory()->create(['tenant_id' => $full->id, 'resource' => 'seats', 'amount' => 100, 'used' => 90]);
+    Tenant::factory()->create(['trade_name' => 'Holgada']);
+
+    visit('/admin/companies')
+        ->assertSee('Holgada')
+        ->click('@high-usage')
+        ->assertScript('() => new URL(location.href).searchParams.get("usage")', 'high')
+        ->assertSee('Casi llena')
+        ->assertDontSee('Holgada')
+        ->assertNoJavaScriptErrors();
 });

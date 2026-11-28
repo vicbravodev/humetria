@@ -64,7 +64,10 @@ it('lists each company with its status for the superadmin', function (): void {
                 'demo_contact' => null,
                 'last_access' => null,
                 'owner' => null,
+                'account_manager' => null,
+                'seats' => null,
                 'invitation' => null,
+                'plan' => null,
             ]]));
 });
 
@@ -127,12 +130,13 @@ it('renders the empty console when there are no companies yet', function (): voi
             ->where('tenants.total', 0));
 });
 
-it('reads the page in nine queries: the superadmin role, the permission cache (permissions and their roles), the counts per view, the count, the page, the owners, the open invitations and which companies use Attendance', function (): void {
+it('reads the page in a fixed number of queries: the superadmin role, the permission cache (permissions and their roles), the counts per view, the count, the page, the owners, the open invitations, which companies use Attendance and the staff', function (): void {
     Tenant::factory()->count(30)->create();
     // A fresh instance, as a real request gets: its roles are not loaded yet.
     $superadmin = superadmin()->fresh();
 
-    $this->expectsDatabaseQueryCount(10);
+    // +3: what each company of the page pays (Billing) and what all of them pay, for the header.
+    $this->expectsDatabaseQueryCount(14);
     $this->actingAs($superadmin)->get(route('companies.index'))->assertOk();
 });
 
@@ -174,8 +178,8 @@ it('lists companies with a fixed number of queries', function (): void {
     $superadmin = superadmin()->fresh();
 
     // The superadmin role, the permission cache (permissions and their roles), the counts per view, the count, the page,
-    // the owners, their users, the open invitations and which of them use Attendance.
-    $this->expectsDatabaseQueryCount(11);
+    // the owners, their users, the open invitations, which of them use Attendance and the staff a company can be handed to.
+    $this->expectsDatabaseQueryCount(15);
     $this->actingAs($superadmin)->get(route('companies.index'))->assertOk();
 });
 
@@ -220,8 +224,8 @@ it('shows one status at a time, counts each within the search, and keeps both in
     $this->actingAs(superadmin())
         ->get(route('companies.index', ['status' => 'trial', 'q' => 'prueba']))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('filters', ['q' => 'prueba', 'status' => 'trial'])
-            ->where('counts', ['all' => 2, 'active' => 0, 'trial' => 1, 'expired' => 1, 'read_only' => 0, 'suspended' => 0, 'archived' => 0])
+            ->where('filters', ['q' => 'prueba', 'status' => 'trial', 'manager' => '', 'usage' => '', 'plan' => ''])
+            ->where('counts', ['all' => 2, 'active' => 0, 'trial' => 1, 'trial_ending' => 0, 'dormant' => 0, 'expired' => 1, 'read_only' => 0, 'suspended' => 0, 'archived' => 0])
             ->where('tenants.first_page_url', fn (string $url): bool => str_contains($url, 'status=trial') && str_contains($url, 'q=prueba')));
 });
 

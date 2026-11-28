@@ -65,6 +65,17 @@ it('shows the prepared demo: enter it, its door, its complaint channel and its t
         ->assertDontSee('ya envejecieron');
 })->with($looks);
 
+it('enters the demo with no countdown in the strip: it lasts until «Salir»', function (): void {
+    signInAsSuperadmin();
+    ownerOf(preparedDemo())->forceFill(['name' => 'Laura Alba'])->save();
+
+    visit('/admin/demo')
+        ->click('Entrar como dueño')
+        ->assertSee('Estás viendo Humetría como Laura Alba · Salir')
+        ->assertDontSee('Quedan')
+        ->assertNoJavaScriptErrors();
+});
+
 it('says before a reset what it wipes, what keeps working and that the door closes', function (): void {
     signInAsSuperadmin();
     preparedDemo();

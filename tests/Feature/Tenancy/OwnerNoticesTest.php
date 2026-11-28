@@ -9,6 +9,7 @@ use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Notifications\CompanyReactivated;
 use App\Modules\Tenancy\Notifications\CompanyRestricted;
 use App\Modules\Tenancy\Notifications\ToolsChanged;
+use App\Modules\Tenancy\Notifications\TrialExtended;
 use App\Modules\Tenancy\Support\OwnerNotices;
 use Carbon\CarbonImmutable;
 use Illuminate\Notifications\AnonymousNotifiable;
@@ -206,4 +207,46 @@ it('greets the owner by name in each notice', function (): void {
     resolve(CompanyModules::class)->syncPlan($tenant->id, ['nom035'], CarbonImmutable::parse('2026-12-01'));
 
     Notification::assertSentTo($owner, ToolsChanged::class, fn (ToolsChanged $notice): bool => str_contains((string) $notice->toMail($owner)->render(), 'Hola, Ana López:'));
+});
+
+it('tells the owner of an ended trial, once it is extended, until which day it now runs, in Mexico City', function (): void {
+    // 21:00 in Mexico City, already the 26th in UTC: seven days later it ends on the 2nd there, the 3rd in UTC.
+    $this->travelTo('2026-11-26 03:00 UTC');
+    $tenant = Tenant::factory()->inTrial(now()->subDays(30))->create(['trade_name' => 'Acme']);
+    $owner = memberOf($tenant, TenantRole::Owner);
+
+    $this->actingAs(superadmin())->post(route('companies.trial-extension'), ['companies' => [$tenant->id], 'days' => 7])->assertRedirect();
+
+    Notification::assertSentToTimes($owner, TrialExtended::class, 1);
+    Notification::assertSentTo($owner, TrialExtended::class, fn (TrialExtended $notice): bool => $notice->toMail($owner)->subject === 'Tu prueba se extendió hasta el 2 de diciembre'
+        && str_contains(mailOf($notice), 'Tu prueba de Acme se extendió hasta el 2 de diciembre')
+        && $notice->afterCommit === true);
+});
+
+it('queues the notice of an extended trial and tries it three times', function (): void {
+    $notice = new TrialExtended(new App\Modules\Tenancy\Data\CompanySummary('t', 'Acme', 'acme', false), '2 de diciembre');
+
+    expect($notice)->toBeInstanceOf(Illuminate\Contracts\Queue\ShouldQueue::class)
+        ->and($notice->tries)->toBe(3)
+        ->and($notice->backoff())->toBe([60, 300]);
+});
+
+it('sends nothing when a trial still running is extended', function (): void {
+    $tenant = Tenant::factory()->inTrial(now()->subDays(3))->create();
+    memberOf($tenant, TenantRole::Owner);
+
+    $this->actingAs(superadmin())->post(route('companies.trial-extension'), ['companies' => [$tenant->id], 'days' => 7])->assertRedirect();
+
+    Notification::assertNothingSent();
+});
+
+it('extends an ended trial with no owner, tells nobody and records it', function (): void {
+    Log::spy();
+    $tenant = Tenant::factory()->inTrial(now()->subDays(30))->create();
+
+    $this->actingAs(superadmin())->post(route('companies.trial-extension'), ['companies' => [$tenant->id], 'days' => 7])->assertRedirect();
+
+    expect($tenant->fresh()?->trialEndsAt()?->isFuture())->toBeTrue();
+    Notification::assertNothingSent();
+    Log::shouldHaveReceived('warning')->with('tenant.owner_not_notified', ['tenant_id' => $tenant->id, 'event' => 'tenant.trial_extended', 'why' => 'no_owner']);
 });

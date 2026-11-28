@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import DatePicker from '@/components/humetria/date-picker';
 import FormDialog from '@/components/humetria/form-dialog';
 import InputError from '@/components/humetria/input-error';
 import TenantReasonField from '@/components/tenancy/tenant-reason-field';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { returnTo } from '@/lib/company-360';
 import { grant } from '@/routes/companies/modules';
 import type { ModuleRow } from '@/types';
 
@@ -12,28 +14,35 @@ import type { ModuleRow } from '@/types';
 export default function GrantModuleDialog({
     companyId,
     module,
+    trigger,
 }: {
     companyId: string;
     module: ModuleRow;
+    /** What opens it instead of the «Conceder» button (the switch of the summary). */
+    trigger?: (open: () => void) => ReactNode;
 }) {
     const [open, setOpen] = useState(false);
 
     return (
         <>
-            <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setOpen(true)}
-                aria-label={`Conceder ${module.label}`}
-            >
-                Conceder
-            </Button>
+            {trigger === undefined ? (
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setOpen(true)}
+                    aria-label={`Conceder ${module.label}`}
+                >
+                    Conceder
+                </Button>
+            ) : (
+                trigger(() => setOpen(true))
+            )}
             <FormDialog
                 open={open}
                 onOpenChange={setOpen}
                 title={`Conceder ${module.label}`}
                 description="Se habilita ya para esta empresa, sin cambiar su plan ni su precio. Queda en la bitácora."
-                form={grant.form(companyId)}
+                form={grant.form(companyId, returnTo(trigger))}
                 submit="Conceder módulo"
             >
                 {(errors) => (

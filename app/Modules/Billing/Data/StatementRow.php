@@ -7,7 +7,8 @@ namespace App\Modules\Billing\Data;
 use Illuminate\Contracts\Support\Arrayable;
 
 /**
- * A statement as the account's page lists it, amounts already written as pesos. A draft has nothing paid and no balance yet.
+ * A statement as the account's page lists it, amounts already written as pesos, with the days it was issued and is due. A draft
+ * has nothing paid, no balance and neither day yet.
  *
  * @implements Arrayable<string, mixed>
  */
@@ -24,6 +25,8 @@ final readonly class StatementRow implements Arrayable
         public ?string $balance,
         public string $state,
         public string $stateLabel,
+        public ?string $issuedOn = null,
+        public ?string $dueOn = null,
     ) {}
 
     /**
@@ -42,6 +45,8 @@ final readonly class StatementRow implements Arrayable
             'balance' => $this->balance,
             'state' => $this->state,
             'state_label' => $this->stateLabel,
+            'issued_on' => $this->issuedOn,
+            'due_on' => $this->dueOn,
         ];
     }
 }

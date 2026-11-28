@@ -48,7 +48,7 @@ dataset('owner account routes', [
 it('hides the owner\'s own account while impersonating', function (string $method, string $name, bool $takesPasskey): void {
     $tenant = Tenant::factory()->create();
     $passkey = passkeyOf(ownerOf($tenant));
-    $this->actingAs(superadmin())->post(route('companies.impersonate', $tenant));
+    $this->actingAs(superadmin())->post(route('companies.impersonate', $tenant), supportEntry());
 
     $this->{$method}(route($name, $takesPasskey ? ['passkey' => $passkey] : []))->assertNotFound();
 })->with('owner account routes');
@@ -64,7 +64,7 @@ it('leaves the owner\'s own account reachable when not impersonating', function 
 it('keeps the appearance settings while impersonating', function (): void {
     $tenant = Tenant::factory()->create();
     ownerOf($tenant);
-    $this->actingAs(superadmin())->post(route('companies.impersonate', $tenant));
+    $this->actingAs(superadmin())->post(route('companies.impersonate', $tenant), supportEntry());
 
     $this->get(route('appearance.edit'))->assertOk();
 });
@@ -93,6 +93,6 @@ it('sends settings to profile, or to appearance while impersonating', function (
 
     $this->actingAs($owner)->get(route('settings'))->assertRedirect(route('profile.edit'));
 
-    $this->actingAs(superadmin())->post(route('companies.impersonate', $tenant));
+    $this->actingAs(superadmin())->post(route('companies.impersonate', $tenant), supportEntry());
     $this->get(route('settings'))->assertRedirect(route('appearance.edit'));
 });

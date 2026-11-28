@@ -16,12 +16,6 @@ final readonly class ChannelDeliveryTallies implements DeliverySummary
 {
     private const array ORDER = ['mail', 'whatsapp'];
 
-    /**
-     * What counts as not delivered: the messages that ended badly. What is still on its way (created, sent, delayed, unknown) is not
-     * a failure: right after a launch nothing has arrived yet and nothing has failed.
-     */
-    private const array FAILED = ['failed', 'bounced', 'complained', 'paused'];
-
     public function __construct(private CurrentTenant $tenant, private CompanyChannels $channels) {}
 
     public function forSource(string $sourceType, string $sourceId, int $minimum): array
@@ -41,7 +35,7 @@ final readonly class ChannelDeliveryTallies implements DeliverySummary
             ->groupBy('channel')
             ->selectRaw(
                 'channel, count(*) as total, count(*) filter (where status in (?, ?)) as delivered, count(*) filter (where status in (?, ?, ?, ?)) as undelivered',
-                [DeliveryStatus::Delivered->value, DeliveryStatus::Read->value, ...self::FAILED],
+                [DeliveryStatus::Delivered->value, DeliveryStatus::Read->value, ...DeliveryStatus::undelivered()],
             )
             ->get()
             ->keyBy('channel');

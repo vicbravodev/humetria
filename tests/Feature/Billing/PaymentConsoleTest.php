@@ -164,6 +164,17 @@ it('offers the statements with a balance, oldest first, for the dialog to apply 
         ->assertJsonPath('data.1.balance', '$2,980');
 });
 
+it('offers a credited statement with what is left after the credit', function (): void {
+    [$account, $one] = receivableAccount();
+    resolve(App\Modules\Billing\Actions\AdjustStatement::class)->handle($one, new App\Modules\Billing\Data\AdjustmentData('Ajuste', -100_000, 'Se cobró de más'), User::factory()->create());
+
+    $this->actingAs(superadmin())->getJson(route('billing.accounts.open-statements', $account))
+        ->assertJsonCount(2, 'data')
+        ->assertJsonPath('data.0.id', $one->id)
+        ->assertJsonPath('data.0.balance', '$2,820')
+        ->assertJsonPath('data.0.balance_input', '2820');
+});
+
 it('lists the payments of the account a page at a time, with what was applied and what was left, and the reversed ones marked', function (): void {
     [$account, $one] = receivableAccount();
     $user = User::factory()->create(['name' => 'Victor Bravo']);

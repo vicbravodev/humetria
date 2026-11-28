@@ -3,11 +3,12 @@ import Pagination from '@/components/humetria/pagination';
 import PageHeader from '@/components/humetria/page-header';
 import CreateTenantDialog from '@/components/tenancy/create-tenant-dialog';
 import TenantsEmpty from '@/components/tenancy/tenants-empty';
-import TenantsTable from '@/components/tenancy/tenants-table';
 import TenantsToolbar from '@/components/tenancy/tenants-toolbar';
+import TenantsWorkArea from '@/components/tenancy/tenants-work-area';
 import { companiesSummary, tenantsFiltered } from '@/lib/tenant-status';
 import type {
     Paginated,
+    StaffMember,
     TenantFilters,
     TenantPrefill,
     TenantRow,
@@ -21,6 +22,9 @@ export default function Tenants({
     counts,
     trialsEndingSoon,
     prefill,
+    staff,
+    revenueCents,
+    plans,
 }: {
     tenants: Paginated<TenantRow>;
     activationMinDate: string;
@@ -28,6 +32,9 @@ export default function Tenants({
     counts: Record<TenantView, number>;
     trialsEndingSoon: number;
     prefill: TenantPrefill | null;
+    staff: StaffMember[];
+    revenueCents: number;
+    plans: { value: string; label: string }[];
 }) {
     const { auth } = usePage().props;
     const filtered = tenantsFiltered(counts, filters);
@@ -35,10 +42,14 @@ export default function Tenants({
     return (
         <>
             <Head title="Empresas" />
-            <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
+            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
                     title="Empresas"
-                    description={companiesSummary(counts.all, trialsEndingSoon)}
+                    description={companiesSummary(
+                        counts.all,
+                        trialsEndingSoon,
+                        revenueCents,
+                    )}
                 >
                     {/* Support sees the console and enters companies; only the superadmin changes them. */}
                     {auth.isSuperadmin && (
@@ -50,14 +61,20 @@ export default function Tenants({
                     )}
                 </PageHeader>
                 {filtered && (
-                    <TenantsToolbar filters={filters} counts={counts} />
+                    <TenantsToolbar
+                        filters={filters}
+                        counts={counts}
+                        plans={plans}
+                        staff={staff}
+                    />
                 )}
                 {tenants.data.length === 0 ? (
                     <TenantsEmpty filtered={filtered} filters={filters} />
                 ) : (
-                    <TenantsTable
+                    <TenantsWorkArea
                         tenants={tenants.data}
                         activationMinDate={activationMinDate}
+                        staff={staff}
                     />
                 )}
                 <Pagination

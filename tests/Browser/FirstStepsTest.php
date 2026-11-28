@@ -115,7 +115,7 @@ it('does not open the welcome to a superadmin working as the owner', function ()
     TenantMembership::factory()->for($tenant)->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
 
     visitPage('dashboard', '/admin/companies', false, false, fn (AwaitableWebpage $page) => $page
-        ->click('@tenant-actions')->click('Entrar como owner')
+        ->click('@tenant-actions')->click('Entrar como soporte')->type('#support-reason', 'Revisar una invitación rebotada')->click('[role="dialog"] button[type="submit"]')
         ->assertScript(pathBecomes('/admin/acme'), true)
         ->assertPathIs('/admin/acme')
         ->assertSee('Estás viendo Humetría como Ana Pérez'))

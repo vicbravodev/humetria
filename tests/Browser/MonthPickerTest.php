@@ -28,7 +28,7 @@ function sentMonth(): string
 
 it('takes a month typed in digits, writes it as mm/aaaa, previews it and generates its draft', function (): void {
     visit(monthAccount())
-        ->click('Generar estado de cuenta')
+        ->click('Generar estado')
         ->assertAttribute('#period', 'type', 'text')
         ->fill('#period', '')
         ->type('#period', '122026')
@@ -44,7 +44,7 @@ it('takes a month typed in digits, writes it as mm/aaaa, previews it and generat
 
 it('picks a month from the grid of the year, with the keyboard, and gives the focus back to the field', function (): void {
     visit(monthAccount())
-        ->click('Generar estado de cuenta')
+        ->click('Generar estado')
         ->fill('#period', '11/2026')
         ->click('[data-slot="month-picker"] button:has-text("Abrir los meses")')
         ->assertVisible('[data-slot="popover-content"] [data-slot="month-grid"]')
@@ -62,7 +62,7 @@ it('picks a month from the grid of the year, with the keyboard, and gives the fo
 
 it('says when the text is no month, and closes the grid with Escape', function (): void {
     visit(monthAccount())
-        ->click('Generar estado de cuenta')
+        ->click('Generar estado')
         ->fill('#period', '13/2026')
         ->keys('#period', 'Tab')
         ->assertSee('No es un mes: escríbelo como 10/2026.')
@@ -75,7 +75,7 @@ it('says when the text is no month, and closes the grid with Escape', function (
 
 it('opens the months as a sheet from the bottom on a phone', function (bool $dark): void {
     visitPage('billing/account', monthAccount(), $dark, true)
-        ->click('Generar estado de cuenta')
+        ->click('Generar estado')
         ->click('#period')
         ->assertVisible('[data-slot="sheet-content"] [data-slot="month-grid"]')
         ->assertScript('() => [...document.querySelectorAll("[data-slot=sheet-content] [data-pick]")].every((month) => month.getBoundingClientRect().height >= 44)', true)

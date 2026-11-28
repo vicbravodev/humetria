@@ -20,9 +20,14 @@ export default function LinkCompanyDialog({
 
     return (
         <>
-            <Button onClick={() => setOpen(true)}>
+            <Button
+                variant="outline"
+                size="sm"
+                aria-label="Vincular empresa"
+                onClick={() => setOpen(true)}
+            >
                 <Link2 aria-hidden />
-                Vincular empresa
+                Vincular
             </Button>
             <FormDialog
                 open={open}

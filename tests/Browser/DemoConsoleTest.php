@@ -32,7 +32,7 @@ it('shows the superadmin every demo request with its contact links', function (b
 
     visitPage('demos/index', '/admin/demo-requests', $dark, $mobile)
         ->assertSee('Solicitudes de demo')
-        ->assertSee('1 solicitud')
+        ->assertSee('De la landing al alta')
         ->assertSee('Ana López')
         ->assertSee('Empresa Ejemplo')
         ->assertSee('Consultor')
@@ -42,6 +42,7 @@ it('shows the superadmin every demo request with its contact links', function (b
         ->assertSee('27 oct 2026, 10:05')
         ->assertAttribute('a[href="mailto:ana@empresa.mx"]', 'href', 'mailto:ana@empresa.mx')
         ->assertAttribute('a[href="https://wa.me/525512345678"]', 'href', 'https://wa.me/525512345678')
+        ->click('Conversiones de anuncios')
         ->assertSee('Conversiones para Google Ads (CSV)')
         ->assertAttribute('a[download][href="/admin/demo-requests/ad-conversions"]', 'href', '/admin/demo-requests/ad-conversions')
         ->assertSee('Conversiones de iOS (CSV)')
@@ -136,7 +137,6 @@ it('shows the tabs with their counts and the follow-up of the request', function
     DemoRequest::factory()->create(['name' => 'Rosa Medina', 'company' => 'Otra Empresa', 'status' => App\Modules\Demos\Enums\DemoStatus::Contacted, 'note' => 'Quedó de contestar', 'created_at' => now()->subDay()]);
 
     visitPage('demos/index', '/admin/demo-requests', $dark, $mobile)
-        ->assertSee('1 solicitud nueva por atender.')
         ->assertSee('Contactadas')
         ->assertSee('Seguimiento')
         ->assertSee('Nota interna')
@@ -181,7 +181,7 @@ it('says in the detail what channel a request arrived by and, when it differs, i
     ]);
 
     visitPage('demos/index', '/admin/demo-requests', $dark, $mobile)
-        ->assertSeeIn('@demo-request-detail', 'Llegó por')
+        ->assertSeeIn('@demo-request-detail', 'Origen')
         ->assertSeeIn('@demo-request-detail', 'anuncios / pago · nom-035')
         ->assertSeeIn('@demo-request-detail', 'Primer contacto')
         ->assertSeeIn('@demo-request-detail', 'boletin / correo')
@@ -193,7 +193,7 @@ it('says "Sin dato", and that it is not direct traffic, when nobody knows where 
     DemoRequest::factory()->create(['name' => 'Ana López', 'company' => 'Empresa Ejemplo']);
 
     visitPage('demos/index', '/admin/demo-requests')
-        ->assertSeeIn('@demo-request-detail', 'Llegó por')
+        ->assertSeeIn('@demo-request-detail', 'Origen')
         ->assertSeeIn('@demo-request-detail', 'Sin dato')
         ->assertSeeIn('@demo-request-detail', 'No significa tráfico directo')
         ->assertDontSee('Primer contacto');

@@ -1,63 +1,54 @@
 import { Form } from '@inertiajs/react';
 import { Save } from 'lucide-react';
 import InputError from '@/components/humetria/input-error';
+import DemoOwnerField from '@/components/demos/demo-owner-field';
+import DemoStatusField from '@/components/demos/demo-status-field';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import { DEMO_CHOICES } from '@/lib/demo-requests';
 import { update } from '@/routes/demo-requests';
 import type { DemoRequestRow } from '@/types';
 
-/** The status and the internal note of a request, saved together. One already converted keeps its status. */
+/** Where a request stands, who of the staff owns it, its next step and the internal note, saved together. */
 export default function DemoRequestForm({
     request,
 }: {
     request: DemoRequestRow;
 }) {
-    const converted = request.status === 'converted';
-
     return (
         <Form
             {...update.form(request.id)}
             options={{ preserveScroll: true }}
-            key={`${request.id}-${request.status}-${request.note}`}
+            key={`${request.id}-${request.status}-${request.note}-${request.owner?.id}-${request.next_step}`}
             className="grid gap-4"
         >
             {({ processing, errors }) => (
                 <>
-                    {converted ? (
-                        <input type="hidden" name="status" value="converted" />
-                    ) : (
-                        <div className="grid max-w-64 gap-2">
-                            <Label htmlFor={`status-${request.id}`}>
-                                Estado
-                            </Label>
-                            <Select name="status" defaultValue={request.status}>
-                                <SelectTrigger id={`status-${request.id}`}>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {DEMO_CHOICES.map((choice) => (
-                                        <SelectItem
-                                            key={choice.value}
-                                            value={choice.value}
-                                        >
-                                            {choice.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <InputError message={errors['status']} />
-                        </div>
-                    )}
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <DemoStatusField
+                            request={request}
+                            error={errors['status']}
+                        />
+                        <DemoOwnerField
+                            request={request}
+                            error={errors['owner_user_id']}
+                        />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor={`next-step-${request.id}`}>
+                            Siguiente paso
+                        </Label>
+                        <Input
+                            id={`next-step-${request.id}`}
+                            name="next_step"
+                            maxLength={200}
+                            defaultValue={request.next_step ?? ''}
+                            placeholder="Mandar la propuesta el lunes"
+                        />
+                        <InputError message={errors['next_step']} />
+                    </div>
                     <div className="grid gap-2">
                         <Label htmlFor={`note-${request.id}`}>
                             Nota interna
@@ -67,7 +58,7 @@ export default function DemoRequestForm({
                             name="note"
                             maxLength={2000}
                             defaultValue={request.note ?? ''}
-                            placeholder="Qué se habló, qué sigue, quién la llevó…"
+                            placeholder="Qué se habló, qué le interesa, qué objeciones tiene…"
                         />
                         <InputError message={errors['note']} />
                     </div>

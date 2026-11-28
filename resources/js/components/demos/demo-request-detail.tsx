@@ -1,15 +1,14 @@
-import { Mail, MessageCircle } from 'lucide-react';
 import type { Ref } from 'react';
-import Initials from '@/components/humetria/initials';
-import DemoRequestChannels from '@/components/demos/demo-request-channels';
+import DemoRequestActions from '@/components/demos/demo-request-actions';
+import DemoRequestFacts from '@/components/demos/demo-request-facts';
 import DemoRequestHandling from '@/components/demos/demo-request-handling';
-import { Button } from '@/components/ui/button';
-import { profileText, toolsText, workforceText } from '@/lib/demo-requests';
-import { whatsappUrl } from '@/lib/whatsapp-url';
+import { Badge } from '@/components/ui/badge';
 import type { DemoRequestRow } from '@/types';
-import { readablePhone } from '@/lib/phone';
 
-/** One request in full: who asked, how to reach them, what they want and what they wrote. */
+/**
+ * The request chosen, in the fixed panel at the right (tablero Demos): the company with how long it has waited, its
+ * data line by line, what it wrote, its actions in a column, and the follow-up of the team under them.
+ */
 export default function DemoRequestDetail({
     ref,
     request,
@@ -20,88 +19,33 @@ export default function DemoRequestDetail({
     request: DemoRequestRow;
     canManage: boolean;
 }) {
-    const facts = [
-        { term: 'Empresa', value: request.company },
-        { term: 'Tamaño', value: workforceText(request.workforce) },
-        { term: 'Le interesa', value: toolsText(request.tools) },
-    ];
-
     return (
         <article
             ref={ref}
             tabIndex={-1}
+            aria-labelledby={`demo-request-${request.id}`}
             data-test="demo-request-detail"
-            className="flex min-w-0 flex-[999_1_400px] flex-col gap-[22px] px-5 py-6 focus:outline-none md:px-7"
+            className="min-w-0 card focus:outline-none xl:sticky xl:top-6 xl:w-[360px] xl:shrink-0"
         >
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                    <Initials name={request.name} className="size-11 text-sm" />
-                    <div className="flex flex-col">
-                        <h2 className="text-lg leading-[26px] font-semibold">
-                            {request.name}
-                        </h2>
-                        <p className="text-sm text-muted-foreground">
-                            {profileText(request.profile)} · llegó el{' '}
-                            {request.received_at}
-                        </p>
-                    </div>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    <Button asChild variant="outline" size="sm">
-                        <a
-                            href={whatsappUrl(request.whatsapp)}
-                            target="_blank"
-                            rel="noreferrer"
-                        >
-                            <MessageCircle aria-hidden />
-                            WhatsApp
-                        </a>
-                    </Button>
-                    <Button asChild size="sm">
-                        <a href={`mailto:${request.email}`}>
-                            <Mail aria-hidden />
-                            Escribir correo
-                        </a>
-                    </Button>
-                </div>
+            <div className="flex items-center gap-3 border-b px-5 py-4 md:px-6">
+                <h2
+                    id={`demo-request-${request.id}`}
+                    className="min-w-0 flex-1 text-base font-semibold"
+                >
+                    {request.company}
+                </h2>
+                <Badge variant={request.waiting.tone}>
+                    {request.waiting.label}
+                </Badge>
             </div>
-            <dl className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-x-6 gap-y-4 border-y py-[18px]">
-                <div className="flex flex-col gap-0.5">
-                    <dt className="text-caption text-muted-foreground">
-                        Correo
-                    </dt>
-                    <dd className="text-sm font-medium break-all">
-                        {request.email}
-                    </dd>
+            <DemoRequestFacts request={request} />
+            {request.message !== null && (
+                <div className="flex flex-col gap-1 border-t px-5 py-3.5 md:px-6">
+                    <h3 className="text-muted-foreground">Mensaje</h3>
+                    <p className="whitespace-pre-line">{request.message}</p>
                 </div>
-                <div className="flex flex-col gap-0.5">
-                    <dt className="text-caption text-muted-foreground">
-                        WhatsApp
-                    </dt>
-                    <dd className="text-sm font-medium tabular-nums">
-                        {readablePhone(request.whatsapp)}
-                    </dd>
-                </div>
-                <DemoRequestChannels request={request} />
-                {facts.map((fact) => (
-                    <div key={fact.term} className="flex flex-col gap-0.5">
-                        <dt className="text-caption text-muted-foreground">
-                            {fact.term}
-                        </dt>
-                        <dd className="text-sm font-medium">{fact.value}</dd>
-                    </div>
-                ))}
-            </dl>
-            <div className="flex flex-col gap-2">
-                <h3 className="text-caption text-muted-foreground">Mensaje</h3>
-                <p className="max-w-[640px] whitespace-pre-line">
-                    {request.message ?? (
-                        <span className="text-muted-foreground">
-                            Sin mensaje
-                        </span>
-                    )}
-                </p>
-            </div>
+            )}
+            <DemoRequestActions request={request} canManage={canManage} />
             <DemoRequestHandling request={request} canManage={canManage} />
         </article>
     );

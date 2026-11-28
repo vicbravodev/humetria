@@ -164,7 +164,7 @@ it('counts the requests of each status for the tabs, and filters by one', functi
 
     $this->actingAs(superadmin())->get(route('demo-requests.index'))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('counts', ['all' => 6, 'new' => 2, 'contacted' => 1, 'converted' => 0, 'discarded' => 3])
+            ->where('counts', ['all' => 6, 'new' => 2, 'contacted' => 1, 'scheduled' => 0, 'trial' => 0, 'converted' => 0, 'discarded' => 3])
             ->where('filters.status', 'all')
             ->where('demoRequests.total', 6));
 

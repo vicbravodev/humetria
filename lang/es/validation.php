@@ -241,6 +241,11 @@ return [
     ],
 
     'attributes' => [
+        'audience' => 'a quién',
+        'starts_time' => 'hora de inicio',
+        'ends_time' => 'hora de fin',
+        'publish' => 'publicación',
+        'confirmation' => 'confirmación',
         'client_name' => 'nombre del cliente',
         'tours' => 'recorridos',
         'mail_enabled' => 'correo',
@@ -499,6 +504,8 @@ return [
         'centers.*.standing' => 'alguien trabaja de pie',
         'centers.*.sector' => 'sector',
         'note' => 'nota',
+        'next_step' => 'siguiente paso',
+        'scheduled_at' => 'día y hora de la demo',
         'corrected_at' => 'hora correcta',
         'ids' => 'marcas',
         'notes' => 'notas',

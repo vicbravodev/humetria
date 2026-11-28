@@ -115,7 +115,7 @@ it('lets support work as the owner of a company, and come back to its own sessio
     $tenant = Tenant::factory()->create();
     $owner = ownerOf($tenant);
 
-    $this->actingAs($support)->post(route('companies.impersonate', $tenant))->assertRedirect(route('dashboard'));
+    $this->actingAs($support)->post(route('companies.impersonate', $tenant), supportEntry())->assertRedirect(route('dashboard'));
     $this->assertAuthenticatedAs($owner);
 
     $this->get(route('tenant.dashboard', $tenant))->assertOk();
@@ -133,14 +133,14 @@ it('never lets support enter as another member of the staff', function (): void 
     setPermissionsTeamId(null);
     $owner->assignRole(User::SUPPORT);
 
-    $this->actingAs(support())->post(route('companies.impersonate', $tenant))->assertNotFound();
+    $this->actingAs(support())->post(route('companies.impersonate', $tenant), supportEntry())->assertNotFound();
 });
 
 it('ends an impersonation whose staff member lost the role', function (): void {
     $support = support();
     $tenant = Tenant::factory()->create();
     $owner = ownerOf($tenant);
-    $this->actingAs($support)->post(route('companies.impersonate', $tenant));
+    $this->actingAs($support)->post(route('companies.impersonate', $tenant), supportEntry());
 
     setPermissionsTeamId(null);
     $support->removeRole(User::SUPPORT);
@@ -156,6 +156,6 @@ it('keeps support out of the queue dashboard and out of what it does as the owne
 
     expect(Gate::forUser(support())->allows('viewHorizon'))->toBeFalse();
 
-    $this->actingAs(support())->post(route('companies.impersonate', $tenant));
+    $this->actingAs(support())->post(route('companies.impersonate', $tenant), supportEntry());
     $this->post(route('companies.restrict', $tenant), ['restriction' => 'suspended', 'reason' => 'Prueba'])->assertNotFound();
 });

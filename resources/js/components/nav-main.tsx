@@ -20,10 +20,13 @@ export function NavMain({
     label,
     icon,
     items,
+    pinned = false,
 }: {
     label?: string;
     icon?: LucideIcon | undefined;
     items: NavItem[];
+    /** A group that never folds: the console's customers are its daily pages. */
+    pinned?: boolean;
 }) {
     const { currentUrl, isCurrentUrl, isCurrentOrParentUrl } = useCurrentUrl();
     const { state, isMobile } = useSidebar();
@@ -86,7 +89,7 @@ export function NavMain({
     );
 
     // A family of tools folds; folded to its icons the sidebar has no labels, so every tool stays at hand.
-    if (label !== undefined && !folded) {
+    if (label !== undefined && !folded && !pinned) {
         const holdsPage = items.some(
             (item) =>
                 isActive(item) ||

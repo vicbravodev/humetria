@@ -16,6 +16,7 @@ const ARRAY_PROPS = [
     'organization/org-chart:chain' => 'resumen corto: la cadena de mando de la persona enfocada, un nodo por nivel',
     'organization/org-chart-quality:issues' => 'catálogo fijo: los tres problemas de la línea de reporte (ReportingIssue), cada uno con su conteo',
     'tenancy/work-centers:states' => 'catálogo fijo: las 32 entidades',
+    'tenancy/users:permissions' => 'catálogo fijo: los permisos de la plataforma (los Gate del código), uno por renglón',
     'tenancy/members:roles' => 'catálogo fijo: los roles que se pueden dar',
     'tenancy/invite-member:roles' => 'catálogo fijo: los roles que se pueden dar',
     'tenancy/member-permissions:groups' => 'catálogo fijo: los permisos del catálogo que la empresa puede dar, por herramienta (PermissionCatalog)',
@@ -27,6 +28,7 @@ const ARRAY_PROPS = [
     'tenancy/roles:groups' => 'catálogo fijo: los permisos del catálogo que la empresa puede dar, por herramienta (PermissionCatalog), para decir qué puede hacer cada rol',
     'sso/settings:domains' => 'resumen corto: los dominios de correo de la empresa, cinco a lo más (el formulario los topa)',
     'dashboard:norms' => 'catálogo fijo: las normas que la persona puede ver (NOM-035, NOM-037, Ley Silla), tres a lo más',
+    'demos/index:board' => 'resumen corto: las cuatro etapas abiertas del embudo, cinco solicitudes a lo más cada una; el resto está en la lista paginada',
     'dashboard:urgencies' => 'resumen corto: lo que no puede esperar, cinco a lo más',
     'dashboard:week' => 'resumen corto: lo que vence en los próximos 7 días, cinco a lo más',
     'results/screenings:destinations' => 'catálogo fijo: los cinco destinos de una canalización, con su guion y su aviso',
@@ -150,6 +152,9 @@ const ARRAY_PROPS = [
     'tenancy/company:limits' => 'resumen corto: los dos cupos del plan (personas y centros)',
     'tenancy/company:modules' => 'catálogo fijo: los nueve módulos del catálogo, cada uno con su estado',
     'tenancy/company:other_usage' => 'resumen fijo: correo de campañas, archivos y WhatsApp del mes (tres medidores)',
+    'tenancy/index:staff' => 'el equipo de Humetría a quien se asigna una empresa: un puñado de personas, no registros que crecen',
+    'announcements/index:kinds' => 'catálogo fijo: los cuatro tipos de aviso (AnnouncementKind)',
+    'announcements/index:plans' => 'catálogo fijo: los planes del catálogo de cobranza, cinco',
     'attendance/punch:qrTypes' => 'catálogo fijo: las marcas (MarkType) que piden leer el QR del centro, cuatro a lo más',
     'billing/accounts:taxRegimes' => 'catálogo fijo del SAT: los regímenes fiscales (c_RegimenFiscal)',
     'billing/accounts:cfdiUses' => 'catálogo fijo del SAT: los usos de CFDI (c_UsoCFDI)',
@@ -161,7 +166,7 @@ const ARRAY_PROPS = [
 ];
 
 /** Pages whose props are declared as an exported type in resources/js/types, not in the page: page => the type. */
-const PAGE_PROP_TYPES = ['tenancy/role-editor' => 'RoleEditorProps'];
+const PAGE_PROP_TYPES = ['tenancy/role-editor' => 'RoleEditorProps', 'tenancy/company' => 'CompanyPage'];
 
 /** The source of an exported props type of resources/js/types, so what the page takes through it is scanned too. */
 function propsType(string $name): string

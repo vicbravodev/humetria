@@ -23,6 +23,7 @@ final class TenantRules
      */
     public const array RESERVED_SLUGS = [
         'admin',
+        'announcements',
         'api',
         'audit',
         'billing',
@@ -37,6 +38,7 @@ final class TenantRules
         'login',
         'logout',
         'passkeys',
+        'operations',
         'overview',
         'password',
         'platform-users',

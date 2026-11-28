@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Demos\Contracts;
 
 use App\Modules\Demos\Data\DemoLead;
+use App\Modules\Demos\Data\DemoWaiting;
 
 /** What the other modules may ask of the demo requests: read one, and say that a company was created from it. */
 interface DemoLeads
@@ -31,4 +32,7 @@ interface DemoLeads
      * @return array<string, int>
      */
     public function countsByStatus(): array;
+
+    /** How many requests are new, and how many of them have waited more than 48 hours: what needs the team today. */
+    public function waiting(): DemoWaiting;
 }

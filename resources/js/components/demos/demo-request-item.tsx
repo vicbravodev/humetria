@@ -1,8 +1,9 @@
+import { Badge } from '@/components/ui/badge';
 import { workforceText } from '@/lib/demo-requests';
 import { cn } from '@/lib/utils';
 import type { DemoRequestRow } from '@/types';
 
-/** A request in the inbox's list: who, when, and from what company and size. */
+/** A request in the list: the company and who asked, its size and origin, how long it has waited and when it came. */
 export default function DemoRequestItem({
     request,
     chosen,
@@ -19,24 +20,23 @@ export default function DemoRequestItem({
                 aria-current={chosen ? 'true' : undefined}
                 onClick={onChoose}
                 className={cn(
-                    'flex w-full flex-col gap-1 px-4 py-3.5 text-left transition-colors duration-150 ease-out hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring',
+                    'flex w-full flex-wrap items-center gap-x-4 gap-y-1.5 px-4 py-3.5 text-left transition-colors duration-150 ease-out hover:bg-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring md:px-6',
                     chosen && 'bg-accent hover:bg-accent',
                 )}
             >
-                <span className="flex items-baseline justify-between gap-2">
-                    <span className="font-medium">{request.name}</span>
-                    <span className="shrink-0 text-caption text-muted-foreground tabular-nums">
-                        {request.received_at}
+                <span className="flex min-w-[220px] flex-1 flex-col gap-0.5">
+                    <span className="font-semibold">{request.company}</span>
+                    <span className="text-sm text-muted-foreground">
+                        <span>{request.name}</span>
+                        {` · ${workforceText(request.workforce)} · ${request.origin}`}
                     </span>
                 </span>
-                <span className="text-sm text-muted-foreground">
-                    {request.company} · {workforceText(request.workforce)}
+                <Badge variant={request.waiting.tone}>
+                    {request.waiting.label}
+                </Badge>
+                <span className="w-36 text-caption text-muted-foreground tabular-nums">
+                    {request.received_at}
                 </span>
-                {request.status !== 'new' && (
-                    <span className="text-caption text-muted-foreground">
-                        {request.status_label}
-                    </span>
-                )}
             </button>
         </li>
     );

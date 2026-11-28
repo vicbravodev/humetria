@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Concerns\BelongsToCurrentTenant;
 use App\Models\AuditEntry;
+use App\Modules\Announcements\Models\Announcement;
+use App\Modules\Announcements\Models\MaintenancePeriod;
 use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Models\CompanyTransfer;
@@ -32,6 +34,7 @@ use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantLimit;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Models\TenantModule;
+use App\Modules\Tenancy\Models\TenantNote;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 
@@ -67,6 +70,7 @@ const TENANT_MODELS_WITHOUT_SCOPE = [
     UsageEvent::class => 'read across companies by the console',
     UsageGrant::class => 'read across companies by the console',
     TenantLimit::class => 'read across companies by the console and the reconciliation',
+    TenantNote::class => 'the staff\'s notes about a company, written and read only from the console, which has no current company',
     // Single sign-on is read by the public sign-in routes before any company is resolved; every query of the module names its company.
     SsoConnection::class => 'read by the sign-in routes before a company is resolved',
     SsoDomain::class => 'read by the sign-in routes before a company is resolved',
@@ -95,6 +99,9 @@ const PLATFORM_MODELS = [
     // Deduplication of what a provider sends again, before any company is known.
     WebhookEvent::class => 'deduplication of provider callbacks, before any company is known',
     Pause::class => 'an operational stop of the whole feature, for every company',
+    // What Humetría tells the companies: written from the console, which has no current company, and read by every panel.
+    Announcement::class => 'platform data: what the console tells every company, or the ones of a plan',
+    MaintenancePeriod::class => 'platform data: a maintenance of the whole platform, for every company',
 ];
 
 /** @return list<class-string<Model>> */

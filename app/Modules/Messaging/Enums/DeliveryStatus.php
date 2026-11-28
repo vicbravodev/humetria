@@ -37,6 +37,17 @@ enum DeliveryStatus: string
         return in_array($this, [self::Failed, self::Bounced, self::Complained], true);
     }
 
+    /**
+     * What counts as not delivered on a page (rule 10, «sin entregar»): the messages that ended badly. What is still on its way
+     * (created, sent, delayed, unknown) is not a failure: right after a launch nothing has arrived yet and nothing has failed.
+     *
+     * @return list<string>
+     */
+    public static function undelivered(): array
+    {
+        return [self::Failed->value, self::Bounced->value, self::Complained->value, self::Paused->value];
+    }
+
     /** Delivered or read; any other status is undelivered. */
     public function isDelivered(): bool
     {
