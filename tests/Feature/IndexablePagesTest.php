@@ -15,6 +15,14 @@ it('lists the pages search engines may index', function (): void {
         ->and(IndexablePages::includes('guides.workday-2027'))->toBeTrue();
 });
 
+it('lets search engines index exactly the landing, the legal pages, each tool, the guide and the blog: nothing of the app', function (): void {
+    expect(IndexablePages::ROUTES)->toBe([
+        'home', 'privacy-notice', 'roadmap', 'tools.nom_035', 'tools.nom_037', 'tools.ley_silla', 'tools.complaints',
+        'tools.compensation', 'tools.attendance', 'tools.leave', 'tools.org_chart', 'tools.engagement', 'guides.workday-2027',
+        'blog.index',
+    ])->and(IndexablePages::WITH_PARAMETERS)->toBe(['blog.show']);
+});
+
 it('does not list a missing name, an unknown name or the login', function (?string $name): void {
     expect(IndexablePages::includes($name))->toBeFalse();
 })->with([null, 'no-such-route', 'login']);

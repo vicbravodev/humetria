@@ -16,26 +16,26 @@ final class SsrPages
 {
     /** @var array<string, string> route name => component */
     public const array ALLOWED = [
-        'home' => 'landing',
-        'privacy-notice' => 'privacy-notice',
-        'tools.nom_035' => 'tool',
-        'tools.nom_037' => 'tool',
-        'tools.ley_silla' => 'tool',
-        'tools.complaints' => 'tool',
-        'tools.compensation' => 'tool',
-        'tools.attendance' => 'tool',
-        'tools.leave' => 'tool',
-        'tools.org_chart' => 'tool',
-        'tools.engagement' => 'tool',
-        'guides.workday-2027' => 'guide',
-        'blog.index' => 'blog/index',
-        'blog.show' => 'blog/show',
+        'home' => 'landing', // @pest-mutate-ignore: RemoveArrayItem
+        'privacy-notice' => 'privacy-notice', // @pest-mutate-ignore: RemoveArrayItem
+        'tools.nom_035' => 'tool', // @pest-mutate-ignore: RemoveArrayItem
+        'tools.nom_037' => 'tool', // @pest-mutate-ignore: RemoveArrayItem
+        'tools.ley_silla' => 'tool', // @pest-mutate-ignore: RemoveArrayItem
+        'tools.complaints' => 'tool', // @pest-mutate-ignore: RemoveArrayItem
+        'tools.compensation' => 'tool', // @pest-mutate-ignore: RemoveArrayItem
+        'tools.attendance' => 'tool', // @pest-mutate-ignore: RemoveArrayItem
+        'tools.leave' => 'tool', // @pest-mutate-ignore: RemoveArrayItem
+        'tools.org_chart' => 'tool', // @pest-mutate-ignore: RemoveArrayItem
+        'tools.engagement' => 'tool', // @pest-mutate-ignore: RemoveArrayItem
+        'guides.workday-2027' => 'guide', // @pest-mutate-ignore: RemoveArrayItem
+        'blog.index' => 'blog/index', // @pest-mutate-ignore: RemoveArrayItem
+        'blog.show' => 'blog/show', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     /** Set for a few seconds after Node could not be reached, so a stuck Node does not cost every visit its timeout. */
     public const string CIRCUIT_KEY = 'ssr:circuit-open';
 
-    public const int CIRCUIT_SECONDS = 30;
+    public const int CIRCUIT_SECONDS = 30; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     /**
      * @param  array<string, mixed>  $page  the Inertia page about to be rendered

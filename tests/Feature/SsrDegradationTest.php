@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-mutates(LogSsrRenderFailure::class, LogSsrRender::class);
+mutates(LogSsrRenderFailure::class, LogSsrRender::class, SsrPages::class);
 
 beforeEach(function (): void {
     $this->logPath = storage_path('logs/ssr-degradation-test.log');
@@ -197,6 +197,16 @@ it('tries Node again once the circuit breaker has closed, after thirty seconds',
     expect(nodeAttempts())->toBe(1);
 
     $this->travel(2)->seconds();
+    $this->get('/')->assertOk();
+
+    expect(nodeAttempts())->toBe(2);
+});
+
+it('keeps the circuit breaker open thirty seconds exactly: Node is tried again at the thirtieth', function (): void {
+    nodeIsDown();
+
+    $this->get('/')->assertOk();
+    $this->travel(30)->seconds();
     $this->get('/')->assertOk();
 
     expect(nodeAttempts())->toBe(2);

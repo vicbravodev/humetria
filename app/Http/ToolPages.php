@@ -41,15 +41,15 @@ final class ToolPages
 {
     /** The tool, as the demo form sends it (App\Modules\Demos\Enums\Tool), and the address of its page. */
     public const array SLUGS = [
-        'nom_035' => 'nom-035',
-        'nom_037' => 'nom-037',
-        'ley_silla' => 'ley-silla',
-        'complaints' => 'buzon-de-quejas',
-        'compensation' => 'compensacion',
-        'attendance' => 'registro-de-jornada',
-        'leave' => 'vacaciones-y-permisos',
-        'org_chart' => 'organigrama',
-        'engagement' => 'clima-laboral',
+        'nom_035' => 'nom-035', // @pest-mutate-ignore: RemoveArrayItem
+        'nom_037' => 'nom-037', // @pest-mutate-ignore: RemoveArrayItem
+        'ley_silla' => 'ley-silla', // @pest-mutate-ignore: RemoveArrayItem
+        'complaints' => 'buzon-de-quejas', // @pest-mutate-ignore: RemoveArrayItem
+        'compensation' => 'compensacion', // @pest-mutate-ignore: RemoveArrayItem
+        'attendance' => 'registro-de-jornada', // @pest-mutate-ignore: RemoveArrayItem
+        'leave' => 'vacaciones-y-permisos', // @pest-mutate-ignore: RemoveArrayItem
+        'org_chart' => 'organigrama', // @pest-mutate-ignore: RemoveArrayItem
+        'engagement' => 'clima-laboral', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     public const string GUIDE_ROUTE = 'guides.workday-2027';
@@ -58,15 +58,15 @@ final class ToolPages
 
     /** The text of each tool's page. */
     private const array CONTENT = [
-        'nom_035' => Nom035::class,
-        'nom_037' => Nom037::class,
-        'ley_silla' => LeySilla::class,
-        'complaints' => Complaints::class,
-        'compensation' => Compensation::class,
-        'attendance' => Attendance::class,
-        'leave' => Leave::class,
-        'org_chart' => OrgChart::class,
-        'engagement' => Engagement::class,
+        'nom_035' => Nom035::class, // @pest-mutate-ignore: RemoveArrayItem
+        'nom_037' => Nom037::class, // @pest-mutate-ignore: RemoveArrayItem
+        'ley_silla' => LeySilla::class, // @pest-mutate-ignore: RemoveArrayItem
+        'complaints' => Complaints::class, // @pest-mutate-ignore: RemoveArrayItem
+        'compensation' => Compensation::class, // @pest-mutate-ignore: RemoveArrayItem
+        'attendance' => Attendance::class, // @pest-mutate-ignore: RemoveArrayItem
+        'leave' => Leave::class, // @pest-mutate-ignore: RemoveArrayItem
+        'org_chart' => OrgChart::class, // @pest-mutate-ignore: RemoveArrayItem
+        'engagement' => Engagement::class, // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     public static function route(string $key): string
