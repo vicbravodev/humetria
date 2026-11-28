@@ -15,6 +15,7 @@ use Carbon\CarbonImmutable;
 use Database\Factories\Organization\EmployeeFactory;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 
@@ -128,4 +129,17 @@ it('retries a job that failed, a few times apart', function (): void {
     $job = new CloseCenterDays($this->tenant->id, $this->mexico->id, '2026-11-11');
 
     expect($job->tries)->toBe(3)->and($job->backoff)->toBe([60, 300]);
+});
+
+it('reports the failure of one company and still queues the others', function (): void {
+    Exceptions::fake();
+    $globex = Tenant::factory()->create();
+    AttendanceSchedule::factory()->create(['tenant_id' => $globex->id, 'employee_id' => EmployeeFactory::new()->create(['tenant_id' => $globex->id])->id]);
+    failToEnter($globex->id);
+    // 08:20 UTC is past 00:15 in Cancún, Mexico City and Tijuana (00:20 there).
+    $this->travelTo(CarbonImmutable::parse('2026-11-11 08:20', 'UTC'));
+
+    expect(resolve(DispatchCloseDays::class)->handle())->toBe(3);
+
+    Exceptions::assertReported(fn (RuntimeException $failure): bool => $failure->getMessage() === 'The company could not be entered.');
 });
