@@ -20,8 +20,9 @@ declare(strict_types=1);
  * Usage: php scripts/mutation-classes.php tests [--plan [--changed]]
  */
 
-$plan = in_array('--plan', $argv ?? [], true);
-$testsDirectory = rtrim($argv[1] ?? 'tests', '/');
+$arguments = $argv ?? [];
+$plan = in_array('--plan', $arguments, true);
+$testsDirectory = rtrim($arguments[1] ?? 'tests', '/');
 $testFilesByClass = [];
 
 foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($testsDirectory, FilesystemIterator::SKIP_DOTS)) as $file) {
@@ -38,7 +39,7 @@ sort($classes);
 if ($plan) {
     $lines = planByModule($testFilesByClass);
 
-    echo in_array('--changed', $argv ?? [], true) ? onlyChangedModules($lines, (string) stream_get_contents(STDIN)) : $lines;
+    echo in_array('--changed', $arguments, true) ? onlyChangedModules($lines, (string) stream_get_contents(STDIN)) : $lines;
 
     return;
 }
