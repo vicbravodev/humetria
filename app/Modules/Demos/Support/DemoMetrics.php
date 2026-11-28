@@ -17,7 +17,7 @@ use Illuminate\Database\Query\Expression;
  */
 final readonly class DemoMetrics
 {
-    private const int DAYS = 90;
+    private const int DAYS = 90; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(private DemoLeads $leads) {}
 

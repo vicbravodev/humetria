@@ -5,8 +5,13 @@ declare(strict_types=1);
 use App\Modules\Demos\Enums\DemoStatus;
 use App\Modules\Demos\Enums\Workforce;
 use App\Modules\Demos\Models\DemoRequest;
+use App\Modules\Demos\Support\DemoCardTime;
+use App\Modules\Demos\Support\DemoListFilters;
+use App\Modules\Demos\Support\DemoOwners;
 use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
+
+mutates(DemoListFilters::class, DemoOwners::class, DemoCardTime::class);
 
 it('says where each request came from, as the funnel names it', function (callable $make, string $origin): void {
     $make();
@@ -81,6 +86,8 @@ it('gives each card how long it has waited, or when its demo is, with how urgent
     'new, past 48 hours' => [['created_at' => '2026-11-23 14:00:00'], 'Hace 52 h', 'destructive'],
     'new, days' => [['created_at' => '2026-11-20 18:00:00'], 'Hace 5 d', 'destructive'],
     'contacted today' => [['status' => DemoStatus::Contacted, 'created_at' => '2026-11-20 18:00:00', 'handled_at' => '2026-11-25 15:00:00'], 'Contactada hoy', 'success'],
+    'contacted yesterday' => [['status' => DemoStatus::Contacted, 'created_at' => '2026-11-20 18:00:00', 'handled_at' => '2026-11-24 15:00:00'], 'Contactada ayer', 'success'],
+    'contacted 2 days ago' => [['status' => DemoStatus::Contacted, 'created_at' => '2026-11-20 18:00:00', 'handled_at' => '2026-11-23 15:00:00'], 'Contactada hace 2 d', 'success'],
     'contacted 3 days ago' => [['status' => DemoStatus::Contacted, 'created_at' => '2026-11-20 18:00:00', 'handled_at' => '2026-11-22 15:00:00'], 'Contactada hace 3 d', 'warning'],
     'scheduled' => [['status' => DemoStatus::Scheduled, 'scheduled_at' => '2026-11-26 17:00:00'], 'jue 26 nov, 11:00', 'default'],
     'in trial' => [['status' => DemoStatus::Trial, 'created_at' => '2026-11-15 18:00:00'], 'Llegó hace 10 d', 'secondary'],

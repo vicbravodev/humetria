@@ -3,15 +3,19 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Demos\Actions\DiscardDemoRequest;
 use App\Modules\Demos\Actions\ListDemoRequests;
+use App\Modules\Demos\Actions\ScheduleDemo;
 use App\Modules\Demos\Enums\DemoProfile;
 use App\Modules\Demos\Enums\Tool;
 use App\Modules\Demos\Enums\Workforce;
 use App\Modules\Demos\Models\DemoRequest;
+use App\Modules\Demos\Support\DemoCardTime;
+use App\Modules\Demos\Support\DemoOwners;
 use Illuminate\Support\Carbon;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(DemoRequest::class, ListDemoRequests::class);
+mutates(DemoRequest::class, ListDemoRequests::class, DemoCardTime::class, DemoOwners::class, ScheduleDemo::class, DiscardDemoRequest::class);
 
 it('lives at /admin/demo-requests', function (): void {
     expect(route('demo-requests.index', absolute: false))->toBe('/admin/demo-requests');

@@ -4,20 +4,23 @@ declare(strict_types=1);
 
 use App\Models\AuditEntry;
 use App\Models\User;
+use App\Modules\Demos\Actions\DiscardDemoRequest;
 use App\Modules\Demos\Actions\ListDemoRequests;
+use App\Modules\Demos\Actions\ScheduleDemo;
 use App\Modules\Demos\Actions\UpdateDemoRequest;
 use App\Modules\Demos\Contracts\DemoLeads;
 use App\Modules\Demos\Enums\DemoStatus;
 use App\Modules\Demos\Models\DemoRequest;
 use App\Modules\Demos\Notifications\DemoRequested;
 use App\Modules\Demos\Support\DemoLeadRegistry;
+use App\Modules\Demos\Support\DemoOwners;
 use App\Modules\Tenancy\Models\Tenant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
 
-mutates(UpdateDemoRequest::class, DemoLeadRegistry::class, ListDemoRequests::class);
+mutates(UpdateDemoRequest::class, DemoLeadRegistry::class, ListDemoRequests::class, ScheduleDemo::class, DiscardDemoRequest::class, DemoOwners::class);
 
 /** The landing's form, as a visitor fills it. */
 function landingDemoForm(array $overrides = []): array
