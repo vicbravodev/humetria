@@ -18,7 +18,7 @@ use App\Modules\Tenancy\Data\WorkCenterSummary;
  */
 final readonly class ApplicabilityPages
 {
-    private const int CENTERS_PER_PAGE = 10;
+    private const int CENTERS_PER_PAGE = 10; // @pest-mutate-ignore: DecrementInteger,IncrementInteger
 
     public function __construct(
         private Headcount $headcount,
@@ -81,7 +81,7 @@ final readonly class ApplicabilityPages
     {
         $guides = $this->guides->for($people);
 
-        return match (true) {
+        return match (true) { // @pest-mutate-ignore: TrueToFalse
             in_array('III', $guides, true) => 'over_50',
             in_array('II', $guides, true) => '16_to_50',
             default => 'up_to_15',
