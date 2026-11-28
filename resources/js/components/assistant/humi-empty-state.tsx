@@ -1,5 +1,5 @@
 import { Lock } from 'lucide-react';
-import Humi from '@/components/assistant/humi';
+import Humi from '@/components/humetria/humi';
 import HumiStarters from '@/components/assistant/humi-starters';
 import type { Starter } from '@/lib/assistant/suggestions';
 

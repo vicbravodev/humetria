@@ -154,11 +154,11 @@ Toda página vive en uno de estos marcos; `layouts/frames.ts` decide cuál. Una 
 
 ### Panel de la empresa (`/admin/{tenant}`)
 
-`layouts/app/app-sidebar-layout.tsx` arma `AppShell` (el `SidebarProvider`, que recuerda si está plegado en la cookie `sidebar_state`), `AppSidebar`, `AppContent`, `MobileTabBar`, `CommandPalette`, el dock de primeros pasos y el de Humi.
+`layouts/app/app-sidebar-layout.tsx` arma `AppShell` (el `SidebarProvider`, que recuerda si está plegado en la cookie `sidebar_state`), `AppSidebar`, `AppContent`, `MobileTabBar`, `CommandPalette`, el dock de primeros pasos, el del guía de la demo (`components/demos/guide-dock.tsx`, solo con una sesión de demo en curso y en lugar de primeros pasos) y el de Humi.
 
 - **Panel de la página:** el sidebar es `variant="inset"`; desde `md` el contenido va en un panel `bg-background` con `rounded-xl`, borde `sidebar-border` y `shadow-raised`, sobre el fondo `sidebar`. El cuerpo llena hasta 1440 px y se centra (ver «Espacio, forma y profundidad»).
 - **Sidebar** (`components/app-sidebar.tsx`), de arriba abajo: `CompanyMark` (al staff fuera de una empresa, además la pastilla «Consola» en `warning`); `TenantSwitcher`, la tarjeta de 56 px con iniciales y nombre de la empresa, que abre la lista cuando la persona tiene dos o más; la navegación; al pie `NextObligationCard` (solo con una evaluación en curso) y `NavUser` (fila de 56 px que abre el menú de la cuenta hacia arriba). La lista se desvanece en sus bordes (`scroll-fade`) en vez de mostrar barra.
-- **Grupos** (`lib/nav-sections.ts`, en este orden): sin título (Panel, Centros de trabajo, Empleados, Accesos), Administración, **Cumple la norma**, **Escucha a tu gente**, **Ordena tu operación** y, solo para staff, Consola, Ventas y Plataforma. Cada grupo con nombre es `NavGroup` (`components/nav-group.tsx`): una fila plegable de 44 px con el ícono de la familia, texto 600 y chevron, que empieza abierta cuando contiene la página actual y, plegada, suma los contadores de sus herramientas. Una herramienta con páginas propias (NOM-037) es `NavSubmenu` (ver `componentes/Sidebar.md`).
+- **Grupos** (`lib/nav-sections.ts`, en este orden): sin título (Panel, Centros de trabajo, Empleados, Accesos), Administración, **Cumple la norma**, **Escucha a tu gente**, **Ordena tu operación** y, solo para staff, Consola (dentro de una empresa) o Clientes (fuera de ella), Ventas y Plataforma. Cada grupo con nombre es `NavGroup` (`components/nav-group.tsx`): una fila plegable de 44 px con el ícono de la familia, texto 600 y chevron, que empieza abierta cuando contiene la página actual y, plegada, suma los contadores de sus herramientas. Una herramienta con páginas propias (NOM-037) es `NavSubmenu` (ver `componentes/Sidebar.md`).
 - **Fila activa:** fondo `card`, anillo de 1 px en `sidebar-border`, peso 500 e ícono en `sidebar-primary` (`SidebarMenuButton` en `components/ui/sidebar.tsx`). El contador de una fila (evaluaciones en curso de NOM-035) va a la derecha.
 - **Plegado a íconos:** 66 px de ancho, botones de 44 × 44 con el nombre en tooltip; se pliega con el botón de la barra superior o ⌘B. Desaparecen los títulos de grupo y la tarjeta de obligación; el padre de un submenú enlaza a su primera página y la tarjeta de la empresa queda en sus iniciales.
 - **Barra superior** (`AppSidebarHeader`, 64 px, fija al desplazar, con divisor cuando el contenido pasa debajo): a la izquierda el botón de plegar (tooltip «Contraer menú ⌘B», desde `md`) y las migas (`AppBreadcrumbs`: la empresa es el inicio; en el celular solo la última); a la derecha «Buscar o ir a… ⌘K» (`CommandPalette`; solo ícono bajo `lg`) y el tema (`ThemeSwitch` de tres opciones desde `sm`, `ThemeMenu` en el celular). El menú de la cuenta vive en el sidebar, no aquí. Al suplantar, `ImpersonationBanner` va encima.
@@ -203,7 +203,30 @@ web.dev, MDN, Apple (barras de pestañas) y Material (hojas y diálogos); se apl
 
 ### Consola de superadmin
 
-Es el mismo marco del panel, sin empresa: `CompanyMark` muestra el logo de Humetría con la pastilla «Consola» y los grupos son Consola (Resumen, Empresas, Cuentas), Ventas (Solicitudes de demo, Sala de demo) y Plataforma (`lib/staff-navigation.ts`). Sus pantallas usan las mismas piezas que el panel: `PageHeader`, `CountTabs` y `SearchField` sobre tablas paginadas (`components/tenancy/tenants-toolbar.tsx`, `tenants-table.tsx`), `OverviewCard` en el resumen. Sus formularios siguen la misma regla que el panel («Formularios», en «Composición y espacio»); hoy varias altas de la consola y los cobros son diálogos y quedan para la auditoría.
+Es el mismo marco del panel, sin empresa: `CompanyMark` muestra el logo de Humetría con la pastilla «Consola». La navegación
+(`lib/staff-navigation.ts`, `lib/nav-sections.ts`) tiene, fuera de una empresa: Resumen sin título; **Clientes** (Empresas,
+Cuentas y cobranza), que nunca se pliega porque son las páginas de todos los días; **Ventas** (Solicitudes de demo, que abre
+en el embudo, y Sala de demo); y **Plataforma** (Equipo Humetría, Bitácora, Salud del sistema, Mensajería, Planes y precios,
+Avisos y Colas). Dentro de una empresa, el staff ve toda la consola en un solo grupo «Consola». Soporte ve Clientes y las
+solicitudes de demo; lo demás es del superadmin. Sus pantallas usan las mismas piezas que el panel:
+
+- **Página:** el contenedor de «Composición y espacio» y `PageHeader` en todas (`tests/Unit/ConsolePagesDesignTest.php`).
+- **Cifras:** como máximo tres por pantalla, en tarjetas `card` de 24 px: etiqueta en `caption`, número en KPI (32/40,
+  600, tabular). Lo que no cabe en tres va en la leyenda de una cifra o en «Atiende primero».
+- **Resumen** (`pages/tenancy/overview.tsx`): saludo, tres cifras, `UrgencyList` («Atiende primero»: cuentas vencidas,
+  rechazos del día, pruebas por vencer, demos sin respuesta en 48 h, empresas sin entrar) y lo facturado mes a mes en
+  `ColumnChart`; a la derecha el embudo de demos y la actividad reciente de la bitácora.
+- **Listas** (Empresas, Cuentas y cobranza, Bitácora, Demos): `CountTabs`, `SearchField` y filtros como selectores junto a
+  la búsqueda, todo en el servidor; tabla `muted` de una línea por fila, `BulkBar` mientras hay selección. La vista rápida de
+  una fila es un `Sheet` a la derecha; desde 1600 px queda acoplada junto a la tabla (lista y su panel).
+- **Ficha de una entidad** (Empresa 360, Cuenta): `PageHeader` con sus etiquetas de estado, su fila de datos (`facts`) y sus
+  acciones; pestañas con conteo; columna derecha con lo que acompaña (contacto, notas internas, zona de riesgo).
+- **Formularios:** la regla de «Composición y espacio». Un aviso nuevo o editado (siete campos) va en el panel lateral con
+  su vista previa; entrar como soporte, extender una prueba, agendar o descartar una demo, suspender o archivar son
+  diálogos de uno o dos campos. Las altas de varios campos que siguen en diálogo (`tenancy/create-tenant-dialog`,
+  `billing/account-dialog`, `billing/add-charge-dialog`) quedan para la auditoría.
+- **Interruptor:** el de la app (`complaints/legal-hold-switch.tsx`; en la consola, `tenancy/switch-track.tsx`); en un módulo
+  de Empresa 360 abre el diálogo de conceder o quitar con motivo, nunca cambia en silencio.
 
 ### Fuera del marco
 

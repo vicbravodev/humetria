@@ -5,13 +5,22 @@ declare(strict_types=1);
 namespace App\Modules\Demos\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Modules\Demos\Actions\DiscardDemoRequest;
 use App\Modules\Demos\Actions\ExportAdConversions;
 use App\Modules\Demos\Actions\ListDemoRequests;
+use App\Modules\Demos\Actions\ScheduleDemo;
 use App\Modules\Demos\Actions\UpdateDemoRequest;
+use App\Modules\Demos\Enums\DemoOrigin;
 use App\Modules\Demos\Enums\DemoStatus;
 use App\Modules\Demos\Enums\Tool;
+use App\Modules\Demos\Http\Requests\DiscardDemoRequestRequest;
+use App\Modules\Demos\Http\Requests\ScheduleDemoRequest;
 use App\Modules\Demos\Http\Requests\UpdateDemoRequestRequest;
 use App\Modules\Demos\Models\DemoRequest;
+use App\Modules\Demos\Support\DemoCardTime;
+use App\Modules\Demos\Support\DemoListFilters;
+use App\Modules\Demos\Support\DemoMetrics;
+use App\Modules\Demos\Support\DemoOwners;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,37 +31,87 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 final class DemoRequestConsoleController extends Controller
 {
-    public function index(Request $request, ListDemoRequests $listDemoRequests): Response
+    public function __construct(private readonly DemoCardTime $cardTime) {}
+
+    public function index(Request $request, ListDemoRequests $listDemoRequests, DemoOwners $owners, DemoMetrics $metrics): Response
     {
         Gate::authorize('view-demo-requests');
 
         $status = DemoStatus::tryFrom($request->string('status')->toString());
+        $search = $request->string('q')->trim()->limit(100, '')->toString();
+        $filters = DemoListFilters::from($search, $request->string('origin')->toString(), $request->string('owner')->toString(), $request->string('size')->toString());
+        // The list (paged and searched) or the funnel (a few cards per open stage): only the one shown is read.
+        $board = $request->string('view')->toString() === 'board';
 
         return Inertia::render('demos/index', [
-            'filters' => ['status' => $status->value ?? 'all'],
+            'filters' => ['status' => $status->value ?? 'all', 'q' => $search, 'view' => $board ? 'board' : 'list', ...$filters->toArray()],
             'counts' => $listDemoRequests->counts(),
             'can_manage' => Gate::allows('manage-demo-requests'),
-            'demoRequests' => $listDemoRequests->handle($status)->through(fn (DemoRequest $demoRequest): array => [
-                'id' => $demoRequest->id,
-                'name' => $demoRequest->name,
-                'email' => $demoRequest->email,
-                'whatsapp' => $demoRequest->whatsapp,
-                'company' => $demoRequest->company,
-                'profile' => $demoRequest->profile?->label(),
-                'workforce' => $demoRequest->workforce?->label(),
-                'tools' => $demoRequest->tools->map(fn (Tool $tool): string => $tool->label())->values()->all(),
-                'message' => $demoRequest->message,
-                'status' => $demoRequest->status->value,
-                'status_label' => $demoRequest->status->label(),
-                'note' => $demoRequest->note,
-                'tenant_id' => $demoRequest->tenant_id,
-                // Null is "no data", never direct traffic; the first contact only when it is not the same channel.
-                'arrived_by' => $demoRequest->arrivedBy(),
-                'first_contact' => $demoRequest->firstContact(),
-                // Carbon's Spanish months end in a dot ("oct."); the design system writes "27 oct 2026".
-                'received_at' => str_replace('.', '', $demoRequest->created_at->setTimezone(config()->string('app.display_timezone'))->isoFormat('D MMM YYYY, HH:mm')),
-            ]),
+            'can_open_room' => Gate::allows('manage-demo'),
+            'demoRequests' => $board ? null : $listDemoRequests->handle($status, $filters)->through($this->row(...)),
+            'board' => $board ? $this->board($listDemoRequests, $filters) : null,
+            // Who of the staff may own a request: only for the form, after the page shows.
+            'staff' => Inertia::defer(fn (): array => $owners->options()),
+            // The figures at the top: aggregates of 90 days, after the page shows.
+            'metrics' => Inertia::defer(fn (): array => $metrics->handle()),
         ]);
+    }
+
+    /** @return list<array{status: string, label: string, total: int, cards: list<array<string, mixed>>}> */
+    private function board(ListDemoRequests $listDemoRequests, DemoListFilters $filters): array
+    {
+        $columns = [];
+
+        foreach ($listDemoRequests->board($filters) as $status => $stage) {
+            $columns[] = [
+                'status' => $status,
+                'label' => DemoStatus::from($status)->stageLabel(),
+                'total' => $stage['total'],
+                'cards' => array_map($this->row(...), $stage['cards']),
+            ];
+        }
+
+        return $columns;
+    }
+
+    /** @return array<string, mixed> */
+    private function row(DemoRequest $demoRequest): array
+    {
+        return [
+            'id' => $demoRequest->id,
+            'name' => $demoRequest->name,
+            'email' => $demoRequest->email,
+            'whatsapp' => $demoRequest->whatsapp,
+            'company' => $demoRequest->company,
+            'profile' => $demoRequest->profile?->label(),
+            'workforce' => $demoRequest->workforce?->label(),
+            'tools' => $demoRequest->tools->map(fn (Tool $tool): string => $tool->label())->values()->all(),
+            'message' => $demoRequest->message,
+            'status' => $demoRequest->status->value,
+            'status_label' => $demoRequest->status->label(),
+            'note' => $demoRequest->note,
+            'tenant_id' => $demoRequest->tenant_id,
+            // Null is "no data", never direct traffic; the first contact only when it is not the same channel.
+            'arrived_by' => $demoRequest->arrivedBy(),
+            'first_contact' => $demoRequest->firstContact(),
+            // Carbon's Spanish months end in a dot ("oct."); the design system writes "27 oct 2026".
+            'received_at' => str_replace('.', '', $demoRequest->created_at->setTimezone(config()->string('app.display_timezone'))->isoFormat('D MMM YYYY, HH:mm')),
+            'owner' => $demoRequest->owner === null ? null : ['id' => $demoRequest->owner->id, 'name' => $demoRequest->owner->name],
+            'next_step' => $demoRequest->next_step,
+            'scheduled_for' => $demoRequest->scheduled_at === null ? null : str_replace('.', '', $demoRequest->scheduled_at->setTimezone(config()->string('app.display_timezone'))->isoFormat('ddd D MMM, HH:mm')),
+            'discard_reason' => $demoRequest->discard_reason,
+            // The funnel's card: where it came from and how long it has waited, or when its demo is.
+            'origin' => $this->origin($demoRequest)->label(),
+            'waiting' => $this->cardTime->of($demoRequest),
+        ];
+    }
+
+    /** Read with the request, from the same rule the filter uses. */
+    private function origin(DemoRequest $demoRequest): DemoOrigin
+    {
+        $origin = $demoRequest->getAttribute('origin');
+
+        return is_string($origin) ? DemoOrigin::tryFrom($origin) ?? DemoOrigin::Unknown : DemoOrigin::Unknown;
     }
 
     /** The click conversions for Google Ads, as a CSV to upload by hand. */
@@ -82,9 +141,27 @@ final class DemoRequestConsoleController extends Controller
 
     public function update(UpdateDemoRequestRequest $request, DemoRequest $demoRequest, UpdateDemoRequest $updateDemoRequest): RedirectResponse
     {
-        $updateDemoRequest->handle($demoRequest, $request->status(), $request->note());
+        $updateDemoRequest->handle($demoRequest, $request->status(), $request->note(), $request->ownerId(), $request->nextStep());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Solicitud actualizada.']);
+
+        return back();
+    }
+
+    public function schedule(ScheduleDemoRequest $request, DemoRequest $demoRequest, ScheduleDemo $scheduleDemo): RedirectResponse
+    {
+        $scheduleDemo->handle($demoRequest, $request->at());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Demo agendada.']);
+
+        return back();
+    }
+
+    public function discard(DiscardDemoRequestRequest $request, DemoRequest $demoRequest, DiscardDemoRequest $discardDemoRequest): RedirectResponse
+    {
+        $discardDemoRequest->handle($demoRequest, $request->reason());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => 'Solicitud descartada.']);
 
         return back();
     }

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import ChoiceField from '@/components/humetria/choice-field';
 import AppliesResult from '@/components/tenancy/applies-result';
 import { Button } from '@/components/ui/button';
-import { nom035Result, RANGES } from '@/lib/applicability';
+import { nom035Result, RANGES, staffNote } from '@/lib/applicability';
 import type { Range } from '@/lib/applicability';
 import type { NavItem } from '@/types';
 
@@ -40,9 +40,7 @@ export default function AppliesNom035({
                     size="lg"
                 />
                 <p className="text-sm text-muted-foreground">
-                    Tienes {people} registradas en {center}. Lo marcamos por ti;
-                    las guías de cada evaluación salen de las personas que
-                    registres.
+                    {staffNote(people, center, range)}
                 </p>
             </div>
             <AppliesResult

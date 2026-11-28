@@ -174,6 +174,21 @@ describe('the balance past due', function (): void {
         Notification::assertSentOnDemand(OverdueBalanceNotice::class, fn (OverdueBalanceNotice $notice, array $channels, object $notifiable): bool => $notifiable->routes['mail'] === $account->contact_email && str_contains(noticeText($notice), $tenant->trade_name));
     });
 
+    it('tells what is left after the credits that correct the statement, and nothing once they leave it at zero', function (): void {
+        [$tenant] = statementCompany(['starts_on' => '2026-09-01']);
+        App\Modules\Billing\Models\AccountCompany::query()->update(['starts_on' => '2026-09-01']);
+        $statement = noticeIssued($tenant->id, '2026-11-11 12:00:00');
+        $credit = fn (int $cents) => resolve(App\Modules\Billing\Actions\AdjustStatement::class)->handle($statement, new App\Modules\Billing\Data\AdjustmentData('Ajuste', $cents, 'Se cobró de más'), User::factory()->create());
+        $credit(-100_000); // -$1,160 of $5,684
+
+        resolve(SendBillingNotices::class)->remind([noticeAccount($tenant)->id]);
+        Notification::assertSentOnDemand(OverdueBalanceNotice::class, fn (OverdueBalanceNotice $notice): bool => str_contains(noticeText($notice), '$4,524'));
+
+        $credit(-390_000); // -$4,524: nothing left
+        resolve(SendBillingNotices::class)->handle();
+        Notification::assertSentOnDemandTimes(OverdueBalanceNotice::class, 1);
+    });
+
     it('waits the 15 days: with 14 it is too early', function (): void {
         [$tenant] = statementCompany(['starts_on' => '2026-09-01']);
         App\Modules\Billing\Models\AccountCompany::query()->update(['starts_on' => '2026-09-01']);

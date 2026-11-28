@@ -57,7 +57,11 @@ export default function CampaignFollowUp({
                     contestará, sortea reemplazos.
                 </Notice>
             )}
-            <section aria-label="Avance" className="grid gap-5 md:grid-cols-3">
+            <section
+                aria-label="Avance"
+                data-tour="evaluation-progress"
+                className="grid gap-5 md:grid-cols-3"
+            >
                 {progress !== null && (
                     <ProgressCard
                         progress={progress}

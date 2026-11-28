@@ -27,7 +27,12 @@ export default function CampaignMoreMenu({
     return (
         <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" aria-label="Más acciones">
+                <Button
+                    variant="outline"
+                    size="icon"
+                    aria-label="Más acciones"
+                    data-tour="close-evaluation"
+                >
                     <Ellipsis aria-hidden="true" />
                 </Button>
             </DropdownMenuTrigger>

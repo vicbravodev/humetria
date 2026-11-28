@@ -1,13 +1,22 @@
 import type { ModulesChange } from '@/types/billing-parts';
+import type { AccountAging, AgingBucket } from '@/types/billing-receivable';
 import type { TenantRow } from '@/types/tenancy';
 
 export type AccountKind = 'direct' | 'consultant';
 
-/** The kinds the console's tabs choose among: one, or all. */
-/** A kind of account, all of them, or the queue of those with a balance past due. */
-export type AccountView = AccountKind | 'all' | 'overdue';
+/** A kind of account, all of them, those with something to collect, or the queue of those with a balance past due. */
+export type AccountView = AccountKind | 'all' | 'receivable' | 'overdue';
 
-export type AccountFilters = { q: string; kind: AccountView };
+export type AccountFilters = {
+    q: string;
+    kind: AccountView;
+    /** The kind of account chosen in «Tipo»; empty for all. */
+    type: AccountKind | '';
+    /** The age of the oldest open balance chosen; empty for any. */
+    age: AgingBucket | '';
+    /** The month of what came in, as `2026-10`; empty for this one. */
+    month: string;
+};
 
 /** An account of the console's list: who pays, how to reach them and how many companies they pay now. */
 export type AccountRow = {
@@ -19,12 +28,28 @@ export type AccountRow = {
     contact_name: string;
     contact_email: string;
     companies: number;
+    /** What it owes in all, written as pesos; null when nothing is. */
+    outstanding: string | null;
+    /** The same in cents (0 when nothing is), to add up a selection. */
+    outstanding_cents: number;
     /** What it owes past due, written as pesos; null when nothing is. */
     overdue: string | null;
+    /** How old its oldest open statement is; null when it owes nothing. */
+    aging: AccountAging | null;
+    /** The day of its last payment that stands; null when it never paid. */
+    last_payment: string | null;
 };
 
 /** An account with the fiscal data a CFDI will need and the contract notes. */
-export type AccountDetail = Omit<AccountRow, 'companies' | 'overdue'> & {
+export type AccountDetail = Omit<
+    AccountRow,
+    | 'companies'
+    | 'outstanding'
+    | 'outstanding_cents'
+    | 'overdue'
+    | 'aging'
+    | 'last_payment'
+> & {
     tax_regime: string | null;
     postal_code: string | null;
     cfdi_use: string | null;
@@ -131,6 +156,8 @@ export type AccountSummary = {
     total: string | null;
     requiring_quotation: number;
     next_renewal: string | null;
+    /** The company that renews next. */
+    next_renewal_company: string | null;
     discount: DiscountNote | null;
 };
 
@@ -173,27 +200,17 @@ export type StatementRow = {
     balance: string | null;
     state: StatementState;
     state_label: string;
+    /** The days it was issued and is due; null while it is a draft. */
+    issued_on: string | null;
+    due_on: string | null;
 };
 
-/** A payment of the account: what came in, how much of it settled statements, and why it was reversed if it was. */
-export type PaymentRow = {
-    id: string;
-    reference: string;
-    paid_on: string;
-    amount: string;
-    applied: string;
-    unapplied: string;
-    note: string | null;
-    recorded_by: string;
-    reversed: boolean;
-    reversal_reason: string | null;
-    can_apply: boolean;
-};
-
-/** What the account owes across its issued statements. */
+/** What the account owes across its issued statements, what of it is past due and how old its oldest open statement is. */
 export type Receivable = {
     outstanding: string;
     open_statements: number;
+    overdue: string | null;
+    aging: AccountAging | null;
 };
 
 /** The statement page's document: the snapshot the amounts came from and who made and issued it. */

@@ -8,7 +8,7 @@ use Illuminate\Contracts\Support\Arrayable;
 
 /**
  * What an account pays across all its companies, for the head of its page: how many have a plan, what they add up to without
- * and with VAT, and when the next one renews. The companies that need a quotation are counted and left out of the sums.
+ * and with VAT, and when the next one renews and which. The companies that need a quotation are counted and left out of the sums.
  *
  * @implements Arrayable<string, mixed>
  */
@@ -26,6 +26,7 @@ final readonly class AccountSummary implements Arrayable
         public int $requiringQuotation,
         public ?string $nextRenewal,
         public ?array $discount,
+        public ?string $nextRenewalCompany = null,
     ) {}
 
     /**
@@ -42,6 +43,7 @@ final readonly class AccountSummary implements Arrayable
             'total' => $this->total,
             'requiring_quotation' => $this->requiringQuotation,
             'next_renewal' => $this->nextRenewal,
+            'next_renewal_company' => $this->nextRenewalCompany,
             'discount' => $this->discount,
         ];
     }

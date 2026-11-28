@@ -13,12 +13,13 @@ enum StatementState: string
     case Paid = 'paid';
     case Credit = 'credit';
 
-    public static function of(StatementStatus $status, int $totalCents, int $paidCents): self
+    /** `$balanceCents` is the statement's one balance (Statement::selectBalance): nothing left, after payments and credits, is paid. */
+    public static function of(StatementStatus $status, int $totalCents, int $paidCents, int $balanceCents): self
     {
         return match (true) {
             $status === StatementStatus::Draft => self::Draft,
             $totalCents < 0 => self::Credit,
-            $paidCents >= $totalCents => self::Paid,
+            $balanceCents <= 0 => self::Paid,
             $paidCents > 0 => self::PartiallyPaid,
             default => self::Open,
         };

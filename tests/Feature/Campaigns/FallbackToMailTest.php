@@ -204,3 +204,18 @@ it('is a queued listener with three tries and the design backoff', function (): 
         ->and($listener->tries)->toBe(3)
         ->and($listener->backoff)->toBe([60, 300]);
 });
+
+it('leaves alone a person the mail already reached with the same link (the demo sends both at once)', function (): void {
+    Log::spy();
+    $this->participant->update(['invited_via' => 'mail']);
+    $reservedBefore = mailReserved($this->tenant);
+
+    event(waFailure($this->participant, $this->campaign));
+
+    $participant = $this->participant->refresh();
+    expect($participant->token_version)->toBe(0)
+        ->and($participant->surveyToken())->toBe($this->oldToken)
+        ->and(mailReserved($this->tenant))->toBe($reservedBefore);
+    Notification::assertNothingSent();
+    Log::shouldHaveReceived('info')->with('campaign.fallback_unneeded', ['participant_id' => $participant->id])->once();
+});

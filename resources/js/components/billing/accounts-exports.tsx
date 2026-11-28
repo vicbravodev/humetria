@@ -1,4 +1,11 @@
+import { ChevronDown, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { show } from '@/routes/billing/exports';
 
 const REPORTS: {
@@ -10,21 +17,26 @@ const REPORTS: {
     { report: 'renewals', label: 'Renovaciones' },
 ];
 
-/** The three reports of the console as CSV files: who pays what, what is owed and what renews. */
+/** «Exportar ▾»: the three reports of the console as CSV files, who pays what, what is owed and what renews. */
 export default function AccountsExports() {
     return (
-        <div
-            role="group"
-            aria-label="Descargar reportes en CSV"
-            className="flex flex-wrap items-center gap-2"
-        >
-            {REPORTS.map(({ report, label }) => (
-                <Button key={report} variant="outline" asChild>
-                    <a href={show.url(report)} download>
-                        {label} (CSV)
-                    </a>
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                    Exportar
+                    <ChevronDown aria-hidden />
                 </Button>
-            ))}
-        </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                {REPORTS.map(({ report, label }) => (
+                    <DropdownMenuItem key={report} asChild>
+                        <a href={show.url(report)} download>
+                            <Download aria-hidden />
+                            {label} (CSV)
+                        </a>
+                    </DropdownMenuItem>
+                ))}
+            </DropdownMenuContent>
+        </DropdownMenu>
     );
 }

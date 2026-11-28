@@ -2,6 +2,7 @@ import type { InertiaLinkProps } from '@inertiajs/react';
 import type { LucideIcon } from 'lucide-react';
 import {
     ArrowRight,
+    Building2,
     Menu,
     Monitor,
     Moon,
@@ -17,6 +18,7 @@ import { hasModule } from '@/lib/modules';
 import { navSections } from '@/lib/nav-sections';
 import type { Command } from '@/lib/commands';
 import { toUrl } from '@/lib/utils';
+import { show as showCompany } from '@/routes/companies';
 import { index as campaigns } from '@/routes/tenant/campaigns';
 import { index as employees } from '@/routes/tenant/employees';
 import { create as importCsv } from '@/routes/tenant/employees/import';
@@ -157,5 +159,19 @@ export function peopleCommands(
                     query: { q: label.split(' · ')[0] ?? label },
                 }),
             ),
+    }));
+}
+
+/** The companies the console's ⌘K found by name (the server matched them): each opens its page in the console. */
+export function companyCommands(
+    companies: Option[],
+    visit: Options['actions']['visit'],
+): PaletteCommand[] {
+    return companies.map(({ value, label }) => ({
+        id: `company-${value}`,
+        label,
+        group: 'Empresas',
+        icon: Building2,
+        run: () => visit(showCompany(value)),
     }));
 }

@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/table';
 import type { PlatformUserRow } from '@/types';
 
+/** Everyone with an account («Personas con cuenta»): who, their platform role, companies, two-factor and last sign-in. */
 export default function UsersTable({ users }: { users: PlatformUserRow[] }) {
     return (
         <Table>

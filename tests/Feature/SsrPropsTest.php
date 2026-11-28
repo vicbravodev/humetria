@@ -60,6 +60,7 @@ it('sends nobody: the user is null and nothing identifies a person', function ()
 
     expect($props['auth'])->toBe(['user' => null, 'isSuperadmin' => false, 'isStaff' => false])
         ->and($props['impersonator'])->toBeNull()
+        ->and($props['demoGuide'])->toBeNull()
         ->and($props['tenant'])->toBeNull()
         ->and($props['tenants'])->toBe([]);
 });

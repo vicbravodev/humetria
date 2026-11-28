@@ -8,6 +8,7 @@ use App\Modules\Assistant\Models\AiUsage;
 use App\Modules\Assistant\Models\ConversationParticipant;
 use App\Modules\Assistant\Support\TenantHumiActivity;
 use App\Modules\Tenancy\Models\Tenant;
+use Carbon\CarbonImmutable;
 
 mutates(TenantHumiActivity::class);
 
@@ -50,4 +51,33 @@ it('answers with one query', function (): void {
 
     $this->expectsDatabaseQueryCount(1);
     $activity->hasAsked($this->user->id);
+});
+
+it('says whether anyone asked Humi in this company since an instant', function (): void {
+    $activity = resolve(HumiActivity::class);
+    workIn($this->a);
+    $since = now()->toImmutable()->startOfSecond();
+    $usage = fn (Tenant $tenant, bool $person, CarbonImmutable $at) => AiUsage::factory()->create([
+        'tenant_id' => $tenant->id,
+        'participant_id' => $person ? ConversationParticipant::factory()->for(User::factory())->create(['tenant_id' => $tenant->id])->id : null,
+        'created_at' => $at,
+    ]);
+
+    // Before the instant, with no person (another module's record()), or in another company: not this company's Humi since.
+    $usage($this->a, true, $since->subSecond());
+    $usage($this->a, false, $since->addMinute());
+    $usage($this->b, true, $since->addMinute());
+    expect($activity->askedSince($since))->toBeFalse();
+
+    // Anyone's, at the very instant.
+    $usage($this->a, true, $since);
+    expect($activity->askedSince($since))->toBeTrue();
+});
+
+it('tells whether anyone asked with one query', function (): void {
+    workIn($this->a);
+    $activity = resolve(HumiActivity::class);
+
+    $this->expectsDatabaseQueryCount(1);
+    $activity->askedSince(now()->toImmutable());
 });

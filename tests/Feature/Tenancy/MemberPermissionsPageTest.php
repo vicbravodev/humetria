@@ -140,7 +140,7 @@ it('lets no one but the owner open or change it, and the staff working as the ow
     $this->actingAs($hr)->get(route('tenant.members.permissions.edit', [$this->tenant, $this->member->id]))->assertForbidden();
     $this->actingAs($hr)->put(route('tenant.members.permissions.update', [$this->tenant, $this->member->id]), ['permissions' => ['view-vacations']])->assertForbidden();
 
-    $this->actingAs(support())->post(route('companies.impersonate', $this->tenant))->assertRedirect();
+    $this->actingAs(support())->post(route('companies.impersonate', $this->tenant), supportEntry())->assertRedirect();
     $this->get(route('tenant.members.permissions.edit', [$this->tenant, $this->member->id]))->assertOk()->assertInertia(fn (Assert $page) => $page->where('can_manage', false));
     $this->put(route('tenant.members.permissions.update', [$this->tenant, $this->member->id]), ['permissions' => ['view-vacations']])->assertNotFound();
 

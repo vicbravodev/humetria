@@ -29,6 +29,7 @@ export default function CenterScreens({
     const newLink = usePage().flash.kioskLink;
     const issue = canManage ? (
         <Button
+            data-tour="attendance-issue-kiosk"
             onClick={() =>
                 router.post(
                     store.url(tenantSlug),

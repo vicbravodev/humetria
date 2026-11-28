@@ -1,4 +1,3 @@
-import { Link, router } from '@inertiajs/react';
 import {
     Bot,
     Ellipsis,
@@ -14,6 +13,7 @@ import HumiSettingsDialog from '@/components/tenancy/humi-settings-dialog';
 import InviteOwnerDialog from '@/components/tenancy/invite-owner-dialog';
 import ReactivateTenantDialog from '@/components/tenancy/reactivate-tenant-dialog';
 import RestrictTenantDialog from '@/components/tenancy/restrict-tenant-dialog';
+import SupportEntryDialog from '@/components/tenancy/support-entry-dialog';
 import TenantLogoDialog from '@/components/tenancy/tenant-logo-dialog';
 import TenantRestrictionItems from '@/components/tenancy/tenant-restriction-items';
 import TenantTermItem from '@/components/tenancy/tenant-term-item';
@@ -26,7 +26,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { type Restriction } from '@/lib/tenant-restriction';
 import { ownerAction } from '@/lib/tenant-status';
-import { impersonate } from '@/routes/companies';
 import type { TenantRow } from '@/types';
 
 type Action =
@@ -36,6 +35,7 @@ type Action =
     | 'edit'
     | 'logo'
     | 'humi'
+    | 'support'
     | Restriction;
 
 const RESTRICTIONS: Restriction[] = ['read_only', 'suspended', 'archived'];
@@ -80,17 +80,9 @@ export default function TenantRowActions({
                         {ownerAction(tenant.owner)}
                     </DropdownMenuItem>
                     {tenant.owner !== null && (
-                        <DropdownMenuItem asChild>
-                            {/* Another person's session: nothing prefetched as the superadmin carries over. */}
-                            <Link
-                                href={impersonate(tenant.id)}
-                                as="button"
-                                onClick={() => router.flushAll()}
-                                className="w-full"
-                            >
-                                <LogIn />
-                                Entrar como owner
-                            </Link>
+                        <DropdownMenuItem onSelect={() => setOpen('support')}>
+                            <LogIn />
+                            Entrar como soporte
                         </DropdownMenuItem>
                     )}
                     <DropdownMenuItem onSelect={() => setOpen('edit')}>
@@ -123,6 +115,12 @@ export default function TenantRowActions({
                 tradeName={tenant.trade_name}
                 open={open === 'humi'}
                 onOpenChange={(isOpen) => setOpen(isOpen ? 'humi' : null)}
+            />
+            <SupportEntryDialog
+                tenantId={tenant.id}
+                tradeName={tenant.trade_name}
+                open={open === 'support'}
+                onOpenChange={(isOpen) => setOpen(isOpen ? 'support' : null)}
             />
             <ReactivateTenantDialog {...dialog('reactivate')} />
             {RESTRICTIONS.map((restriction) => (

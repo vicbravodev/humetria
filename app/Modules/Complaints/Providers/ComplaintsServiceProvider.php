@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Modules\Complaints\Providers;
 
+use App\Modules\Complaints\Contracts\ComplaintActivity;
 use App\Modules\Complaints\Contracts\ComplaintChannels;
 use App\Modules\Complaints\Contracts\ComplaintsToAcknowledge;
 use App\Modules\Complaints\Listeners\EndAssignmentsOnRoleConflict;
 use App\Modules\Complaints\Listeners\EndHandlerOnMemberRemoval;
 use App\Modules\Complaints\Models\ComplaintChannel;
 use App\Modules\Complaints\Support\AddressKey;
+use App\Modules\Complaints\Support\CompanyComplaintActivity;
 use App\Modules\Complaints\Support\CompanyComplaintChannels;
 use App\Modules\Complaints\Support\CompanyComplaintsToAcknowledge;
 use App\Modules\Complaints\Support\ComplaintsWorkerSection;
@@ -36,6 +38,7 @@ final class ComplaintsServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(ComplaintChannels::class, CompanyComplaintChannels::class);
+        $this->app->bind(ComplaintActivity::class, CompanyComplaintActivity::class);
         $this->app->bind(ComplaintsToAcknowledge::class, CompanyComplaintsToAcknowledge::class);
         $this->app->bind(ReferenceSource::class, RandomReferenceSource::class);
         $this->app->tag([ComplaintsWorkerSection::class], 'worker.sections');

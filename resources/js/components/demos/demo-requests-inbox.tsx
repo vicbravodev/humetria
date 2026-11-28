@@ -5,9 +5,9 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import type { DemoRequestRow } from '@/types';
 
 /**
- * The requests of one page as an inbox (pantallas: Consola-Solicitudes): the list at the left, the one chosen in full
- * at the right. The newest is open to begin with. On a phone the request sits below the list: choosing one takes the
- * focus there, so the screen and a screen reader land on it.
+ * The requests of one page as a list, with the one chosen in the same fixed panel as the funnel (tablero Demos). The
+ * newest is chosen to begin with. Below 1280 px the panel sits under the list; on a phone, choosing one takes the focus
+ * there, so the screen and a screen reader land on it.
  */
 export default function DemoRequestsInbox({
     requests,
@@ -30,10 +30,10 @@ export default function DemoRequestsInbox({
     };
 
     return (
-        <div className="flex min-h-[520px] flex-wrap overflow-hidden card">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-start">
             <ul
                 aria-label="Solicitudes"
-                className="w-full border-b md:max-w-[360px] md:flex-[1_1_300px] md:border-r md:border-b-0"
+                className="min-w-0 flex-1 overflow-hidden card"
             >
                 {requests.map((request) => (
                     <DemoRequestItem

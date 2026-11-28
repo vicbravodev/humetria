@@ -21,6 +21,9 @@ interface WhatsAppQuota
      */
     public function reserve(int $count): void;
 
+    /** Like reserve(), but says whether the messages fit instead of throwing; nothing is held when they do not. */
+    public function tryReserve(int $count): bool;
+
     /** What one message is charged now: Meta's cost plus the margin. */
     public function price(): MessagePrice;
 }

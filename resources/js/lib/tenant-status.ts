@@ -1,3 +1,4 @@
+import { pesos } from '@/lib/overview';
 import { countOf } from '@/lib/plural';
 import type { BadgeVariant, TenantFilters, TenantRow } from '@/types';
 
@@ -62,16 +63,39 @@ export function trialLabel(daysLeft: number): string {
 }
 
 /** The console's line under "Empresas": how many there are and, when any, how many trials end this week. */
-export function companiesSummary(total: number, endingSoon: number): string {
-    const companies = countOf(total, 'empresa', 'empresas');
+export function companiesSummary(
+    total: number,
+    endingSoon: number,
+    revenueCents = 0,
+): string {
+    const parts = [countOf(total, 'empresa', 'empresas')];
 
-    if (endingSoon === 0) {
-        return companies;
+    if (revenueCents > 0) {
+        parts.push(`${pesos(revenueCents)} al mes contratado`);
     }
 
-    return endingSoon === 1
-        ? `${companies} · 1 prueba termina esta semana`
-        : `${companies} · ${endingSoon} pruebas terminan esta semana`;
+    if (endingSoon > 0) {
+        parts.push(
+            endingSoon === 1
+                ? '1 prueba termina esta semana'
+                : `${endingSoon} pruebas terminan esta semana`,
+        );
+    }
+
+    return parts.join(' · ');
+}
+
+/** The chips that narrow the console's list (who answers, seats almost used up, plan), only the ones set. */
+function chips({
+    manager = '',
+    usage = '',
+    plan = '',
+}: TenantFilters): Partial<Record<'manager' | 'usage' | 'plan', string>> {
+    return Object.fromEntries(
+        Object.entries({ manager, usage, plan }).filter(
+            ([, value]) => value !== '',
+        ),
+    );
 }
 
 /** The console's search and view as its address carries them: without the defaults. */
@@ -83,6 +107,7 @@ export function companiesQuery(
     return {
         ...(q === '' ? {} : { q }),
         ...(filters.status === 'all' ? {} : { status: filters.status }),
+        ...chips(filters),
     };
 }
 
@@ -94,5 +119,10 @@ export function tenantsFiltered(
     counts: { all: number },
     filters: TenantFilters,
 ): boolean {
-    return counts.all > 0 || filters.q !== '' || filters.status !== 'all';
+    return (
+        counts.all > 0 ||
+        filters.q !== '' ||
+        filters.status !== 'all' ||
+        Object.keys(chips(filters)).length > 0
+    );
 }

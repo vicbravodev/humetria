@@ -4,7 +4,6 @@ import FormField from '@/components/form-field';
 import DatePicker from '@/components/humetria/date-picker';
 import FormDialog from '@/components/humetria/form-dialog';
 import InputError from '@/components/humetria/input-error';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import type { ChargeKind } from '@/lib/billing-form';
 import { store } from '@/routes/billing/charges';
@@ -13,25 +12,20 @@ import type { AccountCompanyRow } from '@/types';
 /** Adds an extra charge to a company with a plan: the accompaniment every period, or an implementation once. It is approved by who adds it. */
 export default function AddChargeDialog({
     company,
+    open,
+    onOpenChange,
 }: {
     company: AccountCompanyRow;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
 }) {
-    const [open, setOpen] = useState(false);
     const [kind, setKind] = useState<ChargeKind>('one_time');
 
     return (
         <>
-            <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setOpen(true)}
-                aria-label={`Agregar cargo a ${company.trade_name}`}
-            >
-                Agregar cargo
-            </Button>
             <FormDialog
                 open={open}
-                onOpenChange={setOpen}
+                onOpenChange={onOpenChange}
                 title={`Agregar cargo · ${company.trade_name}`}
                 description="Un cargo extra se suma al plan de la empresa cuando se hagan los estados de cuenta. Queda a tu nombre como quien lo aprobó."
                 form={store.form(company.company_id)}

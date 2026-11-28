@@ -1,25 +1,16 @@
-import { Link } from '@inertiajs/react';
-import { X } from 'lucide-react';
 import DateRangePicker from '@/components/humetria/date-range-picker';
 import SearchField from '@/components/humetria/search-field';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
+import AuditCompanyFilter from '@/components/tenancy/audit-company-filter';
+import AuditFamilyFilter from '@/components/tenancy/audit-family-filter';
+import AuditFilterChip from '@/components/tenancy/audit-filter-chip';
 import { useQueryFilters } from '@/hooks/use-query-filters';
 import { auditQuery } from '@/lib/audit';
+import { periodChip } from '@/lib/audit-view';
 import { periodShortcuts } from '@/lib/date-range';
 import { index } from '@/routes/audit';
 import type { AuditFamily, AuditFilters } from '@/types';
 
-const ALL = 'all';
-
-/** Narrows the trail: who acted, what kind of event, which company and which days. */
+/** Narrows the trail (tablero Bitácora): a search by person or company, and the days, the company and the type as chips. */
 export default function AuditToolbar({
     filters,
     families,
@@ -34,45 +25,22 @@ export default function AuditToolbar({
         filters,
         auditQuery,
     );
+    const family =
+        families.find(({ value }) => value === filters.family)?.label ?? null;
 
     return (
-        <div role="search" className="flex flex-col gap-4">
-            <div className="flex flex-wrap items-end gap-3">
-                <SearchField
-                    label="Buscar por correo de quien actuó"
-                    value={text}
-                    onChange={type}
-                    className="w-full md:w-[320px]"
-                />
-                <div className="grid gap-1.5">
-                    <Label htmlFor="audit-family">Tipo de evento</Label>
-                    <Select
-                        value={filters.family === '' ? ALL : filters.family}
-                        onValueChange={(family) =>
-                            filter({ family: family === ALL ? '' : family })
-                        }
-                    >
-                        <SelectTrigger
-                            id="audit-family"
-                            className="w-full md:w-60"
-                        >
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value={ALL}>
-                                Todos los eventos
-                            </SelectItem>
-                            {families.map((family) => (
-                                <SelectItem
-                                    key={family.value}
-                                    value={family.value}
-                                >
-                                    {family.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
+        <div role="search" className="flex flex-wrap items-center gap-3">
+            <SearchField
+                label="Buscar por persona o empresa"
+                value={text}
+                onChange={type}
+                className="min-w-[220px] flex-1"
+            />
+            <AuditFilterChip
+                label="Fechas"
+                value={periodChip(filters.from, filters.to)}
+                onClear={() => filter({ from: '', to: '' })}
+            >
                 <DateRangePicker
                     id="audit-period"
                     label="Periodo"
@@ -80,28 +48,32 @@ export default function AuditToolbar({
                     onChange={(period) => filter(period)}
                     shortcuts={periodShortcuts()}
                 />
-            </div>
-            {company !== null && (
-                <p className="flex flex-wrap items-center gap-2 text-meta text-muted-foreground">
-                    Solo lo de{' '}
-                    <strong className="text-foreground">{company}</strong>
-                    <Button
-                        asChild
-                        variant="outline"
-                        size="sm"
-                        className="touch-hit"
-                    >
-                        <Link
-                            href={index.url({
-                                query: auditQuery({ ...filters, company: '' }),
-                            })}
-                        >
-                            <X aria-hidden />
-                            Quitar empresa
-                        </Link>
-                    </Button>
-                </p>
-            )}
+            </AuditFilterChip>
+            <AuditFilterChip
+                label="Empresa"
+                value={company}
+                onClear={() => filter({ company: '' })}
+            >
+                <AuditCompanyFilter
+                    company={
+                        company === null
+                            ? null
+                            : { id: filters.company, name: company }
+                    }
+                    onChange={(next) => filter({ company: next })}
+                />
+            </AuditFilterChip>
+            <AuditFilterChip
+                label="Tipo"
+                value={family}
+                onClear={() => filter({ family: '' })}
+            >
+                <AuditFamilyFilter
+                    family={filters.family}
+                    families={families}
+                    onChange={(next) => filter({ family: next })}
+                />
+            </AuditFilterChip>
         </div>
     );
 }

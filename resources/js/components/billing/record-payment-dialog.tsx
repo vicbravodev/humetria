@@ -13,15 +13,22 @@ import { store } from '@/routes/billing/payments';
 export default function RecordPaymentDialog({
     accountId,
     today,
+    variant = 'default',
 }: {
     accountId: string;
     today: string;
+    /** The primary action of the page, or a quieter one inside a card. */
+    variant?: 'default' | 'outline';
 }) {
     const [open, setOpen] = useState(false);
 
     return (
         <>
-            <Button onClick={() => setOpen(true)}>
+            <Button
+                variant={variant}
+                size={variant === 'default' ? 'default' : 'sm'}
+                onClick={() => setOpen(true)}
+            >
                 <Landmark aria-hidden />
                 Registrar pago
             </Button>

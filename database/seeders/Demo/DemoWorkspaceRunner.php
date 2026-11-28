@@ -10,6 +10,7 @@ use App\Modules\Assistant\Models\ConversationParticipant;
 use App\Modules\Demos\Contracts\DemoWorkspace;
 use App\Modules\Tenancy\Contracts\Companies;
 use App\Modules\Tenancy\Contracts\DemoCompanies;
+use App\Modules\Tenancy\Models\Tenant;
 use Closure;
 use Database\Seeders\Demo\Stories\AttendanceStory;
 use Database\Seeders\Demo\Stories\CompensationStory;
@@ -35,7 +36,7 @@ use LogicException;
  */
 final readonly class DemoWorkspaceRunner implements DemoWorkspace
 {
-    public function __construct(private OrganizationStory $organization, private Nom035Story $nom035, private EngagementStory $engagement, private AttendanceStory $attendance, private LeaveStory $leave, private ComplaintsStory $complaints, private DisclosureStory $disclosure, private CompensationStory $compensation, private SeatingStory $seating, private TeleworkStory $telework, private Companies $companies, private DemoCompanies $demos) {}
+    public function __construct(private OrganizationStory $organization, private Nom035Story $nom035, private EngagementStory $engagement, private AttendanceStory $attendance, private LeaveStory $leave, private ComplaintsStory $complaints, private DisclosureStory $disclosure, private CompensationStory $compensation, private SeatingStory $seating, private TeleworkStory $telework, private Companies $companies, private DemoCompanies $demos, private SessionStage $sessionStage) {}
 
     /** Tables with a tenant_id the reset keeps: the audit trail is insert-only, and a demo request is a lead, not content. */
     private const array KEPT = ['audit_entries', 'demo_requests'];
@@ -60,6 +61,13 @@ final readonly class DemoWorkspaceRunner implements DemoWorkspace
         }
 
         Log::info('demo.prepared', ['tenant_id' => $tenant->id]);
+    }
+
+    public function stageSession(?string $clientName): string
+    {
+        $tenantId = $this->demos->id() ?? throw new LogicException('There is no demo company to stage a session in.');
+
+        return $this->sessionStage->stage(Tenant::query()->findOrFail($tenantId), $clientName);
     }
 
     public function reset(): void

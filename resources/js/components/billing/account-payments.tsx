@@ -1,52 +1,41 @@
 import { usePage } from '@inertiajs/react';
 import AccountPaymentRowView from '@/components/billing/account-payment-row';
+import RecordPaymentDialog from '@/components/billing/record-payment-dialog';
 import Pagination from '@/components/humetria/pagination';
-import {
-    Table,
-    TableBody,
-    TableCaption,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import type { Paginated, PaymentRow } from '@/types';
 
-/** The transfers recorded for the account, the latest first: a wrong one is reversed with a reason, never deleted. */
+/** «Pagos y aplicaciones» (tablero Cuenta de facturación): each transfer, the latest first, with the months it settled; a wrong one is reversed with a reason, never deleted. */
 export default function AccountPayments({
     accountId,
+    today,
     payments,
 }: {
     accountId: string;
+    today: string;
     payments: Paginated<PaymentRow>;
 }) {
     const { auth } = usePage().props;
 
     return (
-        <section aria-labelledby="account-payments" className="grid gap-4">
-            <h2
-                id="account-payments"
-                className="text-xl font-semibold tracking-[-0.01em]"
-            >
-                Pagos
-            </h2>
-            <Table>
-                <TableCaption className="sr-only">
-                    Pagos de la cuenta, del más reciente al más antiguo
-                </TableCaption>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Referencia</TableHead>
-                        <TableHead>Fecha</TableHead>
-                        <TableHead>Importe</TableHead>
-                        <TableHead>Aplicado</TableHead>
-                        <TableHead>Sin aplicar</TableHead>
-                        <TableHead>Registró</TableHead>
-                        <TableHead>
-                            <span className="sr-only">Acciones</span>
-                        </TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
+        <section aria-labelledby="account-payments" className="card p-0">
+            <div className="flex items-center gap-3 border-b px-6 py-4">
+                <h2 id="account-payments" className="flex-1 font-semibold">
+                    Pagos y aplicaciones
+                </h2>
+                {auth.isSuperadmin && (
+                    <RecordPaymentDialog
+                        accountId={accountId}
+                        today={today}
+                        variant="outline"
+                    />
+                )}
+            </div>
+            {payments.data.length === 0 ? (
+                <p className="px-6 py-4 text-muted-foreground">
+                    Aún no hay pagos registrados.
+                </p>
+            ) : (
+                <ul className="divide-y">
                     {payments.data.map((payment) => (
                         <AccountPaymentRowView
                             key={payment.id}
@@ -55,14 +44,17 @@ export default function AccountPayments({
                             canManage={auth.isSuperadmin}
                         />
                     ))}
-                </TableBody>
-            </Table>
-            <Pagination
-                previous="Ver más recientes"
-                next="Ver más antiguos"
-                page={payments}
-                label="Páginas de pagos"
-            />
+                </ul>
+            )}
+            <div className="border-t px-6 py-3 empty:hidden">
+                <Pagination
+                    previous="Anterior"
+                    next="Siguiente"
+                    page={payments}
+                    label="Páginas de pagos"
+                    pinned={false}
+                />
+            </div>
         </section>
     );
 }

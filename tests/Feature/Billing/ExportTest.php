@@ -87,6 +87,17 @@ it('lists the balances: each account with what it owes, what is past due and its
         ->and(array_slice($rows[1], 2))->toBe(['1', '5684.00', '5684.00', '2026-11-11']);
 });
 
+it('nets the credits into the balances, the same as the console', function (): void {
+    [$tenant] = statementCompany(['starts_on' => '2026-09-01']);
+    AccountCompany::query()->update(['starts_on' => '2026-09-01']);
+    $this->travelTo('2026-11-11 12:00:00');
+    $statement = resolve(IssueStatement::class)->handle(resolve(GenerateStatement::class)->handle($tenant->id, CarbonImmutable::parse('2026-11-01'), null), User::factory()->create());
+    resolve(App\Modules\Billing\Actions\AdjustStatement::class)->handle($statement, new App\Modules\Billing\Data\AdjustmentData('Ajuste', -100_000, 'Se cobró de más'), User::factory()->create());
+    $this->travelTo('2026-11-26 15:00:00');
+
+    expect(array_slice(exportRows($this, 'balances')[1], 2))->toBe(['1', '4524.00', '4524.00', '2026-11-11']);
+});
+
 it('lists the renewals by date: each company that pays, its renewal and what the next draft will total', function (): void {
     [$later] = statementCompany(['starts_on' => '2026-09-01', 'renews_on' => '2027-01-01']);
     [$sooner] = statementCompany(['starts_on' => '2026-09-01', 'renews_on' => '2026-12-01']);

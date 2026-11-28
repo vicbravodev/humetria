@@ -252,7 +252,7 @@ it('is closed to whoever is not a member, to the committee, to a superadmin impe
     chat(['message' => 'Hola'], ownerOf($suspended), $suspended)->assertStatus(423);
 
     ownerOf($this->a);
-    $this->actingAs(superadmin())->post(route('companies.impersonate', $this->a));
+    $this->actingAs(superadmin())->post(route('companies.impersonate', $this->a), supportEntry());
     $this->postJson(chatUrl($this->a), ['message' => 'Hola'])->assertNotFound();
 
     HumiAssistant::assertNeverPrompted();

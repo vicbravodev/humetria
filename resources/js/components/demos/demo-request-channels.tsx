@@ -1,6 +1,10 @@
+import DemoFactRow from '@/components/demos/demo-fact-row';
 import type { DemoRequestRow } from '@/types';
 
-/** Where the request came from, as two entries of the detail's list: no data is not the same as direct traffic. */
+/**
+ * Where the request came from, as lines of its panel: the origin with the channel it arrived by under it, and the
+ * first contact when it was another one. No data is not the same as direct traffic.
+ */
 export default function DemoRequestChannels({
     request,
 }: {
@@ -8,32 +12,16 @@ export default function DemoRequestChannels({
 }) {
     return (
         <>
-            <div className="flex flex-col gap-0.5">
-                <dt className="text-caption text-muted-foreground">
-                    Llegó por
-                </dt>
-                <dd className="text-sm font-medium">
-                    {request.arrived_by ?? (
-                        <>
-                            <span className="text-muted-foreground">
-                                Sin dato
-                            </span>
-                            <span className="block text-caption font-normal text-muted-foreground">
-                                No significa tráfico directo.
-                            </span>
-                        </>
-                    )}
-                </dd>
-            </div>
+            <DemoFactRow term="Origen">
+                {request.origin}
+                <span className="block text-sm font-normal text-muted-foreground">
+                    {request.arrived_by ?? 'No significa tráfico directo.'}
+                </span>
+            </DemoFactRow>
             {request.first_contact !== null && (
-                <div className="flex flex-col gap-0.5">
-                    <dt className="text-caption text-muted-foreground">
-                        Primer contacto
-                    </dt>
-                    <dd className="text-sm font-medium">
-                        {request.first_contact}
-                    </dd>
-                </div>
+                <DemoFactRow term="Primer contacto">
+                    {request.first_contact}
+                </DemoFactRow>
             )}
         </>
     );

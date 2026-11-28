@@ -95,6 +95,7 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
 
 ### Módulos
 
+- `Announcements`: avisos de la plataforma a las empresas (banner en su panel, por plan o a todas) y el modo mantenimiento.
 - `Assistant`: Humi, el asistente de IA (ver su README).
 - `Attendance`: asistencia: checadores y kiosco, zonas en mapa, horarios, correcciones, marcas sin conexión y su revisión.
 - `Billing`: cuentas, suscripciones, cargos, estados de cuenta y pagos.
@@ -115,6 +116,8 @@ Http/{Controllers,Requests,Middleware}/  Listeners/  Jobs/  Notifications/  Exce
   estados (ver su README).
 - `Notifications`: avisos push (Web Push con VAPID) a la persona trabajadora, que dicen solo de qué tipo son (cifrado, sin nombres ni datos): suscripciones y envío; reacciona a
   eventos públicos de Attendance y WorkerAccess; nunca manda correo (ver su README).
+- `Operations`: consola de la plataforma para el superadmin: salud del sistema (colas, trabajos fallidos, latido del
+  programador, webhooks) y mensajería en conteos; sin tablas, nunca datos de personas.
 - `Organization`: áreas, empleados, niveles de puesto, líneas de reporte (organigrama).
 - `Responses`: respuestas anónimas y tamizaje de Guía I.
 - `Results`: agregados con mínimo por grupo, reportes, canalización de Guía I.
@@ -131,7 +134,7 @@ No hay SMS. WhatsApp sale solo por `Messaging`.
 ## Arquitectura del frontend
 
 - `resources/js`: `pages/{module}/` (una página por ruta, delgada, sin lógica), `components/{module}/` (espejo del módulo
-  del backend), `components/humetria/` (design system: solo usa ui, hooks y lib), `components/ui/` (shadcn generado),
+  del backend), `components/humetria/` (design system: solo usa ui, sus propias piezas, hooks y lib), `components/ui/` (shadcn generado),
   `components/*.tsx` (el marco de la app), `layouts/ hooks/ lib/ types/`.
 - Un módulo nunca importa componentes de otro. Las páginas no se importan desde ningún lado.
   `hooks`, `lib` y `types` no importan componentes ni layouts. Imports siempre con `@/`, nunca `../`.

@@ -22,7 +22,7 @@ it('shows a company with its modules and where each comes from', function (bool 
     resolve(CompanyModules::class)->syncPlan($tenant->id, ['nom035', 'nom037', 'pulse'], CarbonImmutable::now(config('app.display_timezone')));
     TenantModule::factory()->for($tenant)->create(['module' => 'seating', 'source' => 'grant', 'reason' => 'Piloto de tres semanas']);
 
-    visitPage('tenancy/company', "/admin/companies/{$tenant->id}", $dark, $mobile)
+    visitPage('tenancy/company', "/admin/companies/{$tenant->id}?tab=modulos", $dark, $mobile)
         ->assertSee('Autopartes del Norte')
         ->assertSee('Módulos')
         ->assertSee('NOM-035')
@@ -42,7 +42,7 @@ it('shows a company that has no plan with everything it has today, as it was bef
     signInAsSuperadmin();
     $tenant = Tenant::factory()->create();
 
-    visitPage('tenancy/company', "/admin/companies/{$tenant->id}")
+    visitPage('tenancy/company', "/admin/companies/{$tenant->id}?tab=modulos")
         ->assertSee('Se quita al empezar el plan')
         ->assertSee('Ley Silla')
         ->assertSee('Quejas');
@@ -52,7 +52,7 @@ it('shows support the modules without the buttons that change them', function ()
     $this->actingAs(support());
     $tenant = Tenant::factory()->create();
 
-    visitPage('tenancy/company', "/admin/companies/{$tenant->id}")
+    visitPage('tenancy/company', "/admin/companies/{$tenant->id}?tab=modulos")
         ->assertSee('NOM-037')
         ->assertDontSee('Conceder')
         ->assertMissing('[aria-label^="Quitar "]');
@@ -62,7 +62,7 @@ it('takes a module away from the company page and gives it back', function (): v
     signInAsSuperadmin();
     $tenant = Tenant::factory()->create(['trade_name' => 'Cliente Piloto']);
 
-    visitPage('tenancy/company', "/admin/companies/{$tenant->id}")
+    visitPage('tenancy/company', "/admin/companies/{$tenant->id}?tab=modulos")
         ->click('[aria-label="Quitar Ley Silla"]')
         ->assertSee('Se esconde del menú')
         ->fill('reason', 'Pidió pausar Ley Silla')
@@ -95,7 +95,7 @@ it('shows what the company has used of the people and centers its plan covers', 
     TenantLimit::factory()->create(['tenant_id' => $tenant->id, 'resource' => 'seats', 'amount' => 50, 'used' => 42]);
     TenantLimit::factory()->create(['tenant_id' => $tenant->id, 'resource' => 'centers', 'amount' => 2, 'used' => 3]);
 
-    visitPage('tenancy/company', "/admin/companies/{$tenant->id}", $dark, $mobile)
+    visitPage('tenancy/company', "/admin/companies/{$tenant->id}?tab=uso", $dark, $mobile)
         ->assertSee('Límites')
         ->assertSee('Personas')
         ->assertSee('de 50')
@@ -109,7 +109,7 @@ it('says a company without a plan has no limits', function (): void {
     signInAsSuperadmin();
     $tenant = Tenant::factory()->create();
 
-    visitPage('tenancy/company', "/admin/companies/{$tenant->id}")->assertSee('Sin plan asignado: la empresa no tiene límites.');
+    visitPage('tenancy/company', "/admin/companies/{$tenant->id}?tab=uso")->assertSee('Sin plan asignado: la empresa no tiene límites.');
 });
 
 it('shows the tokens of Humi this month, with the quota and the months before', function (bool $dark, bool $mobile): void {
@@ -118,7 +118,7 @@ it('shows the tokens of Humi this month, with the quota and the months before', 
     UsageCounter::factory()->create(['tenant_id' => $tenant->id, 'used' => 12_000, 'reserved' => 0]);
     UsageCounter::factory()->create(['tenant_id' => $tenant->id, 'period_start' => '2026-01-01', 'used' => 7000, 'quota' => 15_000]);
 
-    visitPage('tenancy/company', "/admin/companies/{$tenant->id}", $dark, $mobile)
+    visitPage('tenancy/company', "/admin/companies/{$tenant->id}?tab=humi", $dark, $mobile)
         ->assertSee('Consumo de Humi')
         ->assertSee('tokens usados')
         ->assertSee('2,000,000')

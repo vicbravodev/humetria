@@ -120,6 +120,13 @@ describe('companiesSummary', () => {
             '4 empresas · 2 pruebas terminan esta semana',
         );
     });
+
+    it('adds what the companies pay a month when they pay something', () => {
+        expect(companiesSummary(48, 4, 18_460_000)).toBe(
+            '48 empresas · $184,600 al mes contratado · 4 pruebas terminan esta semana',
+        );
+        expect(companiesSummary(3, 0, 0)).toBe('3 empresas');
+    });
 });
 
 describe('companiesQuery', () => {
@@ -130,9 +137,39 @@ describe('companiesQuery', () => {
             status: 'trial',
         });
     });
+
+    it('carries the chips that narrow the list, and leaves out the empty ones', () => {
+        expect(
+            companiesQuery({
+                q: '',
+                status: 'all',
+                manager: '5',
+                usage: 'high',
+                plan: 'integral',
+            }),
+        ).toEqual({ manager: '5', usage: 'high', plan: 'integral' });
+        expect(
+            companiesQuery({
+                q: '',
+                status: 'all',
+                manager: '',
+                usage: '',
+                plan: '',
+            }),
+        ).toEqual({});
+    });
 });
 
 describe('tenantsFiltered', () => {
+    it('is true when a chip narrows the list', () => {
+        expect(
+            tenantsFiltered(
+                { all: 0 },
+                { q: '', status: 'all', plan: 'integral' },
+            ),
+        ).toBe(true);
+    });
+
     it('is true when a search matches nothing, even with no company counted', () => {
         expect(tenantsFiltered({ all: 0 }, { q: 'zzz', status: 'all' })).toBe(
             true,

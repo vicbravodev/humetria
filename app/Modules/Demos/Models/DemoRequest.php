@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Modules\Demos\Models;
 
+use App\Concerns\SearchesText;
+use App\Models\User;
 use App\Modules\Demos\Enums\AdClickType;
 use App\Modules\Demos\Enums\DemoProfile;
 use App\Modules\Demos\Enums\DemoStatus;
@@ -16,6 +18,7 @@ use Illuminate\Database\Eloquent\Casts\AsEnumCollection;
 use Illuminate\Database\Eloquent\Concerns\HasVersion4Uuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -35,6 +38,11 @@ use Illuminate\Support\Collection;
  * @property string|null $note
  * @property Carbon|null $handled_at
  * @property string|null $tenant_id
+ * @property int|null $owner_user_id The person of the staff who owns it.
+ * @property string|null $next_step
+ * @property Carbon|null $scheduled_at When its demo is, once scheduled.
+ * @property string|null $discard_reason
+ * @property-read User|null $owner
  * @property string|null $utm_source The campaign this request is credited to: the last known channel, else the first.
  * @property string|null $utm_medium
  * @property string|null $utm_campaign
@@ -55,7 +63,7 @@ use Illuminate\Support\Collection;
 final class DemoRequest extends Model
 {
     /** @use HasFactory<DemoRequestFactory> */
-    use HasFactory, HasVersion4Uuids;
+    use HasFactory, HasVersion4Uuids, SearchesText;
 
     public const null UPDATED_AT = null;
 
@@ -71,8 +79,15 @@ final class DemoRequest extends Model
             'status' => DemoStatus::class,
             'ad_click_type' => AdClickType::class,
             'handled_at' => 'datetime',
+            'scheduled_at' => 'datetime',
             'created_at' => 'datetime',
         ];
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_user_id');
     }
 
     /**

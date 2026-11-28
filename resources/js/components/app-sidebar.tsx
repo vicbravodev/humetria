@@ -39,6 +39,7 @@ const familyIcons: Partial<Record<NavSectionKey, LucideIcon>> = {
     operations: Briefcase,
     admin: Settings2,
     console: Building2,
+    clients: Building2,
     sales: HandCoins,
     platform: ServerCog,
 };
@@ -107,6 +108,7 @@ export function AppSidebar() {
                         <NavMain
                             key={section.label}
                             label={section.label}
+                            pinned={section.key === 'clients'}
                             icon={
                                 section.key === undefined
                                     ? undefined

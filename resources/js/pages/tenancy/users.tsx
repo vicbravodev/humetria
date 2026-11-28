@@ -1,45 +1,53 @@
 import { Head } from '@inertiajs/react';
-import { Users } from 'lucide-react';
-import EmptyState from '@/components/humetria/empty-state';
 import PageHeader from '@/components/humetria/page-header';
-import Pagination from '@/components/humetria/pagination';
-import UsersTable from '@/components/tenancy/users-table';
-import UsersToolbar from '@/components/tenancy/users-toolbar';
-import { countOf } from '@/lib/plural';
-import type { Paginated, PlatformUserFilters, PlatformUserRow } from '@/types';
+import PermissionsTable from '@/components/tenancy/permissions-table';
+import UsersList from '@/components/tenancy/users-list';
+import UsersTabs from '@/components/tenancy/users-tabs';
+import UsersTeamArea from '@/components/tenancy/users-team-area';
+import type {
+    Paginated,
+    PlatformPermissionRow,
+    PlatformUserCounts,
+    PlatformUserFilters,
+    PlatformUserRow,
+} from '@/types';
 
 export default function PlatformUsers({
     users,
+    people,
+    permissions,
+    counts,
     filters,
 }: {
-    users: Paginated<PlatformUserRow>;
+    users: Paginated<PlatformUserRow> | null;
+    people: Paginated<PlatformUserRow> | null;
+    permissions: PlatformPermissionRow[] | null;
+    counts: PlatformUserCounts;
     filters: PlatformUserFilters;
 }) {
     return (
         <>
-            <Head title="Usuarios de la plataforma" />
-            <div className="flex flex-col gap-8 px-4 py-6 md:px-10 md:py-8">
+            <Head title="Equipo Humetría" />
+            <div className="flex w-full flex-col gap-8 px-4 py-6 md:px-10 md:pt-8 md:pb-16">
                 <PageHeader
-                    title="Usuarios"
-                    description={`${countOf(users.total, 'persona', 'personas')} con cuenta. Ayuda a quien no entra y da o quita el rol de soporte; crear un superadmin sigue siendo por terminal.`}
+                    title="Equipo Humetría"
+                    description="Quién del equipo puede entrar a la consola y qué puede hacer. Hoy el rol de soporte se da y se quita aquí; crear un superadmin sigue siendo por terminal a propósito."
                 />
-                <UsersToolbar filters={filters} />
-                {users.data.length === 0 ? (
-                    <EmptyState
-                        icon={Users}
-                        title="Nadie coincide con tu búsqueda"
-                    >
-                        Prueba con otro nombre o con una parte del correo.
-                    </EmptyState>
-                ) : (
-                    <UsersTable users={users.data} />
+                <UsersTabs filters={filters} counts={counts} />
+                {users !== null && people !== null && permissions !== null && (
+                    <UsersTeamArea
+                        team={users}
+                        people={people}
+                        permissions={permissions}
+                        filters={filters}
+                    />
                 )}
-                <Pagination
-                    previous="Ver más recientes"
-                    next="Ver más antiguos"
-                    page={users}
-                    label="Páginas de usuarios"
-                />
+                {users !== null && people === null && (
+                    <UsersList users={users} filters={filters} />
+                )}
+                {users === null && permissions !== null && (
+                    <PermissionsTable permissions={permissions} />
+                )}
             </div>
         </>
     );

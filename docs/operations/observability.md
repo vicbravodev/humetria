@@ -71,6 +71,11 @@ Las señales de WhatsApp y las alertas que se les piden están en `docs/operatio
 - **Alerta de ausencia**: el webhook de Meta sin eventos en 24 horas con mensajes aceptados (0 líneas
   `messaging.delivery_status_changed` con `channel` `whatsapp` en 24 horas habiendo `whatsapp.message_accepted`).
 
+La consola del superadmin (Plataforma → Salud del sistema, `/admin/operations/health`) lee lo mismo sin abrir los logs:
+Horizon (estado y colas; «No responde» si Redis no contesta), los fallidos de `failed_jobs` agrupados por trabajo (nunca su
+carga ni su error), el último latido (`schedule:heartbeat` también lo guarda en la caché; sin latido en 15 minutos dice
+«Sin latido»), el último evento de los webhooks de Meta y Resend, y los mensajes del día por estado.
+
 Los jobs que mandan un solo correo reintentan 3 veces (60 s y 300 s) antes de `queue.job_failed`. `SendWorkerInvitation` y
 `SendFeedbackPublished` corren una sola vez: reintentarlos no es seguro. Los jobs fallidos se guardan una semana
 (`queue:prune-failed --hours=168`, igual que `horizon.trim.failed`).

@@ -22,6 +22,7 @@ export default function InviteCenterButton({
         <ConfirmDialog
             trigger={
                 <Button
+                    data-tour="send-worker-access"
                     disabled={waiting === 0}
                     className="h-auto min-h-11 w-full py-2 whitespace-normal sm:w-auto"
                 >

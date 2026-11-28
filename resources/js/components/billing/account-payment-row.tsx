@@ -1,10 +1,10 @@
 import ApplyPaymentDialog from '@/components/billing/apply-payment-dialog';
 import ReversePaymentDialog from '@/components/billing/reverse-payment-dialog';
 import { Badge } from '@/components/ui/badge';
-import { TableCell, TableRow } from '@/components/ui/table';
+import { paymentNote } from '@/lib/billing-account';
 import type { PaymentRow } from '@/types';
 
-/** A payment of the account: its reference and day, how much came in, how much of it was applied, and who recorded it. */
+/** A payment of the account, in a line: its reference, its day and the months it settled, how much came in, and what can be done with it. */
 export default function AccountPaymentRowView({
     accountId,
     payment,
@@ -15,49 +15,34 @@ export default function AccountPaymentRowView({
     canManage: boolean;
 }) {
     return (
-        <TableRow>
-            <TableCell className="min-w-48 whitespace-normal">
-                <div className="flex flex-col">
-                    <span className="font-medium">{payment.reference}</span>
-                    <span className="text-caption text-muted-foreground">
-                        {payment.reversed
-                            ? `Revertido: ${payment.reversal_reason ?? ''}`
-                            : (payment.note ?? '')}
-                    </span>
-                </div>
-            </TableCell>
-            <TableCell className="text-sm tabular-nums">
-                {payment.paid_on}
-            </TableCell>
-            <TableCell className="text-sm font-medium tabular-nums">
-                {payment.amount}
-            </TableCell>
-            <TableCell className="text-sm tabular-nums">
-                {payment.applied}
-            </TableCell>
-            <TableCell className="text-sm tabular-nums">
-                {payment.unapplied}
-            </TableCell>
-            <TableCell className="text-sm text-muted-foreground">
-                {payment.recorded_by}
-            </TableCell>
-            <TableCell className="w-px text-right">
-                {payment.reversed ? (
-                    <Badge variant="outline">Revertido</Badge>
-                ) : (
-                    canManage && (
-                        <>
-                            {payment.can_apply && (
-                                <ApplyPaymentDialog
-                                    accountId={accountId}
-                                    payment={payment}
-                                />
-                            )}
-                            <ReversePaymentDialog payment={payment} />
-                        </>
-                    )
+        <li className="flex flex-wrap items-center gap-x-3 gap-y-1 px-6 py-3.5">
+            <div className="min-w-0 flex-1">
+                <p className="font-medium">{payment.reference}</p>
+                <p className="text-sm text-muted-foreground">
+                    {paymentNote(payment)}
+                </p>
+                {payment.note !== null && (
+                    <p className="text-caption text-muted-foreground">
+                        {payment.note} · registró {payment.recorded_by}
+                    </p>
                 )}
-            </TableCell>
-        </TableRow>
+            </div>
+            <span className="font-medium tabular-nums">{payment.amount}</span>
+            {payment.reversed ? (
+                <Badge variant="outline">Revertido</Badge>
+            ) : (
+                canManage && (
+                    <div className="flex">
+                        {payment.can_apply && (
+                            <ApplyPaymentDialog
+                                accountId={accountId}
+                                payment={payment}
+                            />
+                        )}
+                        <ReversePaymentDialog payment={payment} />
+                    </div>
+                )
+            )}
+        </li>
     );
 }

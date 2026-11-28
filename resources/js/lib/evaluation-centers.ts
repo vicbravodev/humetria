@@ -57,8 +57,48 @@ export function centerSize(guides: Guide[]): CenterSize | null {
     return SIZES[{ I: 0, II: 1, III: 2 }[last]] ?? null;
 }
 
+/** Why the demo session's room applies Guías I y II with any headcount (spec 2026-11-26-demo-guiada §2.2). */
+export const DEMO_ALWAYS =
+    'en esta demostración se aplican siempre, sin importar cuántas personas tenga el centro.';
+
+export const DEMO_GUIDES_REASON = `Aplican las Guías I y II: ${DEMO_ALWAYS}`;
+
+/**
+ * Whether the guides outgrow the headcount, as numerals ("II") or titles ("Guía II"): only the demo session's room
+ * applies Guía II to 15 people or fewer, so no size of the norm explains them.
+ */
+export function guidesOutgrowStaff(workers: number, guides: string[]): boolean {
+    return (
+        workers <= 15 &&
+        guides.some((guide) => guide.replace('Guía ', '') === 'II')
+    );
+}
+
+/** Why a work center takes the guides it takes (num. 4.4): how many people it has, as the norm groups them. */
+export function staffBand(workers: number): string {
+    if (workers <= 15) {
+        return 'hasta 15 personas';
+    }
+
+    return workers <= 50 ? 'de 16 a 50 personas' : 'más de 50 personas';
+}
+
+/**
+ * The end of «… contestarán las Guías I y II»: the size of the center, or, in the demo session's room, that the demo
+ * applies them always (the size would contradict them).
+ */
+export function staffReason(workers: number, guides: string[]): string {
+    return guidesOutgrowStaff(workers, guides)
+        ? `: ${DEMO_ALWAYS}`
+        : `, porque el centro tiene ${staffBand(workers)}.`;
+}
+
 /** Why those guides apply: "Con más de 50 personas aplican las Guías I y III." */
-export function guidesReason(guides: Guide[]): string {
+export function guidesReason(guides: Guide[], workers: number): string {
+    if (guidesOutgrowStaff(workers, guides)) {
+        return DEMO_GUIDES_REASON;
+    }
+
     switch (centerSize(guides)?.key) {
         case 'small':
             return 'Con hasta 15 personas aplica solo la Guía I.';

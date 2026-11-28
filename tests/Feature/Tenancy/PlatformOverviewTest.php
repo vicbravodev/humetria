@@ -3,7 +3,10 @@
 declare(strict_types=1);
 
 use App\Http\Middleware\ForbidWhileImpersonating;
+use App\Models\AuditEntry;
 use App\Models\User;
+use App\Modules\Billing\Contracts\Receivables;
+use App\Modules\Billing\Data\OverdueAccount;
 use App\Modules\Billing\Enums\Plan;
 use App\Modules\Billing\Enums\Profile;
 use App\Modules\Billing\Enums\SubscriptionStatus;
@@ -13,10 +16,14 @@ use App\Modules\Billing\Support\ContractedRevenue;
 use App\Modules\Billing\Support\LedgerPlatformCost;
 use App\Modules\Demos\Enums\DemoStatus;
 use App\Modules\Demos\Models\DemoRequest;
+use App\Modules\Messaging\Contracts\PlatformDeliveries;
+use App\Modules\Messaging\Data\ChannelTraffic;
 use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Support\PlatformOverview;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 
 mutates(PlatformOverview::class, ContractedRevenue::class, LedgerPlatformCost::class);
@@ -55,7 +62,7 @@ it('counts the demo requests by status', function (): void {
     DemoRequest::factory()->create(['status' => DemoStatus::Contacted]);
 
     $this->actingAs(superadmin())->get(route('overview.index'))
-        ->assertInertia(fn (Assert $page) => $page->where('demos', ['all' => 3, 'new' => 2, 'contacted' => 1, 'converted' => 0, 'discarded' => 0]));
+        ->assertInertia(fn (Assert $page) => $page->where('demos', ['all' => 3, 'new' => 2, 'contacted' => 1, 'scheduled' => 0, 'trial' => 0, 'converted' => 0, 'discarded' => 0]));
 });
 
 it('adds up the monthly income the paying subscriptions contract, before VAT', function (): void {
@@ -169,7 +176,7 @@ it('shows each user in the platform list with the day they last signed in', func
     $person = User::factory()->create(['last_login_at' => '2026-11-10 18:00:00']);
     User::factory()->create(['name' => 'Nunca Entró']);
 
-    $this->actingAs(superadmin())->get(route('platform-users.index'))
+    $this->actingAs(superadmin())->get(route('platform-users.index', ['tab' => 'people']))
         ->assertInertia(fn (Assert $page) => $page->where('users.data', fn ($rows) => collect($rows)->firstWhere('id', $person->id)['lastLogin'] === '10 nov 2026'
             && collect($rows)->firstWhere('name', 'Nunca Entró')['lastLogin'] === null));
 });
@@ -177,9 +184,9 @@ it('shows each user in the platform list with the day they last signed in', func
 it('shows the month of WhatsApp: messages, what Meta charged, what the companies were charged and the margin', function (): void {
     $tenant = Tenant::factory()->create();
     foreach (range(1, 4) as $index) {
-        DB::table('usage_events')->insert(['id' => (string) Illuminate\Support\Str::uuid(), 'tenant_id' => $tenant->id, 'meter' => 'whatsapp', 'period_start' => '2026-11-01', 'quantity' => 1, 'idempotency_key' => "wamid-{$index}", 'occurred_at' => '2026-11-10 12:00:00', 'unit_cost_micros' => 170_000, 'unit_price_micros' => 221_000, 'cost_currency' => 'MXN']);
+        DB::table('usage_events')->insert(['id' => (string) Str::uuid(), 'tenant_id' => $tenant->id, 'meter' => 'whatsapp', 'period_start' => '2026-11-01', 'quantity' => 1, 'idempotency_key' => "wamid-{$index}", 'occurred_at' => '2026-11-10 12:00:00', 'unit_cost_micros' => 170_000, 'unit_price_micros' => 221_000, 'cost_currency' => 'MXN']);
     }
-    DB::table('usage_events')->insert(['id' => (string) Illuminate\Support\Str::uuid(), 'tenant_id' => $tenant->id, 'meter' => 'whatsapp', 'period_start' => '2026-10-01', 'quantity' => 1, 'idempotency_key' => 'last-month', 'occurred_at' => '2026-10-10 12:00:00', 'unit_cost_micros' => 170_000, 'unit_price_micros' => 221_000, 'cost_currency' => 'MXN']);
+    DB::table('usage_events')->insert(['id' => (string) Str::uuid(), 'tenant_id' => $tenant->id, 'meter' => 'whatsapp', 'period_start' => '2026-10-01', 'quantity' => 1, 'idempotency_key' => 'last-month', 'occurred_at' => '2026-10-10 12:00:00', 'unit_cost_micros' => 170_000, 'unit_price_micros' => 221_000, 'cost_currency' => 'MXN']);
 
     $this->actingAs(superadmin())->get(route('overview.index'))->assertOk()
         ->assertInertia(fn (Assert $page) => $page->where('whatsApp', ['messages' => 4, 'costCents' => 68, 'chargedCents' => 88, 'marginCents' => 20]));
@@ -188,4 +195,60 @@ it('shows the month of WhatsApp: messages, what Meta charged, what the companies
 it('shows zeros for WhatsApp when nothing went out', function (): void {
     $this->actingAs(superadmin())->get(route('overview.index'))->assertOk()
         ->assertInertia(fn (Assert $page) => $page->where('whatsApp', ['messages' => 0, 'costCents' => 0, 'chargedCents' => 0, 'marginCents' => 0]));
+});
+
+it('lists what is past due, the account owing the longest first, from Billing', function (): void {
+    $this->mock(Receivables::class)
+        ->shouldReceive('overdueCents')->andReturn(1_610_000)
+        ->shouldReceive('overdueAccounts')->with(3)->andReturn([
+            new OverdueAccount('acc-1', 'Textiles del Norte SA de CV', 1_280_000, 38),
+            new OverdueAccount('acc-2', 'Escuelas Delta AC', 330_000, 19),
+        ])
+        ->shouldReceive('renewingWithin')->andReturn(0);
+
+    $this->actingAs(superadmin())->get(route('overview.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('overdue.cents', 1_610_000)
+            ->where('overdue.accounts', [
+                ['id' => 'acc-1', 'name' => 'Textiles del Norte SA de CV', 'cents' => 1_280_000, 'days' => 38],
+                ['id' => 'acc-2', 'name' => 'Escuelas Delta AC', 'cents' => 330_000, 'days' => 19],
+            ]));
+});
+
+it('counts the demo requests waiting, and those waiting more than 48 hours', function (): void {
+    DemoRequest::factory()->create(['created_at' => now()->subHours(49)]);
+    DemoRequest::factory()->create(['created_at' => now()->subHours(47)]);
+
+    $this->actingAs(superadmin())->get(route('overview.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('demosWaiting', ['new' => 2, 'unattended' => 1]));
+});
+
+it('adds up the messages rejected today, in Mexico City, across channels', function (): void {
+    $this->travelTo('2026-11-12 07:00 UTC'); // 1:00 in Mexico City: the day began at 06:00 UTC.
+    $this->mock(PlatformDeliveries::class)
+        ->shouldReceive('byChannel')
+        ->withArgs(fn (CarbonImmutable $from, CarbonImmutable $to): bool => $from->eq(CarbonImmutable::parse('2026-11-12 06:00 UTC'))
+            && $to->eq(CarbonImmutable::parse('2026-11-13 06:00 UTC')))
+        ->andReturn([
+            new ChannelTraffic('mail', 40, 38, 0, 2),
+            new ChannelTraffic('whatsapp', 412, 388, 293, 14),
+        ]);
+
+    $this->actingAs(superadmin())->get(route('overview.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('rejectedToday', 16));
+});
+
+it('draws what was billed in each of the last twelve months, and the five latest entries of the audit trail', function (): void {
+    $admin = superadmin();
+    foreach (range(1, 7) as $n) {
+        AuditEntry::query()->forceCreate(['id' => (string) Str::uuid(), 'event' => 'tenant.activated', 'metadata' => [], 'created_at' => now()->subMinutes($n)]);
+    }
+
+    $this->actingAs($admin)->get(route('overview.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('billedByMonth', 12)
+            ->where('billedByMonth.11.month', '2026-11')
+            ->has('activity', 5)
+            ->where('activity.0.event', 'tenant.activated'));
 });

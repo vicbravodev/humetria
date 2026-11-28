@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Modules\Tenancy\Http\Controllers\AcceptInvitationController;
 use App\Modules\Tenancy\Http\Controllers\AuditConsoleController;
 use App\Modules\Tenancy\Http\Controllers\CompanyModulesController;
+use App\Modules\Tenancy\Http\Controllers\CompanySelectionController;
+use App\Modules\Tenancy\Http\Controllers\CompanyStaffController;
 use App\Modules\Tenancy\Http\Controllers\ImpersonateOwnerController;
 use App\Modules\Tenancy\Http\Controllers\InvitationConsoleController;
 use App\Modules\Tenancy\Http\Controllers\PlatformOverviewController;
@@ -22,6 +24,12 @@ Route::get('admin/overview', PlatformOverviewController::class)
 Route::get('admin/audit', [AuditConsoleController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('audit.index');
+Route::get('admin/audit/companies', [AuditConsoleController::class, 'companies'])
+    ->middleware(['auth', 'verified'])
+    ->name('audit.companies');
+Route::get('admin/audit/export', [AuditConsoleController::class, 'export'])
+    ->middleware(['auth', 'verified'])
+    ->name('audit.export');
 
 // The platform's people, for the superadmin: help one back in, give or take away support. Never create a superadmin here.
 Route::middleware(['auth', 'verified'])->prefix('admin/platform-users')->name('platform-users.')->where(['user' => '[0-9]{1,9}'])->group(function (): void {
@@ -36,9 +44,23 @@ Route::get('admin/companies', [TenantConsoleController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('companies.index');
 
+// The companies ⌘K finds by name in the console, for all of Humetría's staff.
+Route::get('admin/companies/options', [TenantConsoleController::class, 'options'])
+    ->middleware(['auth', 'verified', 'throttle:60,1'])
+    ->name('companies.options');
+
 Route::post('admin/companies', [TenantConsoleController::class, 'store'])
     ->middleware(['auth', 'verified'])
     ->name('companies.store');
+
+// What the superadmin does at once with the companies chosen in the list.
+Route::post('admin/companies/account-manager', [CompanySelectionController::class, 'assignManager'])
+    ->middleware(['auth', 'verified'])
+    ->name('companies.account-manager');
+
+Route::post('admin/companies/trial-extension', [CompanySelectionController::class, 'extendTrials'])
+    ->middleware(['auth', 'verified'])
+    ->name('companies.trial-extension');
 
 // One company in the console with its modules: the staff reads them, the superadmin changes them.
 Route::get('admin/companies/{tenant}', [CompanyModulesController::class, 'show'])
@@ -52,6 +74,15 @@ Route::post('admin/companies/{tenant}/modules/grant', [CompanyModulesController:
 Route::post('admin/companies/{tenant}/modules/revoke', [CompanyModulesController::class, 'revoke'])
     ->middleware(['auth', 'verified'])
     ->name('companies.modules.revoke');
+
+// The staff's internal notes about a company, and the superadmin's risk zone (suspend or archive, with the name typed).
+Route::post('admin/companies/{tenant}/notes', [CompanyStaffController::class, 'storeNote'])
+    ->middleware(['auth', 'verified'])
+    ->name('companies.notes.store');
+
+Route::post('admin/companies/{tenant}/risk', [CompanyStaffController::class, 'restrict'])
+    ->middleware(['auth', 'verified'])
+    ->name('companies.risk');
 
 Route::put('admin/companies/{tenant}', [TenantConsoleController::class, 'update'])
     ->middleware(['auth', 'verified'])

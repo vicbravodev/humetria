@@ -1,11 +1,13 @@
 import type { Auth } from '@/types/auth';
 import type { SalaryImportSummary } from '@/types/compensation';
+import type { DemoGuide } from '@/types/demo-guide';
 import type { DemoShareLink } from '@/types/demos';
 import type { FirstSteps } from '@/types/first-steps';
 import type { InCourse } from '@/types/navigation';
 import type { LeaveImportSummary } from '@/types/leave-policy';
 import type { EmployeeImportSummary } from '@/types/organization';
 import type { ReportLink } from '@/types/results';
+import type { PlatformNotice } from '@/types/announcements';
 import type { Brand, CurrentTenant, TenantSummary } from '@/types/tenancy';
 import type { FlashToast } from '@/types/ui';
 import type { ProofStep } from '@/types/worker-access';
@@ -35,13 +37,19 @@ declare module '@inertiajs/core' {
             auth: Auth;
             /** The superadmin working as auth.user; null outside an impersonation. */
             impersonator: string | null;
+            /** Seconds before that entry as support ends by itself; only while impersonating. */
+            impersonationLeft?: number | undefined;
             tenant: CurrentTenant | null;
+            /** What Humetría tells the company now, a banner of its panel; only inside a company, and only when there is one. */
+            platform_notice?: PlatformNotice;
             /** The user's first companies, for the switcher, and how many they have. */
             tenants: { data: TenantSummary[]; total: number };
             /** The company's campaigns in course and how close the soonest is to its last day; null outside a company. */
             inCourse: InCourse | null;
             /** The owner's guided tour of the company; null for anyone else, outside a company, once finished or when switched off. */
             firstSteps: FirstSteps | null;
+            /** The guide of the demo session the superadmin presents; null for anyone else, outside the demo or without a session. */
+            demoGuide: DemoGuide | null;
             /** Whether the company of the page is the demo: then every page, its reports above all, carries the «DEMO» mark. */
             demo: boolean;
             /** White label: the logo, name and accent of the company of the page; null outside one, absent on the pages that share almost nothing (the public channel, the workers' page). */

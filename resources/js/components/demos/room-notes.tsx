@@ -5,9 +5,9 @@ export default function RoomNotes() {
             aria-labelledby="room-notes"
             className="flex flex-col gap-3 card p-5 md:col-span-2"
         >
-            <h2 id="room-notes" className="text-base font-semibold">
+            <h3 id="room-notes" className="text-base font-semibold">
                 Antes de presentar
-            </h2>
+            </h3>
             <ul className="flex list-disc flex-col gap-2 pl-5 text-sm text-pretty text-muted-foreground">
                 <li>
                     Reinicia la demo a lo más dos días antes: después, una

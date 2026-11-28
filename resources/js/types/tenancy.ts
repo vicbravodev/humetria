@@ -1,3 +1,4 @@
+import type { TenantPlan } from './company-console';
 import type { TenantCan } from './tenant-can';
 export type TenantOwner = {
     name: string;
@@ -50,20 +51,29 @@ export type TenantRow = {
     /** The prospect of the demo request it was created from, to prefill the owner's invitation; null when it did not come from one. */
     demo_contact: { name: string; email: string } | null;
     owner: TenantOwner | null;
+    /** Who at Humetría answers for it; null when nobody does yet. */
+    account_manager: StaffMember | null;
+    /** The seats it uses of its plan; null without a plan. */
+    seats: { used: number; amount: number } | null;
     invitation: TenantInvitation | null;
+    /** Its plan from Billing: what it pays a month before VAT (null while it does not pay) and when it renews; null without one. */
+    plan: TenantPlan | null;
 };
+
+/** Someone of Humetría's staff, who a company can be handed to. */
+export type StaffMember = { id: number; name: string };
 
 /** The views of the console's companies. */
 export type TenantView =
     | 'all'
     | 'active'
     | 'trial'
+    | 'trial_ending'
+    | 'dormant'
     | 'expired'
     | 'read_only'
     | 'suspended'
     | 'archived';
-
-export type TenantFilters = { q: string; status: TenantView };
 
 export type TenantSummary = Pick<TenantRow, 'slug' | 'trade_name'>;
 
@@ -241,20 +251,6 @@ export type ModuleRow = {
     /** False for the tools the catalog names but nobody has built yet. */
     exists_in_code: boolean;
 };
-
-/** The company a console page is about. */
-export type CompanyDetail = Pick<
-    TenantRow,
-    | 'id'
-    | 'legal_name'
-    | 'trade_name'
-    | 'rfc'
-    | 'slug'
-    | 'type'
-    | 'status'
-    | 'status_label'
-    | 'restriction_reason'
->;
 
 /** A Mexican time zone to choose for a work center, named with its offset today. */
 export type TimezoneOption = { value: string; label: string };

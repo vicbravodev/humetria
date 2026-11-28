@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Modules\Announcements\Support\LiveNotices;
 use App\Modules\Attendance\Actions\CloseDays;
 use App\Modules\Attendance\Actions\DispatchCloseDays;
 use App\Modules\Billing\Actions\ExpireUsageReservations;
@@ -16,6 +17,7 @@ use App\Modules\Campaigns\Actions\SendProgressDigests;
 use App\Modules\Complaints\Actions\PurgeComplaints;
 use App\Modules\Complaints\Actions\ReleaseHeldComplaints;
 use App\Modules\Complaints\Actions\SendComplaintDigests;
+use App\Modules\Demos\Actions\EndStaleDemoSession;
 use App\Modules\Demos\Actions\ForgetAdClicks;
 use App\Modules\Disclosure\Actions\SendDisclosureDigests;
 use App\Modules\Engagement\Actions\AnnounceUpcomingPulses;
@@ -31,6 +33,7 @@ use App\Modules\Messaging\Actions\ReconcileUnknown;
 use App\Modules\Messaging\Actions\ReplayOrphanEvents;
 use App\Modules\Messaging\Actions\ResumeWhatsApp;
 use App\Modules\Messaging\Actions\WatchFailures;
+use App\Modules\Operations\Contracts\SchedulerHeartbeat;
 use App\Modules\Results\Actions\RemindReferrals;
 use App\Modules\Seating\Actions\RemindStandingQuestions;
 use App\Modules\Seating\Actions\ScheduleSeatingChecks;
@@ -64,7 +67,10 @@ Artisan::command('engagement:item-stats {survey}', function (string $survey, Ite
 })->purpose('Print, per question of a survey, how many were shown it, answered and skipped it (for the pilot)');
 
 // PostHog alerts when this line stops arriving: the scheduler (or its container) is down (docs/operations/observability.md).
-Artisan::command('schedule:heartbeat', fn () => Log::info('schedule.heartbeat'))->purpose('Log that the scheduler is alive');
+Artisan::command('schedule:heartbeat', function (SchedulerHeartbeat $heartbeat): void {
+    Log::info('schedule.heartbeat');
+    $heartbeat->beat();
+})->purpose('Log that the scheduler is alive');
 
 Artisan::command('campaigns:close-expired', function (CloseExpiredCampaigns $closeExpired): void {
     $this->info('Evaluaciones cerradas: '.$closeExpired->handle());
@@ -150,9 +156,23 @@ Artisan::command('engagement:announce-pulses', function (AnnounceUpcomingPulses 
     $this->info('Avisos enviados: '.$announce->handle());
 })->purpose('Tell owner and hr, three days before, that the scheduled pulse goes out, with the commitments still open');
 
+Artisan::command('announcements:refresh', function (LiveNotices $notices): void {
+    $notices->refresh();
+})->purpose('Rebuild from their tables the notices and the maintenance the panels read from the cache, so a flushed cache is back within a minute');
+
 Artisan::command('demos:forget-ad-clicks', function (ForgetAdClicks $forget): void {
     $this->info('Identificadores de clic olvidados: '.$forget->handle());
 })->purpose('Forget the Google Ads click id of every demo request older than 90 days, as the privacy notice promises');
+
+Artisan::command('demo:end-stale-session', function (EndStaleDemoSession $end): void {
+    $this->info(match ($end->handle()) {
+        'expired' => 'Sesión vencida: terminando.',
+        'failed' => 'Sesión atorada preparándose: marcada fallida.',
+        'retried' => 'Sesión atorada terminándose: reinicio de nuevo.',
+        'deferred' => 'La demo está ocupada: se intenta de nuevo en una hora.',
+        'none' => 'Sin cambios.',
+    });
+})->purpose('End the demo session open for more than 24 hours (its reset wipes what the audience left), and free the lock of one stuck because its run died');
 
 Artisan::command('leave:route-requests', function (RouteRequests $route): void {
     $done = $route->handle();
@@ -173,6 +193,8 @@ Schedule::command('seating:remind-questions')->dailyAt('09:00')->timezone(config
 Schedule::command('seating:send-digests')->dailyAt('08:30')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('complaints:send-digests')->hourly()->onOneServer()->withoutOverlapping();
 Schedule::command('complaints:release-held')->dailyAt('00:10')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+// A session nobody ended does not linger: at most a day and an hour, and one stuck because its run died at most an hour more.
+Schedule::command('demo:end-stale-session')->hourly()->onOneServer()->withoutOverlapping();
 Schedule::command('demos:forget-ad-clicks')->dailyAt('03:20')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 Schedule::command('complaints:purge')->dailyAt('03:15')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
 // Each center shortly after its own midnight (design of time zones §4, phase 3): every 15 minutes the dispatcher queues the
@@ -273,6 +295,7 @@ Artisan::command('messaging:purge', function (PurgeMessaging $purge): void {
 
 // After the day's mail and the nightly holds, in the quiet of the display time.
 Schedule::command('messaging:purge')->dailyAt('03:25')->timezone(config()->string('app.display_timezone'))->onOneServer()->withoutOverlapping();
+Schedule::command('announcements:refresh')->everyMinute()->onOneServer()->withoutOverlapping();
 
 // A data request of a person (ARCO): by hand, with the phone asked for on a hidden prompt so it stays out of the terminal history.
 Artisan::command('messaging:forget', function (ForgetRecipient $forget): int {

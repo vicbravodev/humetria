@@ -127,7 +127,7 @@ it('does not write completed_at on a page a superadmin opens as the owner', func
     memberOf($this->tenant, TenantRole::Hr);
     FirstStepsState::factory()->welcomed()->create(['tenant_id' => $this->tenant->id, 'user_id' => $this->owner->id]);
 
-    $this->actingAs(superadmin())->post(route('companies.impersonate', $this->tenant));
+    $this->actingAs(superadmin())->post(route('companies.impersonate', $this->tenant), supportEntry());
     $this->get(route('tenant.members.index', $this->tenant))
         ->assertInertia(fn (Assert $page) => $page->where('firstSteps.steps.0.done', true));
 

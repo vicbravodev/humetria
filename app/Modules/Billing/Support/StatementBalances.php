@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Modules\Billing\Support;
 
-use App\Modules\Billing\Enums\StatementStatus;
 use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Models\PaymentAllocation;
 use App\Modules\Billing\Models\Statement;
@@ -30,16 +29,9 @@ final class StatementBalances
         return $paid;
     }
 
-    /** What the account still owes: its issued statements (adjustments included) minus what was paid of them. */
+    /** What the account still owes: the sum of its statements' balances (Statement::withBalance), never less than zero. */
     public function outstanding(BillingAccount $account): int
     {
-        $issued = Statement::query()->where('billing_account_id', $account->id)->where('status', StatementStatus::Issued);
-        $owed = array_sum($issued->pluck('total_cents')->all());
-        $paid = array_sum(PaymentAllocation::query()
-            ->whereIn('statement_id', $issued->clone()->select('id'))
-            ->whereHas('payment', fn ($payment) => $payment->standing())
-            ->pluck('amount_cents')->all());
-
-        return $owed - $paid;
+        return array_sum(Statement::query()->withBalance()->where('billing_account_id', $account->id)->get()->map(fn (Statement $statement): int => $statement->balance_cents)->all());
     }
 }

@@ -10,6 +10,7 @@ export default function BulkBar({
     count,
     one = 'seleccionada',
     many = 'seleccionadas',
+    detail,
     onClear,
     children,
 }: {
@@ -17,6 +18,8 @@ export default function BulkBar({
     /** What the count says for exactly one and for more: "seleccionada" / "seleccionadas". */
     one?: string;
     many?: string;
+    /** What follows the count, after a dot: the amount the chosen rows add up to. */
+    detail?: string | undefined;
     onClear: () => void;
     /** The actions, the primary one first. */
     children: ReactNode;
@@ -34,6 +37,7 @@ export default function BulkBar({
         >
             <p aria-live="polite" className="font-medium tabular-nums">
                 {countOf(count, one, many)}
+                {detail !== undefined && ` · ${detail}`}
             </p>
             <div className="flex flex-wrap items-center gap-2">{children}</div>
             <Button

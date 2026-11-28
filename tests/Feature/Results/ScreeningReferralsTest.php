@@ -171,7 +171,7 @@ it('hides the record from a viewer, with the same 404 as one that does not exist
 
 it('hides the record from an impersonating superadmin', function (): void {
     ownerOf($this->tenant);
-    $this->actingAs(superadmin())->post(route('companies.impersonate', $this->tenant))->assertRedirect();
+    $this->actingAs(superadmin())->post(route('companies.impersonate', $this->tenant), supportEntry())->assertRedirect();
 
     $this->put(screeningReferralUrl($this->campaign->id, $this->screening->employee_id), screeningReferralForm())->assertNotFound();
 

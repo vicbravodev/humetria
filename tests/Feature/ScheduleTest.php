@@ -26,6 +26,7 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
         'seating:send-digests' => '30 8 * * *',
         'complaints:send-digests' => '0 * * * *',
         'complaints:release-held' => '10 0 * * *',
+        'demo:end-stale-session' => '0 * * * *',
         'demos:forget-ad-clicks' => '20 3 * * *',
         'complaints:purge' => '15 3 * * *',
         'attendance:dispatch-close-days' => '*/15 * * * *',
@@ -44,6 +45,8 @@ it('closes expired evaluations hourly, sends the Monday digests, refreshes the c
         'messaging:replay-orphans' => '* * * * *',
         'messaging:watch-failures' => '*/5 * * * *',
         'messaging:purge' => '25 3 * * *',
+        // The panels read the live notices from the cache only: rebuilt every minute, a flushed cache never hides a maintenance.
+        'announcements:refresh' => '* * * * *',
         'horizon:snapshot' => '*/5 * * * *',
         'schedule:heartbeat' => '*/5 * * * *',
         'geoip:update' => '0 6 5 * *',

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Tenancy\Support;
 
+use App\Logging\RedactSensitiveData;
 use App\Models\AuditEntry;
 use App\Models\User;
 use App\Modules\Tenancy\Models\Tenant;
@@ -57,6 +58,26 @@ final class AuditPages
         'sso' => 'Inicio de sesión único', // @pest-mutate-ignore: RemoveArrayItem
         'tenancy' => 'Canales de comunicación', // @pest-mutate-ignore: RemoveArrayItem
         'messaging' => 'WhatsApp', // @pest-mutate-ignore: RemoveArrayItem
+        'audit' => 'Bitácora', // @pest-mutate-ignore: RemoveArrayItem
+        'announcement' => 'Avisos de la plataforma', // @pest-mutate-ignore: RemoveArrayItem
+    ];
+
+    /** The keys that store what an entry changed: the detail shows them as before and after, not as rows of their own. */
+    private const array CHANGE_KEYS = ['before', 'after', 'changes', 'profile_before', 'profile_after'];
+
+    /**
+     * The views of the trail by what matters most, each the events it holds as patterns (`like`): entering a company as
+     * support; what is charged and what a company may use; results and other sensitive records seen or exported; and who
+     * may do what.
+     *
+     * @var array<string, list<string>>
+     */
+    public const array KINDS = [
+        'support' => ['impersonation.%'],
+        'billing' => ['billing.%', 'tenant.trial_started', 'tenant.module_%', 'tenant.modules_synced'],
+        // Anchored at the dot or the underscore before the verb: «reviewed» is not «viewed».
+        'results' => ['%.viewed', '%\\_viewed', '%.exported', '%\\_exported', '%.share\\_opened'],
+        'roles' => ['tenant_role.%', 'tenant_member.role_changed', 'tenant_member.permissions_changed', 'user.support_%', 'user.superadmin_created'],
     ];
 
     /**
@@ -250,6 +271,10 @@ final class AuditPages
         'next_mode' => 'Modo siguiente', // @pest-mutate-ignore: RemoveArrayItem
         'share_id' => 'Enlace', // @pest-mutate-ignore: RemoveArrayItem
         'minutes' => 'Minutos', // @pest-mutate-ignore: RemoveArrayItem
+        'ends_at' => 'Termina', // @pest-mutate-ignore: RemoveArrayItem
+        'owner_user_id' => 'Responsable', // @pest-mutate-ignore: RemoveArrayItem
+        'scheduled_at' => 'Agendada para', // @pest-mutate-ignore: RemoveArrayItem
+        'account_ids' => 'Cuentas', // @pest-mutate-ignore: RemoveArrayItem
         'scenario_id' => 'Escenario', // @pest-mutate-ignore: RemoveArrayItem
         'days' => 'Días', // @pest-mutate-ignore: RemoveArrayItem
         'rows' => 'Filas', // @pest-mutate-ignore: RemoveArrayItem
@@ -334,15 +359,17 @@ final class AuditPages
         'work_mode' => 'Modalidad', // @pest-mutate-ignore: RemoveArrayItem
         'starts' => 'Hora de entrada', // @pest-mutate-ignore: RemoveArrayItem
         'job_title' => 'Puesto', // @pest-mutate-ignore: RemoveArrayItem
+        'family' => 'Tipo de evento', // @pest-mutate-ignore: RemoveArrayItem
     ];
 
     /**
-     * @return array{q: string, family: string, company: string, from: string, to: string}
+     * @return array{q: string, kind: string, family: string, company: string, from: string, to: string}
      */
-    public function filters(string $q, string $family, string $company, string $from, string $to): array
+    public function filters(string $q, string $kind, string $family, string $company, string $from, string $to): array
     {
         return [
             'q' => trim($q),
+            'kind' => array_key_exists($kind, self::KINDS) ? $kind : '',
             'family' => array_key_exists($family, self::FAMILIES) ? $family : '',
             'company' => Str::isUuid($company) ? $company : '',
             'from' => $this->day($from)?->toDateString() ?? '',
@@ -351,14 +378,36 @@ final class AuditPages
     }
 
     /**
-     * @param  array{q: string, family: string, company: string, from: string, to: string}  $filters
-     * @return LengthAwarePaginator<int, array{id: string, at: string, event: string, actor: array{name: string, email: string}|null, impersonator: array{name: string, email: string}|null, company: array{id: string, name: string}|null, subject: string|null, context: array<string, string>}>
+     * @param  array{q: string, kind: string, family: string, company: string, from: string, to: string}  $filters
+     * @return LengthAwarePaginator<int, array{id: string, at: string, day: string, time: string, kind: string|null, origin: string, event: string, actor: array{name: string, email: string}|null, impersonator: array{name: string, email: string}|null, company: array{id: string, name: string}|null, subject: string|null, context: array<string, string>, change: list<array{field: string, before: string, after: string}>}>
      */
     public function handle(array $filters): LengthAwarePaginator
     {
         $page = $this->matching($filters)->latest('created_at')->orderByDesc('id')->paginate(self::PER_PAGE)->withQueryString();
+        $rows = $this->present($page->getCollection());
 
-        $entries = $page->getCollection();
+        return $page->through(fn (AuditEntry $entry, int $key): array => $rows[$key]);
+    }
+
+    /**
+     * The newest entries the filters find, up to a limit, as the console reads them: for the export.
+     *
+     * @param  array{q: string, kind: string, family: string, company: string, from: string, to: string}  $filters
+     * @return list<array{id: string, at: string, day: string, time: string, kind: string|null, origin: string, event: string, actor: array{name: string, email: string}|null, impersonator: array{name: string, email: string}|null, company: array{id: string, name: string}|null, subject: string|null, context: array<string, string>, change: list<array{field: string, before: string, after: string}>}>
+     */
+    public function rows(array $filters, int $limit): array
+    {
+        return $this->present($this->matching($filters)->latest('created_at')->orderByDesc('id')->limit($limit)->get());
+    }
+
+    /**
+     * Each entry as the console reads it, the people, companies and role labels of all of them read once.
+     *
+     * @param  \Illuminate\Support\Collection<int, AuditEntry>  $entries
+     * @return list<array{id: string, at: string, day: string, time: string, kind: string|null, origin: string, event: string, actor: array{name: string, email: string}|null, impersonator: array{name: string, email: string}|null, company: array{id: string, name: string}|null, subject: string|null, context: array<string, string>, change: list<array{field: string, before: string, after: string}>}>
+     */
+    private function present(\Illuminate\Support\Collection $entries): array
+    {
         $people = $this->people(
             $entries->pluck('actor_id')->merge($entries->pluck('impersonator_id'))
                 ->merge($entries->map(fn (AuditEntry $entry): mixed => $this->namedUser($entry)))
@@ -374,11 +423,22 @@ final class AuditPages
         }
         $timezone = config()->string('app.display_timezone');
         $roles = $this->roleLabels($entries);
+        $staff = $this->staff($entries->pluck('actor_id'));
+        $today = CarbonImmutable::now($timezone);
 
-        return $page->through(fn (AuditEntry $entry): array => [
+        return array_values($entries->map(fn (AuditEntry $entry): array => [
             'id' => $entry->id,
             // Carbon's Spanish months end in a dot ("nov."); the design system writes "12 nov 2026".
             'at' => str_replace('.', '', $entry->created_at->setTimezone($timezone)->isoFormat('D MMM YYYY, HH:mm')),
+            'day' => $this->dayLabel(CarbonImmutable::parse($entry->created_at)->setTimezone($timezone), $today),
+            'time' => $entry->created_at->setTimezone($timezone)->format('H:i'),
+            'kind' => $this->kind($entry->event),
+            'origin' => match (true) {
+                $entry->actor_id === null => 'Sistema',
+                $entry->impersonator_id !== null => 'Como soporte',
+                isset($staff[$entry->actor_id]) => 'Consola',
+                default => 'Empresa',
+            },
             'event' => $entry->event,
             'actor' => $entry->actor_id === null ? null : ($people[$entry->actor_id] ?? null),
             'impersonator' => $entry->impersonator_id === null ? null : ($people[$entry->impersonator_id] ?? null),
@@ -387,7 +447,65 @@ final class AuditPages
                 : ['id' => $id, 'name' => $companies[$id]],
             'subject' => $entry->subject_type,
             'context' => $this->context($entry, $companies, $people, $roles),
-        ]);
+            'change' => $this->change($entry, $roles),
+        ])->all());
+    }
+
+    /** The day the table groups an entry under (tablero Bitácora): «Hoy · 25 nov», «Ayer · 24 nov», «Sábado · 22 nov», the year when it is not this one. */
+    private function dayLabel(CarbonImmutable $at, CarbonImmutable $today): string
+    {
+        $date = str_replace('.', '', $at->isoFormat($at->year === $today->year ? 'D MMM' : 'D MMM YYYY'));
+        $name = match (true) {
+            $at->isSameDay($today) => 'Hoy',
+            $at->isSameDay($today->subDay()) => 'Ayer',
+            default => ucfirst($at->isoFormat('dddd')),
+        };
+
+        return "{$name} · {$date}";
+    }
+
+    /** The view of the trail an event belongs to, by the same patterns its tabs count with; null for none. */
+    private function kind(string $event): ?string
+    {
+        foreach (self::KINDS as $kind => $patterns) {
+            foreach ($patterns as $pattern) {
+                $regex = preg_replace_callback('/\\\\_|%|_|[^%_\\\\]+/', fn (array $part): string => match ($part[0]) {
+                    '\\_' => '_',
+                    '%' => '.*',
+                    '_' => '.',
+                    default => preg_quote($part[0], '/'),
+                }, $pattern);
+
+                if (preg_match('/\A'.$regex.'\z/', $event) === 1) {
+                    return $kind;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Which of these people hold a platform role, in one query: what they do outside a company they do from the console.
+     *
+     * @param  \Illuminate\Support\Collection<int, mixed>  $ids
+     * @return array<int, true>
+     */
+    private function staff(\Illuminate\Support\Collection $ids): array
+    {
+        $staff = [];
+
+        foreach (DB::table('model_has_roles')
+            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            ->whereIn('roles.name', [User::SUPERADMIN, User::SUPPORT])
+            ->whereNull('model_has_roles.tenant_id')
+            ->where('model_has_roles.model_type', (new User)->getMorphClass())
+            ->whereIn('model_has_roles.model_id', $ids->filter()->unique()->values())
+            ->pluck('model_has_roles.model_id') as $id) {
+            is_int($id) && $staff[$id] = true;
+        }
+
+        return $staff;
     }
 
     private function companyId(AuditEntry $entry): ?string
@@ -405,6 +523,39 @@ final class AuditPages
         return $entry->subject_type === (new Tenant)->getMorphClass() ? $entry->subject_id : null;
     }
 
+    /**
+     * How many entries each view holds under the rest of the filters, the whole trail first.
+     *
+     * @param  array{q: string, kind: string, family: string, company: string, from: string, to: string}  $filters
+     * @return array<string, int>
+     */
+    public function counts(array $filters): array
+    {
+        $counts = ['all' => $this->matching([...$filters, 'kind' => ''])->count()];
+
+        foreach (array_keys(self::KINDS) as $kind) {
+            $counts[$kind] = $this->matching([...$filters, 'kind' => $kind])->count();
+        }
+
+        return $counts;
+    }
+
+    /**
+     * Twenty companies at a time whose name holds what was typed, for the filter that narrows the trail to one.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    public function companies(string $search): array
+    {
+        return array_values(Tenant::query()
+            ->matching(['trade_name'], $search)
+            ->orderBy('trade_name')
+            ->limit(20)
+            ->get(['id', 'trade_name'])
+            ->map(fn (Tenant $tenant): array => ['value' => $tenant->id, 'label' => $tenant->trade_name])
+            ->all());
+    }
+
     /** The name of a company, for the chip that says the trail is narrowed to it. */
     public function companyName(string $company): ?string
     {
@@ -412,7 +563,7 @@ final class AuditPages
     }
 
     /**
-     * @param  array{q: string, family: string, company: string, from: string, to: string}  $filters
+     * @param  array{q: string, kind: string, family: string, company: string, from: string, to: string}  $filters
      * @return Builder<AuditEntry>
      */
     private function matching(array $filters): Builder
@@ -420,6 +571,11 @@ final class AuditPages
         $timezone = config()->string('app.display_timezone');
 
         return AuditEntry::query()
+            ->when($filters['kind'] !== '', fn (Builder $query) => $query->where(function (Builder $query) use ($filters): void {
+                foreach (self::KINDS[$filters['kind']] as $pattern) {
+                    $query->orWhere('event', 'like', $pattern);
+                }
+            }))
             ->when($filters['family'] !== '', fn (Builder $query) => $query->where('event', 'like', $filters['family'].'.%'))
             ->when($filters['company'] !== '', fn (Builder $query) => $query->where(fn (Builder $query) => $query
                 ->where('tenant_id', $filters['company'])
@@ -429,9 +585,9 @@ final class AuditPages
                     ->orWhere(fn (Builder $query) => $query->where('subject_type', (new Tenant)->getMorphClass())->where('subject_id', $filters['company']))))))
             ->when($filters['from'] !== '', fn (Builder $query) => $query->where('created_at', '>=', CarbonImmutable::parse($filters['from'], $timezone)->startOfDay()->utc()))
             ->when($filters['to'] !== '', fn (Builder $query) => $query->where('created_at', '<=', CarbonImmutable::parse($filters['to'], $timezone)->endOfDay()->utc()))
-            ->when($filters['q'] !== '', fn (Builder $query) => $query->whereIn('actor_id', User::query()
-                ->select('id')
-                ->where('email', 'ilike', '%'.addcslashes($filters['q'], '\\%_').'%')));
+            ->when($filters['q'] !== '', fn (Builder $query) => $query->where(fn (Builder $query) => $query
+                ->whereIn('actor_id', User::query()->select('id')->matching(['name', 'email'], $filters['q']))
+                ->orWhereIn('tenant_id', Tenant::query()->select('id')->matching(['trade_name'], $filters['q']))));
     }
 
     /**
@@ -480,16 +636,76 @@ final class AuditPages
         }
 
         foreach ($entry->metadata as $key => $value) {
-            if ($key === 'tenant_id') {
+            if ($key === 'tenant_id' || in_array($key, self::CHANGE_KEYS, true) || ! $this->shown($key)) {
                 continue;
             }
 
-            $rows[self::KEYS[$key] ?? ucfirst(str_replace('_', ' ', $key))] = $key === 'user_id' && is_int($value) && isset($people[$value])
+            $rows[$this->label($key)] = $key === 'user_id' && is_int($value) && isset($people[$value])
                 ? $this->person($people[$value])
                 : $this->value($key, $value, $roles);
         }
 
         return $rows;
+    }
+
+    /**
+     * What an entry changed, field by field, from what it stored as before and after: the two sides of a snapshot
+     * (`before`, `after`), the fields it lists as changed (`changes`), or the two profiles of a transfer. Only what differs.
+     *
+     * @param  array<string, string>  $roles
+     * @return list<array{field: string, before: string, after: string}>
+     */
+    private function change(AuditEntry $entry, array $roles): array
+    {
+        $metadata = $entry->metadata;
+        $pairs = [];
+
+        if (array_key_exists('before', $metadata) || array_key_exists('after', $metadata)) {
+            $before = $metadata['before'] ?? null;
+            $after = $metadata['after'] ?? null;
+
+            if (is_array($before) || is_array($after)) {
+                $before = is_array($before) ? $before : [];
+                $after = is_array($after) ? $after : [];
+
+                foreach (array_unique([...array_keys($before), ...array_keys($after)]) as $key) {
+                    $pairs[(string) $key] = [$before[$key] ?? null, $after[$key] ?? null];
+                }
+            } else {
+                $pairs['value'] = [$before, $after];
+            }
+        }
+
+        foreach (is_array($metadata['changes'] ?? null) ? $metadata['changes'] : [] as $key => $pair) {
+            if (is_array($pair)) {
+                $pairs[(string) $key] = [$pair['before'] ?? null, $pair['after'] ?? null];
+            }
+        }
+
+        if (array_key_exists('profile_before', $metadata) || array_key_exists('profile_after', $metadata)) {
+            $pairs['profile'] = [$metadata['profile_before'] ?? null, $metadata['profile_after'] ?? null];
+        }
+
+        $rows = [];
+
+        foreach ($pairs as $key => [$before, $after]) {
+            if ($before !== $after && $this->shown($key)) {
+                $rows[] = ['field' => $key === 'value' ? 'Valor' : $this->label($key), 'before' => $this->value($key, $before, $roles), 'after' => $this->value($key, $after, $roles)];
+            }
+        }
+
+        return $rows;
+    }
+
+    /** Whether the detail may show a stored key: never one the logs keep out, unless the trail names it on purpose. */
+    private function shown(int|string $key): bool
+    {
+        return isset(self::KEYS[$key]) || ! in_array(strtolower((string) $key), RedactSensitiveData::KEYS, true);
+    }
+
+    private function label(int|string $key): string
+    {
+        return self::KEYS[$key] ?? ucfirst(str_replace('_', ' ', (string) $key));
     }
 
     /**

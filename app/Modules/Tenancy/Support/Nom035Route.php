@@ -75,7 +75,7 @@ final readonly class Nom035Route
                 $cycles[$id]->until,
                 $running === null ? null : [...self::answered($running), 'daysLeft' => $running->daysLeft ?? 0],
                 array_any($evaluations, fn (CampaignRecord $campaign): bool => $campaign->launchedOn === null),
-                array_intersect(['II', 'III'], $this->guides->for($people[$id] ?? 0)) === [],
+                array_intersect(['II', 'III'], $this->guides->for($people[$id] ?? 0, $id)) === [],
                 $evaluated === null ? 0 : $toChannel[$evaluated->id] ?? 0,
                 $evaluated !== null && in_array($evaluated->id, $sharing['shared'], true),
                 $evaluated === null ? null : $programs[$evaluated->id] ?? null,

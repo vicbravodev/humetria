@@ -19,13 +19,71 @@ export type DemoRequestRow = {
     arrived_by: string | null;
     /** The first known channel, only when it is not the one it arrived by. */
     first_contact: string | null;
+    /** The person of the staff who owns it, if anyone. */
+    owner: DemoOwner | null;
+    next_step: string | null;
+    /** When its demo is, as the console writes it: "jue 3 dic, 11:00". */
+    scheduled_for: string | null;
+    discard_reason: string | null;
+    /** Where it came from, as the funnel groups it: «Anuncio», «Orgánico», «Sin dato»… */
+    origin: string;
+    /** How long it has waited, or when its demo is, with how urgent it looks. */
+    waiting: { label: string; tone: DemoTone };
 };
 
-export type DemoStatus = 'new' | 'contacted' | 'converted' | 'discarded';
+/** The variants of Badge a card's time may take. */
+export type DemoTone =
+    | 'default'
+    | 'secondary'
+    | 'success'
+    | 'warning'
+    | 'destructive';
+
+/** Someone of Humetría's staff who may own a request. */
+export type DemoOwner = { id: number; name: string };
+
+export type DemoStatus =
+    | 'new'
+    | 'contacted'
+    | 'scheduled'
+    | 'trial'
+    | 'converted'
+    | 'discarded';
 
 export type DemoView = 'all' | DemoStatus;
 
-export type DemoFilters = { status: DemoView };
+/** The list (paged and searched) or the funnel. */
+export type DemoLayout = 'list' | 'board';
+
+export type DemoFilters = {
+    status: DemoView;
+    q: string;
+    view: DemoLayout;
+    /** Each empty while it narrows nothing; the owner is a staff id or "none". */
+    origin?: string;
+    owner?: string;
+    size?: string;
+};
+
+/** An open stage of the funnel: how many requests it holds and the newest few. */
+export type DemoBoardColumn = {
+    status: DemoStatus;
+    label: string;
+    total: number;
+    cards: DemoRequestRow[];
+};
+
+/** The figures at the top of the console; conversion and the source are of the last 90 days. */
+export type DemoMetrics = {
+    new: number;
+    unattended: number;
+    /** The median time to the first answer, in hours. */
+    first_response_hours: number | null;
+    /** Percent of the requests that became a company. */
+    conversion: number | null;
+    /** The source most requests came from, and its percent of all of them. */
+    source: { label: string; share: number } | null;
+};
 
 /** The part of a Laravel LengthAwarePaginator the console reads. */
 export type Paginated<T> = {
@@ -47,10 +105,39 @@ export type DemoRoom = {
     prepared: { ago: string; at: string; stale: boolean } | null;
     complaints: DemoShareLink | null;
     door: DemoDoor;
+    /** The tours a session may show, «El centro y su gente» aside: it always goes first. */
+    tours: DemoTour[];
+    session: DemoRoomSession | null;
+};
+
+/** A tour a session may show: what it shows and about how long it takes. */
+export type DemoTour = {
+    key: string;
+    title: string;
+    summary: string;
+    minutes: number;
+};
+
+/** The session in course, or the last one when its preparation failed: each tour's progress and the step that follows. */
+export type DemoRoomSession = {
+    client: string | null;
+    status: 'preparing' | 'active' | 'ending' | 'failed';
+    failed: boolean;
+    /** Since when it is under way: «hace 12 minutos». */
+    since: string;
+    tours: { key: string; title: string; done: number; total: number }[];
+    /** Where the guide goes on (a path inside the demo), while active and not finished. */
+    next: {
+        title: string;
+        tour: string;
+        index: number;
+        total: number;
+        href: string;
+    } | null;
 };
 
 export type DemoRunState = {
-    kind: 'prepare' | 'reset';
+    kind: 'prepare' | 'reset' | 'session';
     status: 'running' | 'finished' | 'failed';
     step: string | null;
     error_class: string | null;

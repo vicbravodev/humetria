@@ -22,7 +22,7 @@ it('makes every notification of every module declare its mail bag', function ():
 });
 
 it('puts the emails that carry access, recovery, security or an accident in the free bag', function (): void {
-    $essential = ['InvitationEmail', 'PortalInvitation', 'AccidentReported', 'NextAmountNotice', 'EligibilityLostNotice', 'OverdueBalanceNotice', 'SensitiveMentions', 'RequestEscalated', 'RequestDecided', 'RequestToDecide', 'RequestCancelled', 'OwnerReplaced', 'CompanyRestricted', 'CompanyReactivated', 'ToolsChanged', 'DemoRequested', 'ComplaintReceived', 'DailyCapReached', 'AccessLinkRequested', 'KeyRegistered', 'KeyDisowned', 'WorkerInvitation', 'ProofCode', 'WeekDisputedAlert'];
+    $essential = ['InvitationEmail', 'PortalInvitation', 'AccidentReported', 'NextAmountNotice', 'EligibilityLostNotice', 'OverdueBalanceNotice', 'SensitiveMentions', 'RequestEscalated', 'RequestDecided', 'RequestToDecide', 'RequestCancelled', 'OwnerReplaced', 'CompanyRestricted', 'CompanyReactivated', 'TrialExtended', 'ToolsChanged', 'DemoRequested', 'ComplaintReceived', 'DailyCapReached', 'AccessLinkRequested', 'KeyRegistered', 'KeyDisowned', 'WorkerInvitation', 'ProofCode', 'WeekDisputedAlert'];
 
     foreach (glob(__DIR__.'/../../app/Modules/*/Notifications/*.php') ?: [] as $file) {
         $name = basename($file, '.php');

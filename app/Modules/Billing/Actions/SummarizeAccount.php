@@ -13,13 +13,14 @@ use App\Modules\Billing\Support\Eligibility;
 use App\Modules\Billing\Support\Money;
 use App\Modules\Billing\Support\ShortDate;
 use App\Modules\Billing\Support\SubscriptionQuoter;
+use App\Modules\Tenancy\Contracts\CompanyRegistry;
 use Carbon\CarbonImmutable;
 
 final readonly class SummarizeAccount
 {
-    public function __construct(private Eligibility $eligibility, private SubscriptionQuoter $quoter) {}
+    public function __construct(private Eligibility $eligibility, private SubscriptionQuoter $quoter, private CompanyRegistry $companies) {}
 
-    /** What the account pays for all the companies it pays now, from their plans as they stand today. */
+    /** What the account pays for all the companies it pays now, from their plans as they stand today, and which renews next. */
     public function handle(BillingAccount $account): AccountSummary
     {
         $companies = AccountCompany::query()->current()->where('billing_account_id', $account->id)->count();
@@ -47,7 +48,7 @@ final readonly class SummarizeAccount
             $total += $quote->totalCents;
         }
 
-        $renews = $subscriptions->map(fn (Subscription $subscription): CarbonImmutable => $subscription->renews_on)->sort()->first();
+        $next = $subscriptions->sortBy(fn (Subscription $subscription): string => $subscription->renews_on->toDateString())->first();
 
         return new AccountSummary(
             companies: $companies,
@@ -56,8 +57,9 @@ final readonly class SummarizeAccount
             vat: $priced === 0 ? null : Money::format($vat),
             total: $priced === 0 ? null : Money::format($total),
             requiringQuotation: $requiringQuotation,
-            nextRenewal: $renews === null ? null : ShortDate::format($renews),
+            nextRenewal: $next === null ? null : ShortDate::format($next->renews_on),
             discount: $subscriptions->contains(fn (Subscription $subscription): bool => $subscription->profile === Profile::ChannelIntegral) ? $this->eligibility->explain($eligible) : null,
+            nextRenewalCompany: $next === null ? null : $this->companies->find($next->tenant_id)?->tradeName,
         );
     }
 }

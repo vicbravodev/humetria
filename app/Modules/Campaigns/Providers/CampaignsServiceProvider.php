@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Campaigns\Providers;
 
+use App\Modules\Campaigns\Contracts\CampaignActivity;
 use App\Modules\Campaigns\Contracts\CampaignRecords;
 use App\Modules\Campaigns\Contracts\CenterSurveys;
 use App\Modules\Campaigns\Contracts\EvaluationSchedule;
@@ -12,6 +13,7 @@ use App\Modules\Campaigns\Listeners\CancelOnDeactivation;
 use App\Modules\Campaigns\Listeners\CancelOnMove;
 use App\Modules\Campaigns\Listeners\FallBackToMail;
 use App\Modules\Campaigns\Support\CampaignInvitationLinks;
+use App\Modules\Campaigns\Support\CompanyCampaignActivity;
 use App\Modules\Campaigns\Support\CompanyCampaignRecords;
 use App\Modules\Campaigns\Support\CompanyCenterSurveys;
 use App\Modules\Campaigns\Support\CompanyEvaluationSchedule;
@@ -32,6 +34,7 @@ final class CampaignsServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(OpenCampaigns::class, CompanyOpenCampaigns::class);
+        $this->app->bind(CampaignActivity::class, CompanyCampaignActivity::class);
         $this->app->bind(CampaignRecords::class, CompanyCampaignRecords::class);
         $this->app->bind(CenterSurveys::class, CompanyCenterSurveys::class);
         $this->app->bind(EvaluationSchedule::class, CompanyEvaluationSchedule::class);

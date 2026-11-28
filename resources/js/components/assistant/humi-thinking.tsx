@@ -1,4 +1,4 @@
-import HumiAvatar from '@/components/assistant/humi-avatar';
+import HumiAvatar from '@/components/humetria/humi-avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 
 /** What shows between sending a message and the first word of the answer. */

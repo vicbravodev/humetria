@@ -1,5 +1,5 @@
 import { Clock, RotateCw, TriangleAlert } from 'lucide-react';
-import HumiAvatar from '@/components/assistant/humi-avatar';
+import HumiAvatar from '@/components/humetria/humi-avatar';
 import { Button } from '@/components/ui/button';
 import { rateWaitText, type ChatFailure } from '@/lib/assistant/chat-errors';
 

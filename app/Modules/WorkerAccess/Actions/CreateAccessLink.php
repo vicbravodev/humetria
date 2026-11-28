@@ -15,7 +15,8 @@ use Illuminate\Support\Str;
 /**
  * A new one-time link of a person of the current company, as the address the person opens. An `issued` one (RH's, 48 hours)
  * revokes every link of the person that still opens; a `requested` one (the person's, 30 minutes) revokes the requested ones.
- * The token is random and exists in clear only in the address: only its hash is kept, and it never reaches a log.
+ * The token is derived from the link's id (WorkerAccessLink::tokenFor) and exists in clear only in the address: only its hash is
+ * kept, and it never reaches a log.
  */
 final readonly class CreateAccessLink
 {
@@ -24,16 +25,18 @@ final readonly class CreateAccessLink
     /** @return array{0: WorkerAccessLink, 1: string} the link and its address */
     public function handle(string $employeeId, LinkKind $kind, ?int $issuedBy = null): array
     {
-        $token = Str::random(48);
+        $id = Str::uuid()->toString();
+        $token = WorkerAccessLink::tokenFor($id);
         $now = CarbonImmutable::now();
         $company = $this->companies->current();
 
-        $link = DB::transaction(function () use ($employeeId, $kind, $issuedBy, $token, $now, $company): WorkerAccessLink {
+        $link = DB::transaction(function () use ($id, $employeeId, $kind, $issuedBy, $token, $now, $company): WorkerAccessLink {
             // One person's links one at a time, so two at once do not both stay open.
             DB::select('select pg_advisory_xact_lock(hashtext(?))', ["worker_access_links:{$employeeId}"]);
             WorkerAccessLink::revokePending($employeeId, $kind === LinkKind::Issued ? null : LinkKind::Requested);
 
-            return WorkerAccessLink::query()->create([
+            return WorkerAccessLink::query()->forceCreate([
+                'id' => $id,
                 'tenant_id' => $company->id,
                 'employee_id' => $employeeId,
                 'token_hash' => WorkerAccessLink::hashToken($token),
@@ -47,6 +50,12 @@ final readonly class CreateAccessLink
 
         Log::info('worker_access.link_created', ['link_id' => $link->id, 'employee_id' => $employeeId, 'kind' => $kind->value]);
 
-        return [$link, rtrim(config()->string('app.url'), '/').route('worker.link.show', [$company->slug, $token], absolute: false)];
+        return [$link, self::address($company->slug, $token)];
+    }
+
+    /** The address a person opens a link with, on the app's own host. */
+    public static function address(string $slug, string $token): string
+    {
+        return rtrim(config()->string('app.url'), '/').route('worker.link.show', [$slug, $token], absolute: false);
     }
 }

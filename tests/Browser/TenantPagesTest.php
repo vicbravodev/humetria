@@ -198,7 +198,7 @@ it('lets an impersonating superadmin close the block modal and use the panel', f
     TenantMembership::factory()->for($tenant)->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
 
     visitPage('dashboard', '/admin/companies', $dark, $mobile, fn (AwaitableWebpage $page) => $page
-        ->click('@tenant-actions')->click('Entrar como owner')
+        ->click('@tenant-actions')->click('Entrar como soporte')->type('#support-reason', 'Revisar una invitación rebotada')->click('[role="dialog"] button[type="submit"]')
         ->assertScript(pathBecomes('/admin/acme'), true)
         ->assertPathIs('/admin/acme')
         ->assertSee('El acceso a Acme Industrial está en pausa'))
@@ -216,7 +216,7 @@ it('offers an impersonating superadmin the way out of the impersonation, not the
     TenantMembership::factory()->for($tenant)->for(User::factory()->create(['name' => 'Ana Pérez']))->create();
 
     visit('/admin/companies')
-        ->click('@tenant-actions')->click('Entrar como owner')
+        ->click('@tenant-actions')->click('Entrar como soporte')->type('#support-reason', 'Revisar una invitación rebotada')->click('[role="dialog"] button[type="submit"]')
         ->assertSee('El acceso a Acme Industrial está en pausa')
         ->assertDontSeeIn('[data-test="tenant-blocked-dialog"]', 'Cerrar sesión')
         ->click('[data-test="tenant-blocked-dialog"] [data-test="stop-impersonation"]')
@@ -232,7 +232,7 @@ it('lets the closed block modal stay closed while moving through the panel', fun
     TenantMembership::factory()->for($tenant)->for(User::factory()->create())->create();
 
     visit('/admin/companies')
-        ->click('@tenant-actions')->click('Entrar como owner')
+        ->click('@tenant-actions')->click('Entrar como soporte')->type('#support-reason', 'Revisar una invitación rebotada')->click('[role="dialog"] button[type="submit"]')
         ->click('[data-test="tenant-blocked-dialog"] > button')
         ->click('[data-sidebar="menu-button"][data-active="true"]')
         ->assertScript(pathBecomes('/admin/acme'), true)

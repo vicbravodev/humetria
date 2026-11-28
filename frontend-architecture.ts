@@ -90,10 +90,12 @@ export const frontendArchitecture = {
                     group: [
                         '@/components/**',
                         '!@/components/ui/**',
+                        // A piece may compose another of the design system (HumiAvatar draws Humi).
+                        '!@/components/humetria/**',
                         '@/layouts/**',
                     ],
                     message:
-                        'El design system solo usa components/ui, hooks y lib.',
+                        'El design system solo usa components/ui, components/humetria, hooks y lib.',
                 }),
             },
         },

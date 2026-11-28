@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Concerns\BelongsToCurrentTenant;
 use App\Models\AuditEntry;
+use App\Modules\Announcements\Models\Announcement;
+use App\Modules\Announcements\Models\MaintenancePeriod;
 use App\Modules\Billing\Models\AccountCompany;
 use App\Modules\Billing\Models\BillingAccount;
 use App\Modules\Billing\Models\CompanyTransfer;
@@ -20,6 +22,7 @@ use App\Modules\Billing\Models\UsageReservation;
 use App\Modules\Compensation\Models\FiscalParameter;
 use App\Modules\Demos\Models\DemoRequest;
 use App\Modules\Demos\Models\DemoRun;
+use App\Modules\Demos\Models\DemoSession;
 use App\Modules\Messaging\Models\Delivery;
 use App\Modules\Messaging\Models\DeliveryEvent;
 use App\Modules\Messaging\Models\OptOut;
@@ -31,6 +34,7 @@ use App\Modules\Tenancy\Models\TenantInvitation;
 use App\Modules\Tenancy\Models\TenantLimit;
 use App\Modules\Tenancy\Models\TenantMembership;
 use App\Modules\Tenancy\Models\TenantModule;
+use App\Modules\Tenancy\Models\TenantNote;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
 
@@ -66,6 +70,7 @@ const TENANT_MODELS_WITHOUT_SCOPE = [
     UsageEvent::class => 'read across companies by the console',
     UsageGrant::class => 'read across companies by the console',
     TenantLimit::class => 'read across companies by the console and the reconciliation',
+    TenantNote::class => 'the staff\'s notes about a company, written and read only from the console, which has no current company',
     // Single sign-on is read by the public sign-in routes before any company is resolved; every query of the module names its company.
     SsoConnection::class => 'read by the sign-in routes before a company is resolved',
     SsoDomain::class => 'read by the sign-in routes before a company is resolved',
@@ -89,9 +94,14 @@ const PLATFORM_MODELS = [
     // The console prepares or resets the demo company; the run is the platform's lock and progress, not the company's
     // content, and it outlives every reset of the demo.
     DemoRun::class => 'a preparation of the demo company, run by the staff console',
+    // Plataforma, como demo_runs: the session outlives the resets it starts and ends, which wipe the demo company.
+    DemoSession::class => 'a demo session for a client, run by the staff console',
     // Deduplication of what a provider sends again, before any company is known.
     WebhookEvent::class => 'deduplication of provider callbacks, before any company is known',
     Pause::class => 'an operational stop of the whole feature, for every company',
+    // What Humetría tells the companies: written from the console, which has no current company, and read by every panel.
+    Announcement::class => 'platform data: what the console tells every company, or the ones of a plan',
+    MaintenancePeriod::class => 'platform data: a maintenance of the whole platform, for every company',
 ];
 
 /** @return list<class-string<Model>> */

@@ -34,7 +34,7 @@ function rowsBecome(int $count): string
         () => new Promise((resolve) => {
             const start = performance.now();
             const check = () => {
-                const rows = document.querySelectorAll('tbody tr').length;
+                const rows = document.querySelectorAll('tbody tr[data-slot="table-row"]').length;
                 rows === {$count} || performance.now() - start > 3000 ? resolve(rows) : requestAnimationFrame(check);
             };
             check();
@@ -54,6 +54,7 @@ it('filters the trail by a first day typed in the field, once the field is left'
 
     visit('/admin/audit')
         ->assertScript(rowsBecome(2), 2)
+        ->click('button:has-text("Fechas")')
         ->type('#audit-period-from', $from->format('dmY'))
         ->assertValue('#audit-period-from', $from->format('d/m/Y'))
         // Nothing is asked of the server while typing.
@@ -71,6 +72,7 @@ it('picks the two ends of the period in one calendar and closes it', function ()
     [$first, $last] = [$today->copy()->subDays(min(5, $today->day - 1)), $today];
 
     visit('/admin/audit')
+        ->click('button:has-text("Fechas")')
         ->click('[data-slot="date-range-picker"] button:has-text("Abrir el calendario")')
         ->assertVisible('[data-slot="popover-content"] [data-slot="calendar"]')
         ->click('[data-day="'.$first->toDateString().'"] button')
@@ -88,6 +90,7 @@ it('fills both ends from a shortcut of the period', function (): void {
     $monday = now('America/Mexico_City')->startOfWeek();
 
     visit('/admin/audit')
+        ->click('button:has-text("Fechas")')
         ->click('#audit-period-from')
         ->click('[data-slot="popover-content"] button:has-text("Semana pasada")')
         ->assertMissing('[data-slot="popover-content"]')
@@ -100,6 +103,7 @@ it('closes the calendar of the period with Escape and keeps the focus in the fie
     rangeTrail();
 
     visit('/admin/audit')
+        ->click('button:has-text("Fechas")')
         ->click('#audit-period-to')
         ->assertVisible('[data-slot="popover-content"] [data-slot="calendar"]')
         ->keys('#audit-period-to', 'Escape')
@@ -113,6 +117,7 @@ it('opens the period as a sheet from the bottom on a phone, with its shortcuts, 
 
     visitPage('tenancy/audit', '/admin/audit', $dark, true)
         ->assertScript('() => document.documentElement.scrollWidth <= window.innerWidth', true)
+        ->click('button:has-text("Fechas")')
         ->click('#audit-period-from')
         ->assertVisible('[data-slot="sheet-content"] [data-slot="calendar"]')
         ->assertScript('() => [...document.querySelectorAll("[data-slot=sheet-content] [data-day] button")].every((day) => day.getBoundingClientRect().height >= 44)', true)

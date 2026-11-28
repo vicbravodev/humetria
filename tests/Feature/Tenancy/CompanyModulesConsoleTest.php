@@ -116,6 +116,17 @@ it('grants a module with a reason and an end, and logs and audits it', function 
     expect(consoleModules($tenant))->toBe(['nom035'])->and(TenantModule::query()->where('module', 'nom037')->where('source', 'grant')->count())->toBe(1);
 });
 
+it('returns to the modules tab when the change was made there, and to the summary otherwise', function (): void {
+    $tenant = consolePlanned(['nom035']);
+
+    $this->actingAs(superadmin())->post(route('companies.modules.grant', [$tenant, 'tab' => 'modulos']), ['module' => 'seating', 'reason' => 'Piloto'])
+        ->assertRedirect(route('companies.show', [$tenant, 'tab' => 'modulos']));
+    $this->actingAs(superadmin())->post(route('companies.modules.revoke', [$tenant, 'tab' => 'modulos']), ['module' => 'seating', 'reason' => 'Fin'])
+        ->assertRedirect(route('companies.show', [$tenant, 'tab' => 'modulos']));
+    $this->actingAs(superadmin())->post(route('companies.modules.grant', [$tenant, 'tab' => 'https://evil.test']), ['module' => 'seating', 'reason' => 'Piloto'])
+        ->assertRedirect(route('companies.show', $tenant));
+});
+
 it('grants a module with no end', function (): void {
     $tenant = consolePlanned(['nom035']);
 

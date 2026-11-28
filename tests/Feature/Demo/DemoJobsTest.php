@@ -43,6 +43,13 @@ function demoWorkspaceSpy(bool $fails = false): ArrayObject
         {
             $this->calls->append('reset');
         }
+
+        public function stageSession(?string $clientName): string
+        {
+            $this->calls->append('stage');
+
+            return 'center';
+        }
     });
 
     return $calls;

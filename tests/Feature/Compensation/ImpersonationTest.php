@@ -14,7 +14,7 @@ it('answers 404 during an impersonation', function (): void {
     $tenant = Tenant::factory()->create();
     ownerOf($tenant);
 
-    $this->actingAs(superadmin())->post(route('companies.impersonate', $tenant))->assertRedirect();
+    $this->actingAs(superadmin())->post(route('companies.impersonate', $tenant), supportEntry())->assertRedirect();
 
     $this->get(route('tenant.compensation.index', $tenant))->assertNotFound();
     // The rest of the account keeps working for the superadmin acting as the owner.
@@ -25,7 +25,7 @@ it('answers 404 during an impersonation of a union too', function (): void {
     $union = Tenant::factory()->union()->create();
     ownerOf($union);
 
-    $this->actingAs(superadmin())->post(route('companies.impersonate', $union))->assertRedirect();
+    $this->actingAs(superadmin())->post(route('companies.impersonate', $union), supportEntry())->assertRedirect();
 
     $this->get(route('tenant.compensation.index', $union))->assertNotFound();
 });

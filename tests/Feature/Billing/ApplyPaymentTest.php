@@ -75,6 +75,17 @@ it('refuses to apply more than is left, more than a balance, or to what is not p
     'a reversed payment' => [fn ($payment, $first, $second, $draft, $foreign, $reversed) => [$reversed, [$second->id => 1_000]], 'payment'],
 ]);
 
+it('applies no more than what is left of a statement after its credits', function (): void {
+    [$account, , $first] = halfAppliedPayment();
+    $payment = Payment::factory()->create(['billing_account_id' => $account->id, 'amount_cents' => 100_000]);
+    resolve(App\Modules\Billing\Actions\AdjustStatement::class)->handle($first, new App\Modules\Billing\Data\AdjustmentData('Ajuste', -10_000, 'Se cobró de más'), User::factory()->create()); // -$116: $484 left
+
+    expect(fn () => resolve(ApplyPayment::class)->handle($payment, [$first->id => 48_401], User::factory()->create()))->toThrow(InvalidPayment::class);
+
+    resolve(ApplyPayment::class)->handle($payment, [$first->id => 48_400], User::factory()->create());
+    expect(resolve(StatementBalances::class)->outstanding($account))->toBe(80_000);
+});
+
 it('applies the balance from the console and sends the person back to the account', function (): void {
     [$account, $payment, , $second] = halfAppliedPayment();
 

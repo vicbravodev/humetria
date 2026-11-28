@@ -15,3 +15,8 @@ export function cn(...inputs: ClassValue[]) {
 export function toUrl(url: NonNullable<InertiaLinkProps['href']>): string {
     return typeof url === 'string' ? url : url.url;
 }
+
+/** The page a link opens, without its query: a sidebar link may open its page on a view (`?view=board`). */
+export function toPath(url: NonNullable<InertiaLinkProps['href']>): string {
+    return toUrl(url).split(/[?#]/, 1)[0] ?? '';
+}

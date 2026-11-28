@@ -7,6 +7,7 @@ use App\Http\Impersonation;
 use App\Http\Middleware\EndRevokedImpersonation;
 use App\Models\AuditEntry;
 use App\Models\User;
+use App\Modules\Tenancy\Enums\TenantRole;
 use App\Modules\Tenancy\Models\Tenant;
 use App\Modules\Tenancy\Models\TenantMembership;
 use Illuminate\Log\Events\MessageLogged;
@@ -29,7 +30,7 @@ function enterAsOwner(): array
     $tenant = Tenant::factory()->create();
     $owner = ownerOf($tenant);
 
-    test()->actingAs($superadmin)->post(route('companies.impersonate', $tenant));
+    test()->actingAs($superadmin)->post(route('companies.impersonate', $tenant), supportEntry());
 
     return [$superadmin, $tenant, $owner];
 }
@@ -40,7 +41,7 @@ it('lets the superadmin work as the owner, leaving the start in the audit trail'
     $owner = ownerOf($tenant);
 
     $this->actingAs($superadmin)
-        ->post(route('companies.impersonate', $tenant))
+        ->post(route('companies.impersonate', $tenant), supportEntry())
         ->assertRedirect(route('dashboard'));
 
     $this->assertAuthenticatedAs($owner);
@@ -51,7 +52,7 @@ it('lets the superadmin work as the owner, leaving the start in the audit trail'
         ->subject_type->toBe($owner->getMorphClass())
         ->subject_id->toBe((string) $owner->id)
         ->tenant_id->toBe($tenant->id)
-        ->metadata->toBe(['tenant_id' => $tenant->id]);
+        ->metadata->toBe(['reason' => 'Revisar una invitación rebotada', 'minutes' => 30, 'tenant_id' => $tenant->id]);
 });
 
 it('records what is done while impersonating as the owner, with the superadmin behind', function (): void {
@@ -106,7 +107,7 @@ it('lets nobody impersonate where it is not allowed', function (Closure $arrange
     [$actor, $tenant] = $arrange();
 
     $this->actingAs($actor)
-        ->post(route('companies.impersonate', $tenant))
+        ->post(route('companies.impersonate', $tenant), supportEntry())
         ->assertNotFound();
 
     $this->assertAuthenticatedAs($actor);
@@ -132,7 +133,7 @@ it('does not let the superadmin impersonate while already impersonating', functi
     $other = Tenant::factory()->create();
     ownerOf($other);
 
-    $this->post(route('companies.impersonate', $other))->assertNotFound();
+    $this->post(route('companies.impersonate', $other), supportEntry())->assertNotFound();
 
     $this->assertAuthenticatedAs($owner);
     expect(AuditEntry::query()->where('event', 'impersonation.started')->count())->toBe(1);
@@ -264,7 +265,7 @@ it('writes ids, never names or emails, in the log and the audit trail', function
     $owner = ownerOf($tenant);
     $owner->forceFill(['name' => 'Óscar Dueño', 'email' => 'oscar@acme.mx'])->save();
 
-    $this->actingAs($superadmin)->post(route('companies.impersonate', $tenant));
+    $this->actingAs($superadmin)->post(route('companies.impersonate', $tenant), supportEntry());
     $this->post(route('impersonation.stop'));
 
     $logged = collect($lines)->filter(fn (MessageLogged $line): bool => str_starts_with($line->message, 'impersonation.'));
@@ -284,7 +285,7 @@ it('shares the name of the superadmin behind the owner, and null otherwise', fun
     $tenant = Tenant::factory()->create();
     ownerOf($tenant);
 
-    $this->actingAs($superadmin)->post(route('companies.impersonate', $tenant));
+    $this->actingAs($superadmin)->post(route('companies.impersonate', $tenant), supportEntry());
 
     $this->get(route('tenant.dashboard', $tenant))
         ->assertInertia(fn (Assert $page) => $page->where('impersonator', 'Sofía Admin'));
@@ -302,7 +303,7 @@ it('does not carry the superadmin password confirmation over to the owner', func
 
     $this->actingAs($superadmin)
         ->withSession(['auth.password_confirmed_at' => now()->timestamp])
-        ->post(route('companies.impersonate', $tenant));
+        ->post(route('companies.impersonate', $tenant), supportEntry());
 
     // Those routes now answer 404 while impersonating (ImpersonationSettingsTest); the mark itself must be gone.
     expect(session()->has('auth.password_confirmed_at'))->toBeFalse();
@@ -378,4 +379,54 @@ it('sends a revoked change back to login with 303, so Inertia follows it with a 
         ->assertRedirect(route('login'));
 
     $this->assertGuest();
+});
+
+it('brings the superadmin back to the demo room on leaving the demo company, and support to the console', function (): void {
+    $demo = Tenant::factory()->demo()->create();
+    memberOf($demo, TenantRole::Owner);
+
+    $this->actingAs(superadmin())->post(route('companies.impersonate', $demo), ['as' => 'owner']);
+    $this->post(route('impersonation.stop'))->assertRedirect(route('demo-room.show'));
+
+    $this->actingAs(support())->post(route('companies.impersonate', $demo));
+    $this->post(route('impersonation.stop'))->assertRedirect(route('companies.index'));
+});
+
+it('lands the superadmin on a page of the demo company when the room asks for it, as owner or HR', function (string $as): void {
+    $demo = Tenant::factory()->create(['slug' => 'alba-demo', 'is_demo' => true]);
+    memberOf($demo, TenantRole::Owner);
+    memberOf($demo, TenantRole::Hr);
+
+    $this->actingAs(superadmin())
+        ->post(route('companies.impersonate', $demo), ['as' => $as, 'to' => '/admin/alba-demo/worker-access?center=abc'])
+        ->assertRedirect(url('/admin/alba-demo/worker-access?center=abc'));
+})->with(['owner', 'hr']);
+
+it('lands on the dashboard when the page asked for is not one of the company entered', function (string $to): void {
+    $demo = Tenant::factory()->create(['slug' => 'alba-demo', 'is_demo' => true]);
+    memberOf($demo, TenantRole::Owner);
+
+    $this->actingAs(superadmin())
+        ->post(route('companies.impersonate', $demo), ['to' => $to])
+        ->assertRedirect(route('dashboard'));
+})->with([
+    'another company' => '/admin/otra-empresa/employees',
+    'a slug that only starts the same' => '/admin/alba-demoevil/employees',
+    'another site' => 'https://evil.example/admin/alba-demo/employees',
+    'protocol-relative' => '//evil.example/admin/alba-demo',
+    'a backslash' => '/admin/alba-demo/\\evil.example',
+    'climbing out' => '/admin/alba-demo/../companies',
+    'climbing out, encoded' => '/admin/alba-demo/%2e%2e/companies',
+    'climbing out, encoded in capitals' => '/admin/alba-demo/%2E%2E/companies',
+    'climbing out, half encoded' => '/admin/alba-demo/.%2E/companies',
+    'the console' => '/admin/companies',
+]);
+
+it('ignores the page asked for in a real company: the room only sends to the demo', function (): void {
+    $company = Tenant::factory()->create(['slug' => 'acme']);
+    ownerOf($company);
+
+    $this->actingAs(superadmin())
+        ->post(route('companies.impersonate', $company), ['to' => '/admin/acme/employees', 'reason' => 'Revisar un reporte', 'minutes' => 30])
+        ->assertRedirect(route('dashboard'));
 });

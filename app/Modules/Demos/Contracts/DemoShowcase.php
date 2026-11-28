@@ -18,4 +18,11 @@ interface DemoShowcase
      * @return list<array{center: string, url: string}>
      */
     public function kioskLinks(): array;
+
+    /**
+     * A new one-use portal link of `$employeeId`, issued as the demo's head of HR and sent nowhere, for the presenter to open on
+     * their own computer; it revokes the person's links before. Null, issuing nothing, unless a session is under way and the
+     * person is active in its center.
+     */
+    public function portalLinkFor(string $employeeId): ?string;
 }

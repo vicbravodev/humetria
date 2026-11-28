@@ -12,6 +12,7 @@ use App\Modules\Billing\Support\MessagingCost;
 use App\Modules\Billing\Support\UsagePeriod;
 use App\Modules\Messaging\Events\WhatsAppMessageAccepted;
 use App\Modules\Messaging\Events\WhatsAppMessageFailed;
+use App\Modules\Tenancy\Contracts\DemoCompanies;
 use Carbon\CarbonImmutable;
 
 /**
@@ -20,10 +21,15 @@ use Carbon\CarbonImmutable;
  */
 final readonly class CountWhatsApp
 {
-    public function __construct(private RecordUsage $record, private MessagingCost $costs) {}
+    public function __construct(private RecordUsage $record, private MessagingCost $costs, private DemoCompanies $demos) {}
 
     public function accepted(WhatsAppMessageAccepted $event): void
     {
+        // The demo is never billed: its messages are not counted (nothing was held for them either).
+        if ($this->demos->isDemo($event->tenantId)) {
+            return;
+        }
+
         $this->record->handle($event->tenantId, UsageMeter::WHATSAPP, 1, $event->deliveryId, fromHold: true, cost: $this->costs->at(CarbonImmutable::now()));
     }
 

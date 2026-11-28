@@ -4,11 +4,13 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
 import HumiDock from '@/components/assistant/humi-dock';
 import { CommandPalette } from '@/components/command-palette';
+import GuideDock from '@/components/demos/guide-dock';
 import FirstStepsDock from '@/components/first-steps/first-steps-dock';
 import { CompanyReadOnlyNotice } from '@/components/company-read-only-notice';
 import { ImpersonatedBlockNotice } from '@/components/impersonated-block-notice';
 import { ImpersonationBanner } from '@/components/impersonation-banner';
 import { MobileTabBar } from '@/components/mobile-tab-bar';
+import { PlatformNoticeBanner } from '@/components/platform-notice-banner';
 import type { AppLayoutProps } from '@/types';
 
 export default function AppSidebarLayout({
@@ -30,12 +32,14 @@ export default function AppSidebarLayout({
                     data-slot="page-body"
                     className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col pb-(--tab-bar-clearance) [view-transition-name:page] md:pb-0"
                 >
+                    <PlatformNoticeBanner />
                     <CompanyReadOnlyNotice />
                     {children}
                 </div>
             </AppContent>
             <MobileTabBar />
             <FirstStepsDock />
+            <GuideDock />
             <HumiDock />
             <CommandPalette />
             <ImpersonatedBlockNotice />
